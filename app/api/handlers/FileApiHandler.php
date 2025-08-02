@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../../src/Core/Utils.php';
-
 /**
  * ファイルAPI操作ハンドラー
  * ファイルの CRUD 操作を担当
@@ -27,26 +25,26 @@ class FileApiHandler
     public function handleGetFiles(): void
     {
         require_once '../models/init.php';
-        
+
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? min(100, max(1, intval($_GET['limit']))) : 20;
         $folder = isset($_GET['folder']) ? intval($_GET['folder']) : null;
-        
+
         $offset = ($page - 1) * $limit;
-        
+
         try {
             // データベース接続パラメータの設定
             $db_directory = '../../db';
             $dsn = 'sqlite:' . $db_directory . '/uploader.db';
             $pdo = new PDO($dsn);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            
+
             $sql = "SELECT id, origin_file_name as original_name, origin_file_name as filename, 
                            comment, size as file_size, 'application/octet-stream' as mime_type, 
                            input_date as upload_date, \"count\" as download_count, folder_id 
                     FROM uploaded WHERE 1=1";
             $params = array();
-            
+
             if ($folder !== null) {
                 $sql .= " AND folder_id = ?";
                 $params[] = $folder;
@@ -60,7 +58,7 @@ class FileApiHandler
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // 総件数取得
             $countSql = "SELECT COUNT(*) FROM uploaded WHERE 1=1";
             $countParams = array();
@@ -71,7 +69,7 @@ class FileApiHandler
             $countStmt = $pdo->prepare($countSql);
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
-            
+
             // 成功レスポンスを直接送信
             http_response_code(200);
             header('Content-Type: application/json; charset=utf-8');
@@ -89,7 +87,6 @@ class FileApiHandler
                 'timestamp' => date('c')
             ), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             exit;
-            
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
@@ -106,7 +103,7 @@ class FileApiHandler
         ob_start();
         include 'upload.php';
         $output = ob_get_clean();
-        
+
         // 既存のoutputがJSONかどうかチェックして適切に処理
         $decoded = json_decode($output, true);
         if (json_last_error() === JSON_ERROR_NONE) {
@@ -130,21 +127,20 @@ class FileApiHandler
             $dsn = 'sqlite:' . $db_directory . '/uploader.db';
             $pdo = new PDO($dsn);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            
+
             $stmt = $pdo->prepare("SELECT id, origin_file_name as original_name, origin_file_name as filename, 
                                           comment, size as file_size, 'application/octet-stream' as mime_type, 
                                           input_date as upload_date, \"count\" as download_count, folder_id 
                                    FROM uploaded WHERE id = ?");
             $stmt->execute(array($fileId));
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$file) {
                 $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
                 return;
             }
-            
+
             $this->response->success('ファイル情報を取得しました', ['file' => $file]);
-            
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
@@ -162,29 +158,28 @@ class FileApiHandler
             $dsn = 'sqlite:' . $db_directory . '/uploader.db';
             $pdo = new PDO($dsn);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            
+
             // ファイル情報取得
             $stmt = $pdo->prepare("SELECT origin_file_name as filename FROM uploaded WHERE id = ?");
             $stmt->execute(array($fileId));
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$file) {
                 $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
                 return;
             }
-            
+
             // 物理ファイル削除
             $filePath = '../../data/' . $file['filename'];
             if (file_exists($filePath)) {
                 unlink($filePath);
             }
-            
+
             // データベースから削除
             $stmt = $pdo->prepare("DELETE FROM uploaded WHERE id = ?");
             $stmt->execute(array($fileId));
-            
+
             $this->response->success('ファイルを削除しました', ['file_id' => $fileId]);
-            
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
@@ -222,14 +217,19 @@ class FileApiHandler
         // ファイルアップロードチェック
         error_log('DEBUG: $_FILES = ' . print_r($_FILES, true));
         error_log('DEBUG: $_POST = ' . print_r($_POST, true));
-        
+
         if (!isset($_FILES['file'])) {
             $this->response->error('ファイルが送信されていません', [], 400, 'FILE_UPLOAD_ERROR');
             return;
         }
-        
+
         if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-            $this->response->error('ファイルのアップロードに失敗しました: エラーコード ' . $_FILES['file']['error'], [], 400, 'FILE_UPLOAD_ERROR');
+            $this->response->error(
+                'ファイルのアップロードに失敗しました: エラーコード ' . $_FILES['file']['error'],
+                [],
+                400,
+                'FILE_UPLOAD_ERROR'
+            );
             return;
         }
 
@@ -289,8 +289,17 @@ class FileApiHandler
             // 新しいファイルパスを決定
             $data_directory = '../../data';
             if (isset($this->config['encrypt_filename']) && $this->config['encrypt_filename']) {
-                $newFilePath = $data_directory . '/file_' . str_replace(['\\', '/', ':', '*', '?', '"', '<', '>', '|'], '', 
-                    openssl_encrypt($fileId, 'aes-256-ecb', $this->config['key'])) . '.' . $ext;
+                $encryptedId = openssl_encrypt(
+                    $fileId,
+                    'aes-256-ecb',
+                    $this->config['key']
+                );
+                $cleanId = str_replace(
+                    ['\\', '/', ':', '*', '?', '"', '<', '>', '|'],
+                    '',
+                    $encryptedId
+                );
+                $newFilePath = $data_directory . '/file_' . $cleanId . '.' . $ext;
             } else {
                 $newFilePath = $data_directory . '/file_' . $fileId . '.' . $ext;
             }
@@ -316,7 +325,6 @@ class FileApiHandler
                 'new_filename' => $newFileName,
                 'size' => $fileSize
             ]);
-
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
@@ -346,7 +354,7 @@ class FileApiHandler
         }
 
         $input = json_decode(file_get_contents('php://input'), true);
-        
+
         if (!isset($input['comment'])) {
             $this->response->error('コメントが必要です', [], 400, 'COMMENT_REQUIRED');
             return;
@@ -382,7 +390,11 @@ class FileApiHandler
 
             // 履歴記録（コメントが変更された場合のみ）
             if ($existingFile['comment'] !== $newComment) {
-                $stmt = $pdo->prepare("INSERT INTO file_history (file_id, old_comment, new_comment, change_type, changed_at, changed_by) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $pdo->prepare(
+                    "INSERT INTO file_history " .
+                    "(file_id, old_comment, new_comment, change_type, changed_at, changed_by) " .
+                    "VALUES (?, ?, ?, ?, ?, ?)"
+                );
                 $stmt->execute(array(
                     $fileId,
                     $existingFile['comment'],
@@ -397,7 +409,6 @@ class FileApiHandler
                 'file_id' => $fileId,
                 'new_comment' => $newComment
             ]);
-
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');

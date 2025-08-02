@@ -1,3 +1,7 @@
+<?php
+
+// Footer partial - Modal dialogs and scripts
+?>
     <div class="modal fade" id="OKModal" tabindex="-1" aria-labelledby="OKModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -34,7 +38,9 @@
     </div>
     
     <!-- Bootstrap 5 JavaScript Bundle (no jQuery required) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
 
     
 

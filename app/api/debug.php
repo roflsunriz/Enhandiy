@@ -89,5 +89,3 @@ echo json_encode([
         'timestamp' => date('c')
     ]
 ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-?>

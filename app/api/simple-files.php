@@ -48,15 +48,15 @@ try {
     $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $limit = isset($_GET['limit']) ? min(100, max(1, intval($_GET['limit']))) : 20;
     $folder = (isset($_GET['folder']) && $_GET['folder'] !== '') ? intval($_GET['folder']) : null;
-    
+
     $offset = ($page - 1) * $limit;
-    
+
     // データベース接続
     $db_directory = '../../db';
     $dsn = 'sqlite:' . $db_directory . '/uploader.db';
     $pdo = new PDO($dsn);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    
+
     // ファイル一覧取得
     $sql = "SELECT id, origin_file_name as original_name, origin_file_name as filename, 
                    comment, dl_key as password_dl, del_key as password_del, 
@@ -64,20 +64,20 @@ try {
                    input_date as upload_date, count as download_count, folder_id 
             FROM uploaded WHERE 1=1";
     $params = array();
-    
+
     if ($folder !== null) {
         $sql .= " AND folder_id = ?";
         $params[] = $folder;
     }
-    
+
     $sql .= " ORDER BY input_date DESC LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
-    
+
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // 総件数取得
     $countSql = "SELECT COUNT(*) FROM uploaded WHERE 1=1";
     $countParams = array();
@@ -88,7 +88,7 @@ try {
     $countStmt = $pdo->prepare($countSql);
     $countStmt->execute($countParams);
     $total = $countStmt->fetchColumn();
-    
+
     // 成功レスポンス
     http_response_code(200);
     echo json_encode([
@@ -104,7 +104,6 @@ try {
         ],
         'timestamp' => date('c')
     ], JSON_UNESCAPED_UNICODE);
-    
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
@@ -113,5 +112,3 @@ try {
         'timestamp' => date('c')
     ]);
 }
-
-?>

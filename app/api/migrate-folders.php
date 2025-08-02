@@ -43,7 +43,6 @@ if (!$foldersTableExists) {
         created_at INTEGER NOT NULL,
         FOREIGN KEY (parent_id) REFERENCES folders(id) ON DELETE CASCADE
     )";
-    
     try {
         $db->exec($query);
         echo "✅ foldersテーブルを作成しました。\n";
@@ -74,7 +73,7 @@ if (!$hasFolderId) {
     try {
         $db->exec($query);
         echo "✅ uploadedテーブルにfolder_idカラムを追加しました。\n";
-        
+
         // FOREIGN KEY制約を追加（SQLiteの制限で後から追加は困難なので、インデックスのみ作成）
         $db->exec("CREATE INDEX IF NOT EXISTS idx_uploaded_folder_id ON uploaded(folder_id)");
         echo "✅ folder_idカラムにインデックスを作成しました。\n";
@@ -122,5 +121,3 @@ foreach ($uploadedColumns as $col) {
         echo "- {$col['name']} ({$col['type']})\n";
     }
 }
-
-?>

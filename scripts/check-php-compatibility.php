@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHP 5.6互換性チェックスクリプト
  * 使用している機能がPHP 5.6で動作するかチェック
@@ -27,7 +28,7 @@ echo "\n";
 // 必要な関数のチェック
 $requiredFunctions = [
     'json_decode' => '5.2.0',
-    'json_encode' => '5.2.0', 
+    'json_encode' => '5.2.0',
     'openssl_encrypt' => '5.3.0',
     'file_get_contents' => '4.3.0',
     'file_put_contents' => '5.0.0'
@@ -64,20 +65,19 @@ try {
     // configファイルの基本テスト
     if (file_exists('config/config.php.example')) {
         echo "✅ config.php.example が存在します\n";
-        
+
         // 一時的にconfig.phpを作成してテスト
         copy('config/config.php.example', 'config/config.php.test');
         include 'config/config.php.test';
-        
+
         $config = new config();
         $settings = $config->index();
-        
+
         if (isset($settings['version'])) {
             echo "✅ バージョン情報取得: " . $settings['version'] . "\n";
         }
-        
+
         unlink('config/config.php.test');
-        
     } else {
         echo "❌ config.php.example が見つかりません\n";
         $configTest = false;
@@ -104,4 +104,3 @@ if (empty($missingExtensions) && $configTest) {
 
 echo "\n推奨環境: PHP 7.4以上\n";
 echo "最小要件: PHP 5.6以上\n";
-?>

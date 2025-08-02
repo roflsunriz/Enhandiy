@@ -1,7 +1,11 @@
 <?php
+
 /**
  * リリース管理スクリプト
  * composer.jsonとconfig.phpのバージョンを同期します
+ *
+ * このファイルはクラス定義とCLI実行の両方を含んでいます。
+ * CLI実行時のみサイドエフェクトが発生します。
  */
 
 class ReleaseManager

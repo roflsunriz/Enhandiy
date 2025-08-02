@@ -35,11 +35,10 @@ try {
         ), JSON_UNESCAPED_UNICODE);
         exit;
     }
-    
+
     require_once '../../config/config.php';
     $configObj = new config();
     $config = $configObj->index();
-    
 } catch (Exception $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
@@ -72,11 +71,16 @@ if (!isset($config['api_enabled']) || !$config['api_enabled']) {
 
 // ルーター読み込みとリクエスト処理
 try {
+    require_once 'auth.php';
+    require_once 'response.php';
+    require_once __DIR__ . '/../../src/Core/Utils.php';
+    require_once 'handlers/FileApiHandler.php';
+    require_once 'handlers/FolderApiHandler.php';
+    require_once 'handlers/SystemApiHandler.php';
     require_once 'router.php';
-    
+
     $router = new ApiRouter($config);
     $router->handleRequest();
-    
 } catch (Exception $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
@@ -91,5 +95,3 @@ try {
     error_log('API error: ' . $e->getMessage());
     exit;
 }
-
-?>

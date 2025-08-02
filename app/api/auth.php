@@ -96,13 +96,13 @@ class ApiAuth
     /**
      * APIキーの検証
      */
-    private function validateApiKey($apiKey) {
+    private function validateApiKey($apiKey)
+    {
         if (!isset($this->config['api_keys'][$apiKey])) {
             return false;
         }
 
         $keyConfig = $this->config['api_keys'][$apiKey];
-        
         // 有効期限チェック
         if (isset($keyConfig['expires']) && $keyConfig['expires']) {
             $expiryTime = strtotime($keyConfig['expires']);
@@ -113,16 +113,15 @@ class ApiAuth
 
         // 権限を設定
         $this->permissions = isset($keyConfig['permissions']) ? $keyConfig['permissions'] : array();
-        
         return true;
     }
 
     /**
      * レート制限チェック
      */
-    private function checkRateLimit($apiKey) {
+    private function checkRateLimit($apiKey)
+    {
         $rateLimit = $this->config['api_rate_limit'];
-        
         // レート制限が0の場合は無制限
         if ($rateLimit <= 0) {
             return true;
@@ -131,26 +130,23 @@ class ApiAuth
         // レート制限の実装（簡易版：1時間ごとのリセット）
         $rateLimitFile = dirname(__FILE__) . '/data/rate_limits/' . md5($apiKey) . '.json';
         $rateLimitDir = dirname($rateLimitFile);
-        
         if (!is_dir($rateLimitDir)) {
             mkdir($rateLimitDir, 0755, true);
         }
 
         $currentHour = date('Y-m-d-H');
         $rateLimitData = array();
-        
         if (file_exists($rateLimitFile)) {
             $rateLimitData = json_decode(file_get_contents($rateLimitFile), true) ?: array();
         }
 
         // 古いデータをクリーンアップ
-        $rateLimitData = array_filter($rateLimitData, function($hour) use ($currentHour) {
+        $rateLimitData = array_filter($rateLimitData, function ($hour) use ($currentHour) {
             return $hour >= date('Y-m-d-H', strtotime('-1 hour'));
         }, ARRAY_FILTER_USE_KEY);
 
         // 現在の時間のリクエスト数をチェック
         $currentRequests = isset($rateLimitData[$currentHour]) ? $rateLimitData[$currentHour] : 0;
-        
         if ($currentRequests >= $rateLimit) {
             return false;
         }
@@ -165,7 +161,8 @@ class ApiAuth
     /**
      * エラーレスポンスを送信
      */
-    private function sendError($statusCode, $errorCode, $message) {
+    private function sendError($statusCode, $errorCode, $message)
+    {
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(array(
@@ -179,4 +176,3 @@ class ApiAuth
         exit;
     }
 }
-

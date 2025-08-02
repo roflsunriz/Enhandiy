@@ -1,9 +1,12 @@
 <?php
+
 /**
  * モーダルダイアログ部分テンプレート
  * ファイル編集、差し替えなどのモーダルを担当
  */
+
 ?>
+
 
 <!-- ファイル編集モーダル -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -17,10 +20,14 @@
         <!-- タブナビゲーション -->
         <ul class="nav nav-tabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="comment-tab" data-bs-toggle="tab" data-bs-target="#commentTab" type="button" role="tab" aria-controls="commentTab" aria-selected="true">コメント編集</button>
+            <button class="nav-link active" id="comment-tab" data-bs-toggle="tab"
+                    data-bs-target="#commentTab" type="button" role="tab"
+                    aria-controls="commentTab" aria-selected="true">コメント編集</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="replace-tab" data-bs-toggle="tab" data-bs-target="#replaceTab" type="button" role="tab" aria-controls="replaceTab" aria-selected="false">ファイル差し替え</button>
+            <button class="nav-link" id="replace-tab" data-bs-toggle="tab"
+                    data-bs-target="#replaceTab" type="button" role="tab"
+                    aria-controls="replaceTab" aria-selected="false">ファイル差し替え</button>
           </li>
         </ul>
         
@@ -54,20 +61,21 @@
                 <input type="file" class="form-control" id="replaceFileInput" name="file" required>
                 <p class="help-block">
                   <?php echo isset($max_file_size) ? $max_file_size : 100; ?>MBまでのファイルがアップロードできます。<br>
-                  対応拡張子： <?php 
+                  対応拡張子： <?php
                     if (isset($extension) && is_array($extension)) {
-                        foreach($extension as $ext){
-                            echo $ext.' ';
+                        foreach ($extension as $ext) {
+                            echo $ext . ' ';
                         }
                     } else {
                         echo 'zip pdf jpg png';
                     }
-                  ?>
+                    ?>
                 </p>
               </div>
               <div class="form-group">
                 <label for="modalReplaceKeyInput">差し替えキー</label>
-                <input type="password" class="form-control" id="modalReplaceKeyInput" name="replacekey" placeholder="差し替えキーを入力してください" required>
+                <input type="password" class="form-control" id="modalReplaceKeyInput"
+                       name="replacekey" placeholder="差し替えキーを入力してください" required>
                 <p class="help-block">アップロード時に設定した差し替えキーを入力してください。</p>
               </div>
               <input type="hidden" id="replaceFileId">
@@ -123,14 +131,16 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="shareMaxDownloads">最大ダウンロード数</label>
-                  <input type="number" class="form-control" id="shareMaxDownloads" min="1" max="1000" placeholder="制限なし">
+                  <input type="number" class="form-control" id="shareMaxDownloads"
+                         min="1" max="1000" placeholder="制限なし">
                   <p class="help-block">指定した回数ダウンロードされると、リンクが無効になります。</p>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="shareExpiresDays">有効期限（日数）</label>
-                  <input type="number" class="form-control" id="shareExpiresDays" min="1" max="365" placeholder="制限なし">
+                  <input type="number" class="form-control" id="shareExpiresDays"
+                         min="1" max="365" placeholder="制限なし">
                   <p class="help-block">指定した日数後にリンクが無効になります。</p>
                 </div>
               </div>
@@ -170,7 +180,8 @@
             <div class="input-group">
               <textarea class="form-control" id="shareUrl" rows="3" readonly></textarea>
               <span class="input-group-btn" style="vertical-align: top;">
-                <button class="btn btn-success" type="button" id="copyShareUrlBtn" title="クリップボードにコピー" style="height: 80px;">
+                <button class="btn btn-success" type="button" id="copyShareUrlBtn"
+                        title="クリップボードにコピー" style="height: 80px;">
                   <span class="glyphicon glyphicon-copy"></span><br>
                   コピー
                 </button>

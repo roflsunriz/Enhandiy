@@ -1,8 +1,10 @@
 <?php
+
 /**
  * ページ専用JavaScript部分テンプレート
  * インラインJavaScriptとデータの受け渡しを担当
  */
+
 ?>
 
 <!-- ファイルデータをJavaScriptに渡す -->
@@ -15,8 +17,12 @@
         allow_comment_edit: <?php echo json_encode(isset($allow_comment_edit) ? $allow_comment_edit : false); ?>,
         allow_file_replace: <?php echo json_encode(isset($allow_file_replace) ? $allow_file_replace : false); ?>,
         folders_enabled: <?php echo json_encode(isset($folders_enabled) ? $folders_enabled : false); ?>,
-        upload_method_priority: <?php echo json_encode(isset($upload_method_priority) ? $upload_method_priority : 'resumable'); ?>,
-        upload_fallback_enabled: <?php echo json_encode(isset($upload_fallback_enabled) ? $upload_fallback_enabled : true); ?>,
+        upload_method_priority: <?php
+            echo json_encode(isset($upload_method_priority) ? $upload_method_priority : 'resumable');
+        ?>,
+        upload_fallback_enabled: <?php
+            echo json_encode(isset($upload_fallback_enabled) ? $upload_fallback_enabled : true);
+        ?>,
         csrf_token: <?php echo json_encode(isset($csrf_token) ? $csrf_token : ''); ?>
     };
   
@@ -53,7 +59,8 @@
         
         // URLからエラーパラメータを削除（ブラウザの履歴を汚さないため）
         if (window.history && window.history.replaceState) {
-          const cleanUrl = window.location.pathname + window.location.search.replace(/[?&]error=[^&]*/, '').replace(/^&/, '?');
+          const cleanUrl = window.location.pathname + 
+                           window.location.search.replace(/[?&]error=[^&]*/, '').replace(/^&/, '?');
           window.history.replaceState({}, document.title, cleanUrl);
         }
       } else {

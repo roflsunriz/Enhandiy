@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Tus.io プロトコル対応アップロードAPI
  * phpUploader - Tus.io Server Implementation
@@ -10,8 +11,8 @@ ini_set('max_execution_time', 0);
 set_time_limit(0);
 
 // Docker環境用のデバッグログ
-error_log("Tus.io Request - Method: " . $_SERVER['REQUEST_METHOD'] . 
-          ", URI: " . $_SERVER['REQUEST_URI'] . 
+error_log("Tus.io Request - Method: " . $_SERVER['REQUEST_METHOD'] .
+          ", URI: " . $_SERVER['REQUEST_URI'] .
           ", PATH_INFO: " . ($_SERVER['PATH_INFO'] ?? 'not set') .
           ", QUERY_STRING: " . ($_SERVER['QUERY_STRING'] ?? 'not set'));
 
@@ -82,9 +83,10 @@ try {
 /**
  * OPTIONSリクエスト - サーバー機能を返す
  */
-function handleOptions() {
+function handleOptions()
+{
     global $tus_version, $max_file_size;
-    
+
     header('Tus-Version: ' . $tus_version);
     header('Tus-Extension: creation,expiration');
     header('Tus-Max-Size: ' . ($max_file_size * 1024 * 1024));
@@ -95,9 +97,10 @@ function handleOptions() {
 /**
  * POSTリクエスト - 新しいアップロードセッション作成
  */
-function handleCreate() {
+function handleCreate()
+{
     global $db, $data_directory, $max_file_size;
-    
+
     // Upload-Lengthヘッダーをチェック
     $uploadLength = $_SERVER['HTTP_UPLOAD_LENGTH'] ?? null;
     if (!$uploadLength || !is_numeric($uploadLength)) {
@@ -105,33 +108,33 @@ function handleCreate() {
         echo json_encode(['error' => 'Upload-Length header required']);
         exit;
     }
-    
+
     $fileSize = intval($uploadLength);
-    
+
     // ファイルサイズチェック
     if ($fileSize > $max_file_size * 1024 * 1024) {
         http_response_code(413);
         echo json_encode(['error' => 'File size exceeds limit']);
         exit;
     }
-    
+
     // メタデータの解析
     $metadata = parseMetadata($_SERVER['HTTP_UPLOAD_METADATA'] ?? '');
-    
+
     // アップロードIDを生成
     $uploadId = generateUploadId();
     $currentTime = time();
     $expiresAt = $currentTime + (24 * 60 * 60); // 24時間で期限切れ
-    
+
     // チャンクファイルのパス
     $chunkPath = $data_directory . '/chunks/' . $uploadId . '.chunk';
-    
+
     // チャンクディレクトリが存在しない場合は作成
     $chunkDir = dirname($chunkPath);
     if (!is_dir($chunkDir)) {
         mkdir($chunkDir, 0755, true);
     }
-    
+
     // データベースに記録
     try {
         // 差し替えキーの検証
@@ -148,7 +151,7 @@ function handleCreate() {
                 dl_key, del_key, replace_key, max_downloads, share_expires_at, folder_id
             ) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
+
         $result = $sql->execute([
             $uploadId,
             $fileSize,
@@ -165,20 +168,19 @@ function handleCreate() {
             isset($metadata['expires_days']) ? $currentTime + (intval($metadata['expires_days']) * 24 * 60 * 60) : null,
             isset($metadata['folder_id']) ? intval($metadata['folder_id']) : null
         ]);
-        
+
         if (!$result) {
             throw new Exception('Database write failed');
         }
-        
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to create upload session']);
         exit;
     }
-    
+
     // 空のチャンクファイルを作成
     touch($chunkPath);
-    
+
     // レスポンス - GETパラメータ形式を使用
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $baseUrl = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . '/tus-upload.php';
@@ -190,18 +192,25 @@ function handleCreate() {
 /**
  * PATCHリクエスト - チャンクデータアップロード
  */
-function handlePatch() {
+function handlePatch()
+{
     global $db, $key, $extension;
-    
+
     $uploadId = getUploadIdFromPath();
     error_log("PATCH request - Upload ID: " . ($uploadId ? $uploadId : 'null'));
-    
+
     if (!$uploadId) {
         http_response_code(404);
-        echo json_encode(['error' => 'Upload not found', 'debug' => ['request_uri' => $_SERVER['REQUEST_URI'], 'path_info' => $_SERVER['PATH_INFO'] ?? 'not set']]);
+        echo json_encode([
+            'error' => 'Upload not found',
+            'debug' => [
+                'request_uri' => $_SERVER['REQUEST_URI'],
+                'path_info' => $_SERVER['PATH_INFO'] ?? 'not set'
+            ]
+        ]);
         exit;
     }
-    
+
     // アップロード情報を取得
     $upload = getUploadInfo($uploadId);
     if (!$upload) {
@@ -209,14 +218,14 @@ function handlePatch() {
         echo json_encode(['error' => 'Upload not found']);
         exit;
     }
-    
+
     // 期限切れチェック
     if ($upload['expires_at'] && time() > $upload['expires_at']) {
         http_response_code(410);
         echo json_encode(['error' => 'Upload expired']);
         exit;
     }
-    
+
     // Upload-Offsetヘッダーをチェック
     $uploadOffset = $_SERVER['HTTP_UPLOAD_OFFSET'] ?? null;
     if (!is_numeric($uploadOffset)) {
@@ -224,13 +233,13 @@ function handlePatch() {
         echo json_encode(['error' => 'Upload-Offset header required']);
         exit;
     }
-    
+
     $offset = intval($uploadOffset);
-    
+
     // チャンクファイルの実際のサイズを確認
     $actualOffset = file_exists($upload['chunk_path']) ? filesize($upload['chunk_path']) : 0;
     error_log("Offset check - DB: {$upload['offset']}, File: {$actualOffset}, Request: {$offset}");
-    
+
     // データベースのオフセットと実際のファイルサイズが異なる場合は修正
     if ($actualOffset !== $upload['offset']) {
         error_log("Correcting offset mismatch - updating DB offset from {$upload['offset']} to {$actualOffset}");
@@ -238,7 +247,7 @@ function handlePatch() {
         $sql->execute([$actualOffset, $uploadId]);
         $upload['offset'] = $actualOffset;
     }
-    
+
     // オフセットが現在の進行状況と一致するかチェック
     if ($offset !== $upload['offset']) {
         error_log("Offset conflict - expected: {$upload['offset']}, received: {$offset}");
@@ -251,16 +260,18 @@ function handlePatch() {
         ]);
         exit;
     }
-    
+
     // チャンクデータを読み取り
     $input = fopen('php://input', 'r');
     $chunkFile = fopen($upload['chunk_path'], 'a');
-    
+
     $bytesWritten = 0;
     while (!feof($input)) {
         $data = fread($input, 8192);
-        if ($data === false) break;
-        
+        if ($data === false) {
+            break;
+        }
+
         $written = fwrite($chunkFile, $data);
         if ($written === false) {
             fclose($input);
@@ -271,13 +282,13 @@ function handlePatch() {
         }
         $bytesWritten += $written;
     }
-    
+
     fclose($input);
     fclose($chunkFile);
-    
+
     // 新しいオフセットを計算
     $newOffset = $offset + $bytesWritten;
-    
+
     // データベースを更新
     try {
         $sql = $db->prepare("UPDATE tus_uploads SET offset = ?, updated_at = ? WHERE id = ?");
@@ -287,12 +298,12 @@ function handlePatch() {
         echo json_encode(['error' => 'Database update failed']);
         exit;
     }
-    
+
     // アップロード完了チェック
     if ($newOffset >= $upload['file_size']) {
         completeUpload($uploadId, $upload);
     }
-    
+
     header('Upload-Offset: ' . $newOffset);
     http_response_code(204);
 }
@@ -300,17 +311,24 @@ function handlePatch() {
 /**
  * HEADリクエスト - アップロード進行状況確認
  */
-function handleHead() {
+function handleHead()
+{
     $uploadId = getUploadIdFromPath();
     error_log("HEAD request - Upload ID: " . ($uploadId ? $uploadId : 'null'));
-    
+
     if (!$uploadId) {
         error_log("HEAD request failed - no upload ID found");
         http_response_code(404);
-        echo json_encode(['error' => 'Upload not found', 'debug' => ['request_uri' => $_SERVER['REQUEST_URI'], 'query_string' => $_SERVER['QUERY_STRING'] ?? 'not set']]);
+        echo json_encode([
+            'error' => 'Upload not found',
+            'debug' => [
+                'request_uri' => $_SERVER['REQUEST_URI'],
+                'query_string' => $_SERVER['QUERY_STRING'] ?? 'not set'
+            ]
+        ]);
         exit;
     }
-    
+
     $upload = getUploadInfo($uploadId);
     if (!$upload) {
         error_log("HEAD request failed - upload info not found for ID: " . $uploadId);
@@ -318,7 +336,7 @@ function handleHead() {
         echo json_encode(['error' => 'Upload session not found', 'upload_id' => $uploadId]);
         exit;
     }
-    
+
     // 期限切れチェック
     if ($upload['expires_at'] && time() > $upload['expires_at']) {
         error_log("HEAD request failed - upload expired for ID: " . $uploadId);
@@ -326,12 +344,12 @@ function handleHead() {
         echo json_encode(['error' => 'Upload expired', 'upload_id' => $uploadId]);
         exit;
     }
-    
+
     // チャンクファイルの実際のサイズを確認
     $actualOffset = file_exists($upload['chunk_path']) ? filesize($upload['chunk_path']) : 0;
-    
+
     error_log("HEAD request success - ID: {$uploadId}, offset: {$actualOffset}, size: {$upload['file_size']}");
-    
+
     header('Upload-Offset: ' . $actualOffset);
     header('Upload-Length: ' . $upload['file_size']);
     header('Cache-Control: no-store');
@@ -341,18 +359,19 @@ function handleHead() {
 /**
  * アップロード完了処理
  */
-function completeUpload($uploadId, $upload) {
+function completeUpload($uploadId, $upload)
+{
     global $db, $data_directory, $key, $encrypt_filename, $extension;
-    
+
     // デバッグログ開始
     error_log("DEBUG completeUpload START - Upload ID: $uploadId");
-    
+
     $metadata = json_decode($upload['metadata'], true);
     $originalFileName = $metadata['filename'] ?? 'unknown';
-    
+
     error_log("DEBUG completeUpload - metadata: " . print_r($metadata, true));
     error_log("DEBUG completeUpload - originalFileName: $originalFileName");
-    
+
     // 拡張子チェック
     $ext = pathinfo($originalFileName, PATHINFO_EXTENSION);
     error_log("DEBUG completeUpload - extension: $ext, allowed: " . print_r($extension, true));
@@ -364,7 +383,7 @@ function completeUpload($uploadId, $upload) {
         return false;
     }
     error_log("DEBUG completeUpload - Extension check passed");
-    
+
     try {
         error_log("DEBUG completeUpload - Starting database insert");
         // uploadedテーブルに移動
@@ -374,7 +393,7 @@ function completeUpload($uploadId, $upload) {
                 dl_key_hash, del_key_hash, replace_key, max_downloads, expires_at, folder_id
             ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
+
         $insertData = [
             htmlspecialchars($originalFileName, ENT_QUOTES, 'UTF-8'),
             htmlspecialchars($upload['comment'] ?? '', ENT_QUOTES, 'UTF-8'),
@@ -387,19 +406,19 @@ function completeUpload($uploadId, $upload) {
             $upload['share_expires_at'],
             $upload['folder_id']
         ];
-        
+
         error_log("DEBUG completeUpload - Insert data: " . print_r($insertData, true));
         $result = $sql->execute($insertData);
-        
+
         if (!$result) {
             $errorInfo = $sql->errorInfo();
             error_log("DEBUG completeUpload - SQL Error: " . print_r($errorInfo, true));
             throw new Exception('Failed to insert into uploaded table: ' . $errorInfo[2]);
         }
         error_log("DEBUG completeUpload - Database insert successful");
-        
+
         $fileId = $db->lastInsertId();
-        
+
         // 最終ファイルパスを決定
         if ($encrypt_filename) {
             // セキュアなファイル名の生成（ハッシュ化）
@@ -409,24 +428,23 @@ function completeUpload($uploadId, $upload) {
         } else {
             $finalPath = $data_directory . '/file_' . $fileId . '.' . $ext;
         }
-        
+
         // チャンクファイルを最終的な場所に移動
         if (!rename($upload['chunk_path'], $finalPath)) {
             throw new Exception('Failed to move file');
         }
-        
+
         // encrypt_filenameが有効な場合は、データベースにハッシュ化されたファイル名を記録
         if ($encrypt_filename && isset($storedFileName)) {
             $updateStmt = $db->prepare("UPDATE uploaded SET stored_file_name = ? WHERE id = ?");
             $updateStmt->execute([$storedFileName, $fileId]);
         }
-        
+
         // tus_uploadsテーブルを更新
         $sql = $db->prepare("UPDATE tus_uploads SET completed = 1, final_file_id = ? WHERE id = ?");
         $sql->execute([$fileId, $uploadId]);
-        
+
         return true;
-        
     } catch (Exception $e) {
         // エラー時はチャンクファイルを削除
         error_log("DEBUG completeUpload - ERROR: " . $e->getMessage());
@@ -441,10 +459,13 @@ function completeUpload($uploadId, $upload) {
 /**
  * ヘルパー関数群
  */
-function parseMetadata($metadataHeader) {
+function parseMetadata($metadataHeader)
+{
     $metadata = [];
-    if (empty($metadataHeader)) return $metadata;
-    
+    if (empty($metadataHeader)) {
+        return $metadata;
+    }
+
     $pairs = explode(',', $metadataHeader);
     foreach ($pairs as $pair) {
         $parts = explode(' ', trim($pair), 2);
@@ -457,22 +478,25 @@ function parseMetadata($metadataHeader) {
     return $metadata;
 }
 
-function generateUploadId() {
+function generateUploadId()
+{
     return uniqid('tus_', true) . '_' . bin2hex(random_bytes(8));
 }
 
-function getCurrentUrl() {
+function getCurrentUrl()
+{
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $baseUrl = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . '/tus-upload.php';
     return $baseUrl;
 }
 
-function getUploadIdFromPath() {
+function getUploadIdFromPath()
+{
     // 1. GETパラメータから取得を試行
     if (isset($_GET['upload_id']) && strpos($_GET['upload_id'], 'tus_') === 0) {
         return $_GET['upload_id'];
     }
-    
+
     // 2. PATH_INFOから取得を試行
     if (isset($_SERVER['PATH_INFO'])) {
         $pathInfo = trim($_SERVER['PATH_INFO'], '/');
@@ -480,31 +504,30 @@ function getUploadIdFromPath() {
             return $pathInfo;
         }
     }
-    
+
     // 3. REQUEST_URIから取得を試行
     $path = $_SERVER['REQUEST_URI'];
     $path = parse_url($path, PHP_URL_PATH);
     $parts = explode('/', $path);
-    
+
     foreach ($parts as $part) {
         if (strpos($part, 'tus_') === 0) {
             return $part;
         }
     }
-    
+
     // 4. デバッグ情報をログに記録
-    error_log("Upload ID not found - REQUEST_URI: " . $_SERVER['REQUEST_URI'] . 
-              ", PATH_INFO: " . ($_SERVER['PATH_INFO'] ?? 'not set') . 
+    error_log("Upload ID not found - REQUEST_URI: " . $_SERVER['REQUEST_URI'] .
+              ", PATH_INFO: " . ($_SERVER['PATH_INFO'] ?? 'not set') .
               ", QUERY_STRING: " . ($_SERVER['QUERY_STRING'] ?? 'not set'));
-    
+
     return null;
 }
 
-function getUploadInfo($uploadId) {
+function getUploadInfo($uploadId)
+{
     global $db;
     $sql = $db->prepare("SELECT * FROM tus_uploads WHERE id = ?");
     $sql->execute([$uploadId]);
     return $sql->fetch();
 }
-
-?>

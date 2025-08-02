@@ -1,4 +1,5 @@
 <?php
+
 /**
  * コメント編集専用エンドポイント
  * CSRFトークンによる保護で安全な編集機能を提供
@@ -85,7 +86,6 @@ try {
         ]);
         exit;
     }
-    
     require_once $configPath;
     $configObj = new config();
     $config = $configObj->index();
@@ -175,7 +175,6 @@ try {
             'timestamp' => date('c')
         ]);
     }
-
 } catch (PDOException $e) {
     error_log('Comment edit database error: ' . $e->getMessage());
     http_response_code(500);
@@ -195,4 +194,3 @@ try {
         'timestamp' => date('c')
     ]);
 }
-?>

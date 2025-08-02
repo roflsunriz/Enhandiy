@@ -75,12 +75,14 @@ if (isset($_POST['expires_days']) && $expires_at !== $current_expires_at) {
 }
 
 if ($should_update) {
-    $updateStmt = $db->prepare("UPDATE uploaded SET max_downloads = :max_downloads, expires_at = :expires_at WHERE id = :id");
+    $updateStmt = $db->prepare(
+        "UPDATE uploaded SET max_downloads = :max_downloads, expires_at = :expires_at WHERE id = :id"
+    );
     $updateStmt->bindValue(':max_downloads', $max_downloads);
     $updateStmt->bindValue(':expires_at', $expires_at);
     $updateStmt->bindValue(':id', $id);
     $updateStmt->execute();
-    
+
     // 更新後の値を使用
     $current_max_downloads = $max_downloads;
     $current_expires_at = $expires_at;

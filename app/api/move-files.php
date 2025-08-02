@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 複数ファイルの一括移動API
  */
@@ -68,7 +69,7 @@ try {
     // データベース接続
     $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    
+
     // フォルダが指定されている場合、存在確認
     if ($folderId !== null) {
         $stmt = $db->prepare("SELECT id FROM folders WHERE id = ?");
@@ -79,13 +80,13 @@ try {
             exit;
         }
     }
-    
+
     // 指定されたファイルの存在確認
     $placeholders = str_repeat('?,', count($fileIds) - 1) . '?';
     $stmt = $db->prepare("SELECT id FROM uploaded WHERE id IN ($placeholders)");
     $stmt->execute($fileIds);
     $existingFiles = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    
+
     $notFoundFiles = array_diff($fileIds, $existingFiles);
     if (!empty($notFoundFiles)) {
         http_response_code(400);
@@ -95,24 +96,22 @@ try {
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    
+
     // 一括移動実行
     $stmt = $db->prepare("UPDATE uploaded SET folder_id = ? WHERE id IN ($placeholders)");
     $params = array_merge([$folderId], $fileIds);
     $stmt->execute($params);
-    
+
     $affectedRows = $stmt->rowCount();
-    
+
     echo json_encode([
         'success' => true,
         'message' => "{$affectedRows}個のファイルを移動しました",
         'moved_count' => $affectedRows,
         'target_folder_id' => $folderId
     ], JSON_UNESCAPED_UNICODE);
-    
 } catch (Exception $e) {
     error_log('Bulk move error: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode(['error' => 'ファイルの移動に失敗しました'], JSON_UNESCAPED_UNICODE);
 }
-?>

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+// phpcs:disable PSR1.Files.SideEffects
 require_once __DIR__ . '/../../../src/Core/Utils.php';
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
  * システムAPI操作ハンドラー
@@ -48,7 +50,6 @@ class SystemApiHandler
             }
 
             $this->response->success('システム状態を取得しました', $statusInfo);
-
         } catch (Exception $e) {
             error_log('System status error: ' . $e->getMessage());
             $this->response->error('システム状態の取得に失敗しました', [], 500, 'SYSTEM_ERROR');
@@ -90,7 +91,6 @@ class SystemApiHandler
                     'recent_uploads_24h' => (int)$recentStats['recent_uploads']
                 ]
             ];
-
         } catch (PDOException $e) {
             error_log('Database stats error: ' . $e->getMessage());
             return ['database' => ['error' => 'データベース統計の取得に失敗しました']];
@@ -119,7 +119,6 @@ class SystemApiHandler
                     ]
                 ]
             ];
-
         } catch (Exception $e) {
             error_log('System info error: ' . $e->getMessage());
             return ['system' => ['error' => 'システム情報の取得に失敗しました']];
@@ -155,9 +154,15 @@ class SystemApiHandler
         $minutes = floor(($seconds % 3600) / 60);
 
         $parts = [];
-        if ($days > 0) $parts[] = $days . '日';
-        if ($hours > 0) $parts[] = $hours . '時間';
-        if ($minutes > 0) $parts[] = $minutes . '分';
+        if ($days > 0) {
+            $parts[] = $days . '日';
+        }
+        if ($hours > 0) {
+            $parts[] = $hours . '時間';
+        }
+        if ($minutes > 0) {
+            $parts[] = $minutes . '分';
+        }
 
         return empty($parts) ? '1分未満' : implode(' ', $parts);
     }
@@ -199,7 +204,6 @@ class SystemApiHandler
             } else {
                 $this->response->error('システムに問題があります', $health, 503, 'SYSTEM_UNHEALTHY');
             }
-
         } catch (Exception $e) {
             error_log('Health check error: ' . $e->getMessage());
             $this->response->error('ヘルスチェックに失敗しました', [], 500, 'HEALTH_CHECK_ERROR');
@@ -223,7 +227,6 @@ class SystemApiHandler
             $stmt->fetchColumn();
 
             return ['status' => 'ok', 'message' => 'データベース接続正常'];
-
         } catch (Exception $e) {
             return ['status' => 'error', 'message' => 'データベース接続エラー: ' . $e->getMessage()];
         }
@@ -269,7 +272,6 @@ class SystemApiHandler
             } else {
                 return ['status' => 'error', 'message' => implode(', ', $checks)];
             }
-
         } catch (Exception $e) {
             return ['status' => 'error', 'message' => 'ファイルシステムチェックエラー: ' . $e->getMessage()];
         }
@@ -301,7 +303,6 @@ class SystemApiHandler
             } else {
                 return ['status' => 'warning', 'message' => implode(', ', $issues)];
             }
-
         } catch (Exception $e) {
             return ['status' => 'error', 'message' => '設定チェックエラー: ' . $e->getMessage()];
         }

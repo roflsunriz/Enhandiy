@@ -106,10 +106,10 @@ try {
     $comment = htmlspecialchars($_POST['comment'] ?? '', ENT_QUOTES, 'UTF-8');
     $fileSize = filesize($_FILES['file']['tmp_name']);
     $fileTmpPath = $_FILES['file']['tmp_name'];
-    
+
     // フォルダIDの処理
     $folder_id = isset($_POST['folder_id']) && !empty($_POST['folder_id']) ? intval($_POST['folder_id']) : null;
-    
+
     // 認証キーの処理（空のキーは認証不要として扱うため、NULLとして保存）
     $dlKey = $_POST['dlkey'] ?? '';
     $delKey = $_POST['delkey'] ?? '';
@@ -127,7 +127,7 @@ try {
     if (!in_array($fileExtension, $config['extension'])) {
         $validationErrors[] = "許可されていない拡張子です。(" . implode(', ', $config['extension']) . "のみ)";
     }
-    
+
     // フォルダIDの存在確認（フォルダ機能が有効な場合のみ）
     if (isset($config['folders_enabled']) && $config['folders_enabled'] && $folder_id !== null) {
         $folderCheck = $db->prepare("SELECT id FROM folders WHERE id = ?");
@@ -197,11 +197,11 @@ try {
     if (empty($replaceKey) || trim($replaceKey) === '') {
         $responseHandler->error('差し替えキーは必須入力です。', [], 400);
     }
-    
+
     // 認証キーのハッシュ化（空の場合はnull）
     $dlKeyHash = (!empty($dlKey) && trim($dlKey) !== '') ? SecurityUtils::hashPassword($dlKey) : null;
     $delKeyHash = (!empty($delKey) && trim($delKey) !== '') ? SecurityUtils::hashPassword($delKey) : null;
-    
+
     // 差し替えキーの暗号化
     $encryptedReplaceKey = openssl_encrypt($replaceKey, 'aes-256-ecb', $config['key']);
 
@@ -270,7 +270,6 @@ try {
         'file_name' => $fileName,
         'file_size' => $fileSize
     ]);
-
 } catch (Exception $e) {
     // 出力バッファをクリア
     if (ob_get_level()) {
@@ -297,4 +296,3 @@ try {
         ], JSON_UNESCAPED_UNICODE);
     }
 }
-

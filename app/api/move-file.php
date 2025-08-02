@@ -84,9 +84,9 @@ if ($folderId !== null) {
 try {
     $stmt = $db->prepare("UPDATE uploaded SET folder_id = ? WHERE id = ?");
     $stmt->execute([$folderId, $fileId]);
-    
+
     $targetFolder = $folderId ? "フォルダID: $folderId" : "ルートフォルダ";
-    
+
     echo json_encode([
         'message' => 'ファイルを移動しました',
         'file_id' => $fileId,
@@ -95,10 +95,7 @@ try {
         'new_folder_id' => $folderId,
         'target_folder' => $targetFolder
     ], JSON_UNESCAPED_UNICODE);
-    
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['error' => 'ファイル移動に失敗しました: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
 }
-
-?>

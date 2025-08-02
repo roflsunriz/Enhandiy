@@ -1,8 +1,10 @@
 <?php
+
 /**
  * ステータスメッセージ表示部分テンプレート
  * 成功・エラーメッセージの表示を担当
  */
+
 ?>
 
 <?php if (isset($status_message)) : ?>
@@ -14,5 +16,5 @@
     <div id="statusMessage" class="alert alert-danger" role="alert">
       <strong>エラー</strong> 処理に失敗しました
     </div>
-  <?php endif; ?>
+    <?php endif; ?>
 <?php endif; ?>

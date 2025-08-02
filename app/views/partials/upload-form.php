@@ -1,8 +1,10 @@
 <?php
+
 /**
  * アップロードフォーム部分テンプレート
  * ドラッグ&ドロップ、ファイル選択、設定項目を担当
  */
+
 ?>
 
 <div class="row bg-white radius box-shadow">
@@ -61,7 +63,7 @@
         </div>
       </div>
 
-      <?php if(isset($folders_enabled) && $folders_enabled): ?>
+      <?php if (isset($folders_enabled) && $folders_enabled) : ?>
       <!-- フォルダ選択 -->
       <div class="form-group">
         <label for="folder-select">保存先フォルダ</label>
@@ -96,19 +98,21 @@
           <div class="col-sm-6">
             <div class="form-group">
               <label for="delkeyInput">削除キー <small class="text-muted">(任意)</small></label>
-              <input type="text" class="form-control" id="delkeyInput" name="delkey" placeholder="削除キーを入力... (空白時は削除不可)">
+              <input type="text" class="form-control" id="delkeyInput" name="delkey" 
+                     placeholder="削除キーを入力... (空白時は削除不可)">
               <p class="help-block">ファイル削除時に必要なキーです</p>
             </div>
           </div>
         </div>
       </div>
 
-      <?php if(isset($allow_file_replace) && $allow_file_replace): ?>
+      <?php if (isset($allow_file_replace) && $allow_file_replace) : ?>
       <!-- 差し替えキー -->
       <div class="form-section">
         <div class="form-group">
           <label for="replacekeyInput">差し替えキー <span class="text-danger">*必須</span></label>
-          <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" placeholder="差し替えキーを入力してください" required>
+          <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
+                 placeholder="差し替えキーを入力してください" required>
           <p class="help-block">ファイル差し替え時に必要なキーです（必須項目）</p>
         </div>
       </div>
