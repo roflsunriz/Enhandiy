@@ -7,15 +7,17 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title><?php echo $title ?></title>
 
-    <!-- Bootstrap -->
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 
+    <!-- TypeScript版CSS -->
+    <link rel="stylesheet" href="./asset/dist/file-manager.css">
+    
+    <!-- 従来のCSS（段階的移行のため一時的に保持） -->
     <link rel="stylesheet" href="./asset/css/common.css">
     <link rel="stylesheet" href="./asset/css/responsive.css">
     <link rel="stylesheet" href="./asset/css/responsive-extra.css">
-    <link rel="stylesheet" href="./asset/css/file-manager.css">
+    <!-- <link rel="stylesheet" href="./asset/css/file-manager.css"> -->
     <link rel="stylesheet" href="./asset/css/share.css">
     <link rel="stylesheet" href="./asset/css/dragdrop.css">
     <link rel="stylesheet" href="./asset/css/folders.css">

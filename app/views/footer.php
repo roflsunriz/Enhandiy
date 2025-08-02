@@ -1,11 +1,9 @@
-    <div class="modal" id="OKModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
+    <div class="modal fade" id="OKModal" tabindex="-1" aria-labelledby="OKModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Modal title</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
+            <h1 class="modal-title fs-5" id="OKModalLabel">Modal title</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p>Modal body text goes here.</p>
@@ -17,55 +15,46 @@
       </div>
     </div>
 
-    <div class="modal" id="OKCanselModal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
+    <div class="modal fade" id="OKCanselModal" tabindex="-1" aria-labelledby="OKCanselModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Modal title</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
+            <h1 class="modal-title fs-5" id="OKCanselModalLabel">Modal title</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p>Modal body text goes here.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
             <button type="button" class="btn btn-primary f-action">OK</button>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- Bootstrap 5 JavaScript Bundle (no jQuery required) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
     
 
-    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap.min.js"></script>
+    <!-- DataTables removed - replaced with TypeScript FileManager -->
     
     <!-- Tus.io resumable upload client -->
     <script src="https://cdn.jsdelivr.net/npm/tus-js-client@3.1.1/dist/tus.min.js"></script>
     
-    <script src="./asset/js/modal.js"></script>
+    <!-- Modal処理 (TypeScript版に移行済み) -->
+    <!-- <script src="./asset/js/modal.js"></script> -->
     
-    <!-- FileManager リファクタリング版コンポーネント -->
-    <script src="./asset/js/components/FileManagerUtils.js"></script>
-    <script src="./asset/js/components/FileManagerCore.js"></script>
-    <script src="./asset/js/components/FileManagerRenderer.js"></script>
-    <script src="./asset/js/components/FileManagerEvents.js"></script>
-    <script src="./asset/js/components/FileManagerBulkActions.js"></script>
-    <script src="./asset/js/file-manager.js"></script>
+    <!-- TypeScript版JavaScript (DataTables完全除去済み) -->
+    <script src="./asset/dist/main.js"></script>
+    <script src="./asset/dist/file-manager.js"></script>
+    <script src="./asset/dist/share.js"></script>
+    <script src="./asset/dist/file-edit.js"></script>
     
-    <script src="./asset/js/common.js"></script>
-    <script src="./asset/js/share.js"></script>
+    <!-- 残りのJavaScript（次回移行予定） -->
     <script src="./asset/js/dragdrop.js"></script>
     <script src="./asset/js/folder-manager.js"></script>
     <script src="./asset/js/resumable-upload.js"></script>
-    <script src="./asset/js/file-edit.js"></script>
   </body>
 </html>

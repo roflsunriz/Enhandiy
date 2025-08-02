@@ -6,23 +6,21 @@
 ?>
 
 <!-- ファイル編集モーダル -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel">
-  <div class="modal-dialog" role="document">
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="editModalLabel">ファイル編集</h4>
+        <h1 class="modal-title fs-5" id="editModalLabel">ファイル編集</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- タブナビゲーション -->
         <ul class="nav nav-tabs" role="tablist">
-          <li role="presentation" class="active">
-            <a href="#commentTab" aria-controls="commentTab" role="tab" data-toggle="tab">コメント編集</a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="comment-tab" data-bs-toggle="tab" data-bs-target="#commentTab" type="button" role="tab" aria-controls="commentTab" aria-selected="true">コメント編集</button>
           </li>
-          <li role="presentation">
-            <a href="#replaceTab" aria-controls="replaceTab" role="tab" data-toggle="tab">ファイル差し替え</a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="replace-tab" data-bs-toggle="tab" data-bs-target="#replaceTab" type="button" role="tab" aria-controls="replaceTab" aria-selected="false">ファイル差し替え</button>
           </li>
         </ul>
         
@@ -82,7 +80,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
         <button type="button" class="btn btn-primary" id="saveCommentBtn" style="display: none;">コメント保存</button>
         <button type="button" class="btn btn-warning" id="replaceFileBtn" style="display: none;">ファイル差し替え</button>
       </div>
@@ -91,14 +89,12 @@
 </div>
 
 <!-- 共有リンクモーダル -->
-<div class="modal fade" id="shareLinkModal" tabindex="-1" role="dialog" aria-labelledby="shareLinkModalLabel">
-  <div class="modal-dialog modal-lg" role="document">
+<div class="modal fade" id="shareLinkModal" tabindex="-1" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="shareLinkModalLabel">共有リンク生成</h4>
+        <h1 class="modal-title fs-5" id="shareLinkModalLabel">共有リンク生成</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- ファイル情報 -->
