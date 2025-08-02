@@ -33,8 +33,8 @@
   <!-- フッター情報 -->
   <div class="row">
     <div class="col-sm-12">
-      <p class="text-right">@<a href="https://github.com/shimosyan/phpUploader" target="_blank">
-        shimosyan/phpUploader</a> v<?php echo $version ?? '2.0.0'; ?> (GitHub)</p>
+      <p class="text-right">@<a href="https://github.com/roflsunriz/phpUploader" target="_blank">
+        roflsunriz/phpUploader</a> v<?php echo $version ?? '2.0.0-roflsunriz'; ?> (GitHub)</p>
     </div>
   </div>
 </div>
