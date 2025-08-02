@@ -4,7 +4,7 @@
 
 phpUploader v2.0.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、そして強化されたファイル管理機能を提供します。
 
-![cover](https://github.com/user-attachments/assets/bd485c47-6acd-4525-9a17-5eb38cf98fc0)
+![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
 ## ✨ 主要機能
 
