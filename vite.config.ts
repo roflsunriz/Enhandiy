@@ -13,6 +13,9 @@ export default defineConfig({
         share: resolve(__dirname, 'src/share.ts'),
         'file-edit': resolve(__dirname, 'src/file-edit.ts'),
         'api-client': resolve(__dirname, 'src/api/client.ts'),
+        'folder-manager': resolve(__dirname, 'src/folder-manager.ts'),
+        'drag-drop': resolve(__dirname, 'src/drag-drop.ts'),
+        'resumable-upload': resolve(__dirname, 'src/resumable-upload.ts'),
       },
       output: {
         entryFileNames: '[name].js',

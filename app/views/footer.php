@@ -47,14 +47,13 @@
     <!-- <script src="./asset/js/modal.js"></script> -->
     
     <!-- TypeScript版JavaScript (DataTables完全除去済み) -->
-    <script src="./asset/dist/main.js"></script>
-    <script src="./asset/dist/file-manager.js"></script>
-    <script src="./asset/dist/share.js"></script>
-    <script src="./asset/dist/file-edit.js"></script>
+    <script type="module" src="./asset/dist/main.js"></script>
+    <script type="module" src="./asset/dist/file-manager.js"></script>
+    <script type="module" src="./asset/dist/share.js"></script>
+    <script type="module" src="./asset/dist/file-edit.js"></script>
     
-    <!-- 残りのJavaScript（次回移行予定） -->
-    <script src="./asset/js/dragdrop.js"></script>
-    <script src="./asset/js/folder-manager.js"></script>
-    <script src="./asset/js/resumable-upload.js"></script>
+    <script type="module" src="./asset/dist/drag-drop.js"></script>
+    <script type="module" src="./asset/dist/folder-manager.js"></script>
+    <script type="module" src="./asset/dist/resumable-upload.js"></script>
   </body>
 </html>
