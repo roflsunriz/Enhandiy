@@ -1,8 +1,10 @@
 <?php
+
 /**
  * エラー表示部分テンプレート
  * アップロードエラーなどの表示を担当
  */
+
 ?>
 
 <div class="row bg-white radius box-shadow" id="errorContainer" style="display: none;">

@@ -42,8 +42,8 @@ try {
     $db->beginTransaction();
 
     try {
-    // トークンの検証
-    $tokenStmt = $db->prepare("
+        // トークンの検証
+        $tokenStmt = $db->prepare("
         SELECT t.*, u.origin_file_name, u.stored_file_name, u.file_hash
         FROM access_tokens t
         JOIN uploaded u ON t.file_id = u.id
@@ -57,7 +57,10 @@ try {
         $tokenData = $tokenStmt->fetch();
 
         if (!$tokenData) {
-            $logger->warning('Invalid or expired delete token', ['file_id' => $fileId, 'token' => substr($token, 0, 8) . '...']);
+            $logger->warning(
+                'Invalid or expired delete token',
+                ['file_id' => $fileId, 'token' => substr($token, 0, 8) . '...']
+            );
             $db->rollBack();
             header('Location: ./');
             exit;
@@ -134,13 +137,11 @@ try {
         // 成功時のリダイレクト
         header('Location: ./?deleted=success');
         exit;
-
     } catch (Exception $e) {
         // トランザクションロールバック
         $db->rollBack();
         throw $e;
     }
-
 } catch (Exception $e) {
     // 緊急時のエラーハンドリング
     if (isset($logger)) {

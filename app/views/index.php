@@ -1,4 +1,5 @@
 <?php
+
 /**
  * メインビューテンプレート - リファクタリング版
  * 分離された部分テンプレートを統合したビュー
@@ -12,6 +13,7 @@
  * - modals.php: モーダルダイアログ
  * - page-scripts.php: JavaScript部分
  */
+
 ?>
 
 <div class="container">

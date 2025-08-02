@@ -55,7 +55,10 @@ try {
     $tokenData = $tokenStmt->fetch();
 
     if (!$tokenData) {
-        $logger->info('Token not found in access_tokens, trying legacy share link validation', ['file_id' => $fileId, 'token' => substr($token, 0, 8) . '...']);
+        $logger->info(
+            'Token not found in access_tokens, trying legacy share link validation',
+            ['file_id' => $fileId, 'token' => substr($token, 0, 8) . '...']
+        );
         // 古い共有リンク処理にフォールバック
         validateLegacyShareLink($fileId, $token, $config, $db, $logger);
         exit;
@@ -148,7 +151,6 @@ try {
         $logger->error('Failed to open file for download', ['file_id' => $fileId, 'path' => $filePath]);
         header('Location: ./');
     }
-
 } catch (Exception $e) {
     // 緊急時のエラーハンドリング
     if (isset($logger)) {
@@ -166,26 +168,27 @@ try {
 /**
  * 古い共有リンクの検証とダウンロード処理
  */
-function validateLegacyShareLink($id, $dlkey, $config, $db, $logger) {
+function validateLegacyShareLink($id, $dlkey, $config, $db, $logger)
+{
     // ファイル情報取得
     $stmt = $db->prepare("SELECT * FROM uploaded WHERE id = :id");
     $stmt->bindValue(':id', $id);
     $stmt->execute();
     $result = $stmt->fetchAll();
-    
+
     if (empty($result)) {
         $logger->warning('File not found for legacy share link', ['file_id' => $id]);
         header('Location: ./');
         exit;
     }
-    
+
     $fileData = $result[0];
     $filename = $fileData['origin_file_name'];
     $origin_dlkey = $fileData['dl_key_hash']; // 修正：dl_key_hashを使用
     $current_count = $fileData['count'];
     $max_downloads = $fileData['max_downloads'];
     $expires_at = $fileData['expires_at'];
-    
+
     // DLキーがNULL（空）の場合は認証不要、そうでない場合は認証チェック
     if ($origin_dlkey !== null) {
         // 共有リンクトークンの検証（暗号化されたDLキーと照合）
@@ -195,14 +198,14 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger) {
         } else {
             $expectedToken = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $config['key'], OPENSSL_RAW_DATA));
         }
-        
+
         if ($dlkey !== $expectedToken) {
             $logger->warning('Invalid legacy share link token', ['file_id' => $id]);
             header('Location: ./');
             exit;
         }
     }
-    
+
     // 制限チェック
     // 有効期限チェック
     if ($expires_at !== null && $expires_at < time()) {
@@ -210,29 +213,32 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger) {
         header('Location: ./?error=expired');
         exit;
     }
-    
+
     // ダウンロード回数制限チェック
     if ($max_downloads !== null && $current_count >= $max_downloads) {
-        $logger->warning('Download limit exceeded', ['file_id' => $id, 'count' => $current_count, 'max' => $max_downloads]);
+        $logger->warning(
+            'Download limit exceeded',
+            ['file_id' => $id, 'count' => $current_count, 'max' => $max_downloads]
+        );
         header('Location: ./?error=limit_exceeded');
         exit;
     }
-    
+
     // ファイルパス生成
     $fileExtension = pathinfo($filename, PATHINFO_EXTENSION);
     $filePath = $config['data_directory'] . '/file_' . $id . '.' . $fileExtension;
-    
+
     // ファイル存在確認
     if (!file_exists($filePath)) {
         $logger->error('Physical file not found for legacy share link', ['file_id' => $id, 'path' => $filePath]);
         header('Location: ./');
         exit;
     }
-    
+
     // ダウンロード回数を増加
     $updateStmt = $db->prepare("UPDATE uploaded SET count = count + 1 WHERE id = :id");
     $updateStmt->execute(['id' => $id]);
-    
+
     // ファイルダウンロード
     header('Content-Description: File Transfer');
     header('Content-Type: application/octet-stream');
@@ -241,11 +247,9 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger) {
     header('Cache-Control: must-revalidate');
     header('Pragma: public');
     header('Content-Length: ' . filesize($filePath));
-    
+
     $logger->info('Legacy share link download completed', ['file_id' => $id, 'filename' => $filename]);
-    
+
     readfile($filePath);
     exit;
 }
-
-
