@@ -354,6 +354,7 @@ export class FileManagerRenderer {
    * ユーティリティメソッド
    */
   private getFileIcon(mimeType: string): string {
+    if (!mimeType) return '📁';
     if (mimeType.startsWith('image/')) return '🖼';
     if (mimeType.startsWith('video/')) return '🎥';
     if (mimeType.startsWith('audio/')) return '🎵';
@@ -364,6 +365,7 @@ export class FileManagerRenderer {
   }
 
   private getFileTypeClass(mimeType: string): string {
+    if (!mimeType) return 'file';
     if (mimeType.startsWith('image/')) return 'image';
     if (mimeType.startsWith('video/')) return 'video';
     if (mimeType.startsWith('audio/')) return 'audio';
@@ -398,12 +400,14 @@ export class FileManagerRenderer {
   }
 
   private escapeHtml(text: string): string {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
 
   private truncateText(text: string, length: number): string {
+    if (!text) return '';
     return text.length > length ? text.substring(0, length) + '...' : text;
   }
 }
