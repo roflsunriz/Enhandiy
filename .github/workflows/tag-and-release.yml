@@ -1,0 +1,135 @@
+name: 🏷️ Tag and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 2.0.0-roflsunriz)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to release from'
+        required: true
+        default: 'feature/todo-improvements-backup'
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+      release_notes:
+        description: 'Additional release notes'
+        required: false
+        type: string
+
+jobs:
+  validate-and-tag:
+    name: 🔍 Validate and Create Tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    outputs:
+      tag_name: ${{ steps.create_tag.outputs.tag_name }}
+      
+    steps:
+      - name: 🔄 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0
+
+      - name: 🔍 Validate version format
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          
+          # バージョン形式をチェック (セマンティックバージョニング + roflsunriz識別子)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-roflsunriz)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z-roflsunriz (e.g., 2.0.0-roflsunriz)"
+            exit 1
+          fi
+          
+          echo "✅ Version format is valid: $VERSION"
+
+      - name: 📋 Check composer.json version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          COMPOSER_VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          
+          echo "Input version: $VERSION"
+          echo "Composer.json version: $COMPOSER_VERSION"
+          
+          if [ "$VERSION" != "$COMPOSER_VERSION" ]; then
+            echo "⚠️  Warning: Version mismatch between input and composer.json"
+            echo "Input: $VERSION"
+            echo "Composer: $COMPOSER_VERSION"
+            echo "Using input version for tag creation"
+          fi
+
+      - name: 🏷️ Create and push tag
+        id: create_tag
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          TAG_NAME="v${VERSION}"
+          BRANCH="${{ github.event.inputs.branch }}"
+          
+          # タグが既に存在するかチェック
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "❌ Tag $TAG_NAME already exists"
+            exit 1
+          fi
+          
+          # 軽量タグを作成
+          git tag "$TAG_NAME"
+          
+          # タグをプッシュ
+          git push origin "$TAG_NAME"
+          
+          echo "✅ Tag $TAG_NAME created and pushed successfully"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: 📝 Prepare release info
+        run: |
+          TAG_NAME="${{ steps.create_tag.outputs.tag_name }}"
+          VERSION="${{ github.event.inputs.version }}"
+          BRANCH="${{ github.event.inputs.branch }}"
+          
+          echo "## 🎉 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag**: $TAG_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch**: $BRANCH" >> $GITHUB_STEP_SUMMARY
+          echo "**Pre-release**: ${{ github.event.inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "The release workflow will be triggered automatically by the tag push." >> $GITHUB_STEP_SUMMARY
+
+  wait-for-release:
+    name: ⏳ Wait for Release Creation
+    runs-on: ubuntu-latest
+    needs: validate-and-tag
+    
+    steps:
+      - name: ⏳ Wait for release workflow
+        run: |
+          echo "🏷️ Tag created: ${{ needs.validate-and-tag.outputs.tag_name }}"
+          echo "⏳ Waiting for release workflow to complete..."
+          echo "🔗 Check the Actions tab for release progress"
+          
+          # 少し待ってからリリースの確認
+          sleep 30
+          
+      - name: 🔍 Check release status
+        run: |
+          TAG_NAME="${{ needs.validate-and-tag.outputs.tag_name }}"
+          
+          echo "🔍 Checking if release was created for tag: $TAG_NAME"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
+          echo ""
+          echo "📋 Manual verification steps:"
+          echo "1. Go to: https://github.com/${{ github.repository }}/releases"
+          echo "2. Look for release: $TAG_NAME"
+          echo "3. Verify release assets are attached"
+          echo ""
+          echo "✅ Tag and release process initiated successfully!"

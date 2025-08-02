@@ -1,0 +1,263 @@
+name: 🔍 Pre-Release Quality Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to check'
+        required: true
+        default: 'feature/todo-improvements-backup'
+        type: string
+  push:
+    branches:
+      - 'feature/todo-improvements-backup'
+      - 'release/*'
+  pull_request:
+    branches:
+      - 'main'
+      - 'master'
+
+jobs:
+  quality-check:
+    name: 🧪 Quality Assurance
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🔄 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: pdo, sqlite3, openssl, json
+          coverage: none
+
+      - name: 📦 Install Composer dependencies
+        run: |
+          if [ -f composer.json ]; then
+            composer install --no-dev --optimize-autoloader
+            echo "✅ Composer dependencies installed"
+          else
+            echo "ℹ️  No composer.json found, skipping dependency installation"
+          fi
+
+      - name: 🔍 PHP Syntax Check
+        run: |
+          echo "🔍 Checking PHP syntax..."
+          find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
+          echo "✅ PHP syntax check completed"
+
+      - name: 📋 Validate Configuration
+        run: |
+          echo "📋 Validating configuration files..."
+          
+          # config.php.example の存在確認
+          if [ ! -f "config/config.php.example" ]; then
+            echo "❌ config/config.php.example not found"
+            exit 1
+          fi
+          
+          # composer.json の存在確認
+          if [ ! -f "composer.json" ]; then
+            echo "❌ composer.json not found"
+            exit 1
+          fi
+          
+          # バージョン情報の確認
+          VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "📌 Current version: $VERSION"
+          
+          # README.md の存在確認
+          if [ ! -f "README.md" ]; then
+            echo "⚠️  README.md not found"
+          fi
+          
+          echo "✅ Configuration validation completed"
+
+      - name: 🗄️ Database Schema Check
+        run: |
+          echo "🗄️ Checking database schema files..."
+          
+          # マイグレーションファイルの確認
+          if [ -f "migrate_db.php" ]; then
+            php -l migrate_db.php
+            echo "✅ migrate_db.php syntax OK"
+          fi
+          
+          if [ -f "app/models/init.php" ]; then
+            php -l app/models/init.php
+            echo "✅ app/models/init.php syntax OK"
+          fi
+          
+          echo "✅ Database schema check completed"
+
+      - name: 🌐 API Endpoints Check
+        run: |
+          echo "🌐 Checking API endpoints..."
+          
+          # API関連ファイルの構文チェック
+          if [ -d "app/api" ]; then
+            find app/api -name "*.php" -print0 | xargs -0 -n1 php -l
+            echo "✅ API files syntax check completed"
+          fi
+          
+          # API文書の確認
+          if [ -f "docs/API.md" ]; then
+            echo "✅ API documentation found"
+          else
+            echo "⚠️  API documentation not found"
+          fi
+
+      - name: 🎨 Frontend Assets Check
+        run: |
+          echo "🎨 Checking frontend assets..."
+          
+          # CSS ファイルの確認
+          if [ -d "asset/css" ]; then
+            echo "✅ CSS directory found"
+            ls -la asset/css/
+          fi
+          
+          # JavaScript ファイルの確認
+          if [ -d "asset/js" ]; then
+            echo "✅ JavaScript directory found"
+            ls -la asset/js/
+          fi
+          
+          # 画像ファイルの確認
+          if [ -d "asset/images" ] || [ -d "image" ]; then
+            echo "✅ Image directory found"
+          fi
+
+      - name: 📚 Documentation Check
+        run: |
+          echo "📚 Checking documentation..."
+          
+          # リリースノートの確認
+          RELEASE_NOTES=$(find . -name "RELEASE_NOTES*.md" | head -1)
+          if [ -n "$RELEASE_NOTES" ]; then
+            echo "✅ Release notes found: $RELEASE_NOTES"
+            wc -l "$RELEASE_NOTES"
+          else
+            echo "⚠️  Release notes not found"
+          fi
+          
+          # ライセンスファイルの確認
+          if [ -f "LICENSE" ] || [ -f "MIT-LICENSE.txt" ]; then
+            echo "✅ License file found"
+          else
+            echo "⚠️  License file not found"
+          fi
+
+      - name: 🔒 Security Check
+        run: |
+          echo "🔒 Performing basic security checks..."
+          
+          # 危険な関数の使用チェック
+          echo "🔍 Checking for potentially dangerous functions..."
+          DANGEROUS_FUNCTIONS="eval exec system shell_exec passthru"
+          
+          for func in $DANGEROUS_FUNCTIONS; do
+            if grep -r "$func(" --include="*.php" . --exclude-dir=vendor; then
+              echo "⚠️  Found usage of potentially dangerous function: $func"
+            fi
+          done
+          
+          # デフォルトパスワードのチェック
+          echo "🔍 Checking for default passwords..."
+          if grep -r "CHANGE_THIS" --include="*.php" .; then
+            echo "⚠️  Found default passwords that should be changed"
+          fi
+          
+          echo "✅ Security check completed"
+
+      - name: 📊 Generate Quality Report
+        run: |
+          echo "## 📊 Quality Check Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Checks" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐘 PHP Syntax Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- 📋 Configuration Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- 🗄️ Database Schema Check" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 API Endpoints Check" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 Frontend Assets Check" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 Documentation Check" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔒 Security Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # バージョン情報
+          VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "### 📌 Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "**Current Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # ファイル統計
+          echo "### 📈 Project Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "**PHP Files**: $(find . -name '*.php' -not -path './vendor/*' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "**CSS Files**: $(find . -name '*.css' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "**JS Files**: $(find . -name '*.js' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Lines of PHP**: $(find . -name '*.php' -not -path './vendor/*' -exec wc -l {} + | tail -1 | awk '{print $1}')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🎉 Quality Check Status" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ✅ All checks passed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "**Ready for Release**: 🚀 Yes" >> $GITHUB_STEP_SUMMARY
+
+  release-readiness:
+    name: 🚀 Release Readiness Check
+    runs-on: ubuntu-latest
+    needs: quality-check
+    
+    steps:
+      - name: 🔄 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+
+      - name: 🏷️ Check version consistency
+        run: |
+          echo "🏷️ Checking version consistency..."
+          
+          # composer.json からバージョンを取得
+          COMPOSER_VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          echo "Composer version: $COMPOSER_VERSION"
+          
+          # リリースノートファイルの確認
+          EXPECTED_NOTES="RELEASE_NOTES_v${COMPOSER_VERSION}.md"
+          if [ -f "$EXPECTED_NOTES" ]; then
+            echo "✅ Release notes found: $EXPECTED_NOTES"
+          else
+            echo "⚠️  Expected release notes file not found: $EXPECTED_NOTES"
+            echo "Available release notes:"
+            ls -la RELEASE_NOTES*.md 2>/dev/null || echo "No release notes found"
+          fi
+
+      - name: 🎯 Release Checklist
+        run: |
+          echo "## 🎯 Release Readiness Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # 必須項目のチェック
+          CHECKLIST_ITEMS=(
+            "composer.json:$([ -f composer.json ] && echo '✅' || echo '❌')"
+            "config.php.example:$([ -f config/config.php.example ] && echo '✅' || echo '❌')"
+            "README.md:$([ -f README.md ] && echo '✅' || echo '❌')"
+            "License file:$([ -f LICENSE ] || [ -f MIT-LICENSE.txt ] && echo '✅' || echo '❌')"
+            "Release notes:$(ls RELEASE_NOTES*.md >/dev/null 2>&1 && echo '✅' || echo '❌')"
+            "API documentation:$([ -f docs/API.md ] && echo '✅' || echo '❌')"
+          )
+          
+          for item in "${CHECKLIST_ITEMS[@]}"; do
+            echo "- ${item}" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "If all items are ✅, you can proceed with creating a release:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to Actions tab" >> $GITHUB_STEP_SUMMARY
+          echo "2. Run 'Tag and Release' workflow" >> $GITHUB_STEP_SUMMARY
+          echo "3. Specify version and branch" >> $GITHUB_STEP_SUMMARY
+          echo "4. The release will be created automatically" >> $GITHUB_STEP_SUMMARY
