@@ -1,8 +1,8 @@
-# phpUploader v2.0.0 - Major Feature Release
+# phpUploader v2.0.0-roflsunriz - Enhanced Community Fork
 
 ## 🎉 Overview
 
-This is a major release of phpUploader with significant new features and improvements. Version 2.0.0 introduces modern UI components, advanced upload capabilities, comprehensive API support, and enhanced file management features.
+This is a community-enhanced fork of phpUploader with significant new features and improvements. Version 2.0.0-roflsunriz introduces modern UI components, advanced upload capabilities, comprehensive API support, and enhanced file management features built upon the original phpUploader foundation.
 
 ## ✨ New Features
 
@@ -207,8 +207,11 @@ This is a major release of phpUploader with significant new features and improve
 
 ---
 
-**Full Changelog**: https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v2.0.0
+**Full Changelog**: https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v2.0.0-roflsunriz
 
-**Contributors**: @roflsunriz
+**Fork Maintainer**: @roflsunriz
+**Original Project**: shimosyan/phpUploader
+
+**Special Thanks**: This enhanced version builds upon the excellent foundation provided by the original phpUploader project.
 
 Thank you for using phpUploader! 🚀
