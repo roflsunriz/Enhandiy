@@ -53,10 +53,10 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           
           # リリースノートファイルを探す
-          if [ -f "RELEASE_NOTES_${VERSION}.md" ]; then
-            NOTES_FILE="RELEASE_NOTES_${VERSION}.md"
-          elif [ -f "RELEASE_NOTES_${TAG_NAME}.md" ]; then
-            NOTES_FILE="RELEASE_NOTES_${TAG_NAME}.md"
+          if [ -f "RELEASE_NOTES_${VERSION}-roflsunriz.md" ]; then
+            NOTES_FILE="RELEASE_NOTES_${VERSION}-roflsunriz.md"
+          elif [ -f "RELEASE_NOTES_${TAG_NAME}-roflsunriz.md" ]; then
+            NOTES_FILE="RELEASE_NOTES_${TAG_NAME}-roflsunriz.md"
           elif [ -f "CHANGELOG.md" ]; then
             NOTES_FILE="CHANGELOG.md"
           else
