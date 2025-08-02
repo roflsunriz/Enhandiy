@@ -5,6 +5,7 @@
 
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
+import { ShareApi, FileApi } from '../api/client';
 
 export class FileManagerEvents {
   private core: FileManagerCore;
@@ -25,39 +26,122 @@ export class FileManagerEvents {
    * イベントリスナーの登録
    */
   private bindEvents(): void {
-    // 検索入力
-    this.addListener('.file-manager__search-input', 'input', this.handleSearch.bind(this));
-    this.addListener('.file-manager__search-input', 'keyup', this.handleSearchKeyup.bind(this));
-
-    // ビュー切り替え
-    this.addListenerAll('.file-manager__view-btn', 'click', this.handleViewToggle.bind(this));
-
-    // ファイル選択（チェックボックス）
-    this.addListenerAll('.file-checkbox', 'change', this.handleFileSelection.bind(this));
-    this.addListener('.select-all-checkbox', 'change', this.handleSelectAll.bind(this));
-
-    // ファイルアクション
-    this.addListenerAll('.file-action-btn', 'click', this.handleFileAction.bind(this));
-
-    // 一括操作
-    this.addListenerAll('.bulk-action-btn', 'click', this.handleBulkAction.bind(this));
-
-    // ページネーション
-    this.addListenerAll('.pagination-btn', 'click', this.handlePagination.bind(this));
-
-    // ソート（リストビュー）
-    this.addListenerAll('.sortable', 'click', this.handleSort.bind(this));
-
-    // ファイルアイテムクリック（選択）
-    this.addListenerAll('.file-grid-item', 'click', this.handleItemClick.bind(this));
-    this.addListenerAll('.file-list-item', 'click', this.handleItemClick.bind(this));
-
-    // ダブルクリック（ダウンロード）
-    this.addListenerAll('.file-grid-item', 'dblclick', this.handleItemDoubleClick.bind(this));
-    this.addListenerAll('.file-list-item', 'dblclick', this.handleItemDoubleClick.bind(this));
+    // イベント委譲を使用して動的要素にも対応
+    this.addListener(this.core.container, 'input', this.handleDelegatedInput.bind(this));
+    this.addListener(this.core.container, 'keyup', this.handleDelegatedKeyup.bind(this));
+    this.addListener(this.core.container, 'click', this.handleDelegatedClick.bind(this));
+    this.addListener(this.core.container, 'change', this.handleDelegatedChange.bind(this));
+    this.addListener(this.core.container, 'dblclick', this.handleDelegatedDoubleClick.bind(this));
 
     // キーボードショートカット
     this.addListener(document, 'keydown', this.handleKeyboard.bind(this));
+  }
+
+  /**
+   * 委譲されたinputイベント処理
+   */
+  private handleDelegatedInput(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    if (target.classList.contains('file-manager__search-input')) {
+      this.handleSearch(event);
+    }
+  }
+
+  /**
+   * 委譲されたkeyupイベント処理
+   */
+  private handleDelegatedKeyup(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    if (target.classList.contains('file-manager__search-input')) {
+      this.handleSearchKeyup(event);
+    }
+  }
+
+  /**
+   * 委譲されたclickイベント処理
+   */
+  private handleDelegatedClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // ビュー切り替えボタン
+    if (target.classList.contains('file-manager__view-btn') || target.closest('.file-manager__view-btn')) {
+      this.handleViewToggle(event);
+      return;
+    }
+    
+    // ファイルアクションボタン
+    if (target.classList.contains('file-action-btn') || target.closest('.file-action-btn')) {
+      this.handleFileAction(event);
+      return;
+    }
+    
+    // 一括操作ボタン
+    if (target.classList.contains('bulk-action-btn') || target.closest('.bulk-action-btn')) {
+      this.handleBulkAction(event);
+      return;
+    }
+    
+    // ページネーションボタン
+    if (target.classList.contains('pagination-btn') || target.closest('.pagination-btn')) {
+      this.handlePagination(event);
+      return;
+    }
+    
+    // ソートヘッダー
+    if (target.classList.contains('sortable') || target.closest('.sortable')) {
+      this.handleSort(event);
+      return;
+    }
+    
+    // ファイルアイテムクリック
+    if (target.classList.contains('file-grid-item') || target.closest('.file-grid-item')) {
+      this.handleItemClick(event);
+      return;
+    }
+    
+    if (target.classList.contains('file-list-item') || target.closest('.file-list-item')) {
+      this.handleItemClick(event);
+      return;
+    }
+  }
+
+  /**
+   * 委譲されたchangeイベント処理
+   */
+  private handleDelegatedChange(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    if (target.classList.contains('file-checkbox')) {
+      this.handleFileSelection(event);
+    } else if (target.classList.contains('select-all-checkbox')) {
+      this.handleSelectAll(event);
+    } else if (target.classList.contains('file-manager__sort-select')) {
+      this.handleSortSelectChange(event);
+    }
+  }
+
+  /**
+   * 委譲されたdoubleclickイベント処理
+   */
+  private handleDelegatedDoubleClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    if (target.classList.contains('file-grid-item') || target.closest('.file-grid-item')) {
+      this.handleItemDoubleClick(event);
+    } else if (target.classList.contains('file-list-item') || target.closest('.file-list-item')) {
+      this.handleItemDoubleClick(event);
+    }
+  }
+
+  /**
+   * ソートセレクト変更処理
+   */
+  private handleSortSelectChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const [field, direction] = select.value.split('_') as [import('../types/fileManager').SortField, import('../types/fileManager').SortDirection];
+    this.core.setSortBy(field, direction);
   }
 
   /**
@@ -119,6 +203,7 @@ export class FileManagerEvents {
   private handleFileAction(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation(); // 他のリスナーを停止
     
     const button = event.target as HTMLElement;
     const action = button.dataset.action;
@@ -126,22 +211,46 @@ export class FileManagerEvents {
     
     if (!action || !fileId) return;
     
+    // 重複実行を防ぐためのフラグチェック
+    if (button.dataset.processing === 'true') {
+      return;
+    }
+    
+    // 処理中フラグを設定
+    button.dataset.processing = 'true';
+    
     const file = this.core.getFiles().find(f => f.id === fileId);
-    if (!file) return;
+    if (!file) {
+      button.dataset.processing = 'false';
+      return;
+    }
 
-    switch (action) {
-      case 'download':
-        this.downloadFile(file.id);
-        break;
-      case 'share':
-        this.shareFile(file.id);
-        break;
-      case 'delete':
-        this.deleteFile(file.id);
-        break;
-      case 'edit':
-        this.editFile(file.id);
-        break;
+    try {
+      switch (action) {
+        case 'download':
+          this.downloadFile(file.id.toString());
+          break;
+        case 'share':
+          this.shareFile(file.id.toString());
+          break;
+        case 'delete':
+          this.deleteFile(file.id.toString());
+          break;
+        case 'edit':
+          this.editFile(file.id.toString());
+          break;
+        case 'move':
+          this.moveFile(file.id.toString());
+          break;
+        case 'replace':
+          this.replaceFile(file.id.toString());
+          break;
+      }
+    } finally {
+      // 処理完了後にフラグをリセット（少し遅延）
+      setTimeout(() => {
+        button.dataset.processing = 'false';
+      }, 1000);
     }
   }
 
@@ -216,18 +325,30 @@ export class FileManagerEvents {
     }
     
     const item = (event.currentTarget as HTMLElement);
+    
+    // ダブルクリック処理中は除外
+    if (item.dataset.doubleClickProcessing === 'true') {
+      return;
+    }
+    
     const fileId = item.dataset.fileId;
     
     if (fileId) {
-      const mouseEvent = event as MouseEvent;
-      // Ctrlキーまたは⌘キーが押されている場合は選択状態を切り替え
-      if (mouseEvent.ctrlKey || mouseEvent.metaKey) {
-        this.core.toggleFileSelection(fileId);
-      } else {
-        // 通常クリックの場合は単一選択
-        this.core.clearSelection();
-        this.core.toggleFileSelection(fileId);
-      }
+      // シングルクリックの遅延実行（ダブルクリックとの干渉を防ぐ）
+      setTimeout(() => {
+        // ダブルクリック処理中でないことを再確認
+        if (item.dataset.doubleClickProcessing !== 'true') {
+          const mouseEvent = event as MouseEvent;
+          // Ctrlキーまたは⌘キーが押されている場合は選択状態を切り替え
+          if (mouseEvent.ctrlKey || mouseEvent.metaKey) {
+            this.core.toggleFileSelection(fileId);
+          } else {
+            // 通常クリックの場合は単一選択
+            this.core.clearSelection();
+            this.core.toggleFileSelection(fileId);
+          }
+        }
+      }, 200); // 200ms遅延
     }
   }
 
@@ -236,13 +357,28 @@ export class FileManagerEvents {
    */
   private handleItemDoubleClick(event: Event): void {
     event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation(); // 他のリスナーを停止
     
     const item = (event.currentTarget as HTMLElement);
     const fileId = item.dataset.fileId;
     
+    // ダブルクリック処理中フラグをチェック
+    if (item.dataset.doubleClickProcessing === 'true') {
+      return;
+    }
+    
+    // ダブルクリック処理中フラグを設定
+    item.dataset.doubleClickProcessing = 'true';
+    
     if (fileId) {
       this.downloadFile(fileId);
     }
+    
+    // フラグをリセット（遅延）
+    setTimeout(() => {
+      item.dataset.doubleClickProcessing = 'false';
+    }, 1000);
   }
 
   /**
@@ -287,7 +423,7 @@ export class FileManagerEvents {
     // ダウンロードリンクを作成して実行
     const link = document.createElement('a');
     link.href = `./download.php?id=${encodeURIComponent(fileId)}`;
-    link.download = file.name;
+    link.download = file.name || 'download';
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
@@ -308,7 +444,7 @@ export class FileManagerEvents {
     }
     
     if (selectedFiles.length === 1) {
-      this.downloadFile(selectedFiles[0].id);
+      this.downloadFile(selectedFiles[0].id.toString());
     } else {
       // 複数ファイルの場合はZIP化など
       console.log('複数ファイルダウンロード:', selectedFiles.length, '件');
@@ -319,31 +455,68 @@ export class FileManagerEvents {
   /**
    * ファイル共有
    */
-  private shareFile(fileId: string): void {
+  private async shareFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
     
-    console.log('共有:', file.name);
-    alert('共有機能は実装中です。');
+    try {
+      // 共有リンク生成APIを呼び出し
+      const result = await ShareApi.generateShareLink({
+        fileId: fileId
+      });
+      
+      if (result.success && result.data?.share_url) {
+        // 共有リンクをクリップボードにコピー
+        const shareUrl = result.data.share_url;
+        
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(shareUrl);
+          alert(`共有リンクをクリップボードにコピーしました:\n${shareUrl}`);
+        } else {
+          // クリップボードAPIが使えない場合
+          window.prompt('共有リンク（Ctrl+Cでコピー）:', shareUrl);
+        }
+      } else {
+        alert('共有リンクの生成に失敗しました: ' + (result.error || '不明なエラー'));
+      }
+    } catch (error) {
+      console.error('共有エラー:', error);
+      alert('共有機能でエラーが発生しました。');
+    }
   }
 
   /**
    * ファイル削除
    */
-  private deleteFile(fileId: string): void {
+  private async deleteFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
     
-    if (confirm(`「${file.name}」を削除しますか？この操作は取り消せません。`)) {
-      console.log('削除:', file.name);
-      this.core.removeFile(fileId);
+    if (!confirm(`「${file.name}」を削除しますか？この操作は取り消せません。`)) {
+      return;
+    }
+    
+    try {
+      // 削除API呼び出し
+              const result = await FileApi.deleteFile(fileId);
+      
+      if (result.success) {
+        // UIからファイルを削除
+        this.core.removeFile(fileId);
+        alert('ファイルを削除しました。');
+      } else {
+        alert('ファイル削除に失敗しました: ' + (result.error || '不明なエラー'));
+      }
+    } catch (error) {
+      console.error('削除エラー:', error);
+      alert('ファイル削除でエラーが発生しました。');
     }
   }
 
   /**
    * 選択ファイルの削除
    */
-  private deleteSelectedFiles(): void {
+  private async deleteSelectedFiles(): Promise<void> {
     const selectedFiles = this.core.getSelectedFiles();
     
     if (selectedFiles.length === 0) {
@@ -351,10 +524,40 @@ export class FileManagerEvents {
       return;
     }
     
-    if (confirm(`選択した${selectedFiles.length}件のファイルを削除しますか？この操作は取り消せません。`)) {
-      selectedFiles.forEach(file => {
-        this.core.removeFile(file.id);
-      });
+    if (!confirm(`選択した${selectedFiles.length}件のファイルを削除しますか？この操作は取り消せません。`)) {
+      return;
+    }
+    
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      
+      // 各ファイルを順次削除
+      for (const file of selectedFiles) {
+        try {
+          const result = await FileApi.deleteFile(file.id.toString());
+          
+          if (result.success) {
+            this.core.removeFile(file.id.toString());
+            successCount++;
+          } else {
+            console.error('ファイル削除失敗:', file.name, result.error);
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('ファイル削除エラー:', file.name, error);
+          errorCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        alert(`${successCount}件のファイルを削除しました。${errorCount > 0 ? `\n${errorCount}件の削除に失敗しました。` : ''}`);
+      } else {
+        alert('ファイルの削除に失敗しました。');
+      }
+    } catch (error) {
+      console.error('一括削除エラー:', error);
+      alert('ファイル削除でエラーが発生しました。');
     }
   }
 
@@ -365,8 +568,42 @@ export class FileManagerEvents {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
     
-    console.log('編集:', file.name);
-    alert('編集機能は実装中です。');
+    // コメント編集モーダルを表示する関数を呼び出し
+    if (typeof (window as unknown as { editFile?: (id: string, name?: string, comment?: string) => void }).editFile === 'function') {
+      (window as unknown as { editFile: (id: string, name?: string, comment?: string) => void }).editFile(fileId, file.name, file.comment);
+    } else {
+      alert('編集機能が読み込まれていません。ページを再読み込みしてください。');
+    }
+  }
+
+  /**
+   * ファイル移動
+   */
+  private async moveFile(fileId: string): Promise<void> {
+    const file = this.core.getFiles().find(f => f.id === fileId);
+    if (!file) return;
+    
+    // フォルダマネージャーのmoveFile関数を呼び出し
+    if (typeof (window as unknown as { moveFile?: (id: string) => Promise<void> }).moveFile === 'function') {
+      await (window as unknown as { moveFile: (id: string) => Promise<void> }).moveFile(fileId);
+    } else {
+      alert('フォルダマネージャーが読み込まれていません。');
+    }
+  }
+
+  /**
+   * ファイル差し替え
+   */
+  private replaceFile(fileId: string): void {
+    const file = this.core.getFiles().find(f => f.id === fileId);
+    if (!file) return;
+    
+    // ファイル差し替えモーダルを表示する関数を呼び出し
+    if (typeof (window as unknown as { replaceFile?: (id: string, name?: string) => void }).replaceFile === 'function') {
+      (window as unknown as { replaceFile: (id: string, name?: string) => void }).replaceFile(fileId, file.name);
+    } else {
+      alert('差し替え機能が読み込まれていません。ページを再読み込みしてください。');
+    }
   }
 
   /**
@@ -387,16 +624,7 @@ export class FileManagerEvents {
     }
   }
 
-  /**
-   * イベントリスナーの追加（複数要素）
-   */
-  private addListenerAll(selector: string, event: string, handler: EventListener): void {
-    const elements = this.core.container.querySelectorAll(selector);
-    elements.forEach(element => {
-      element.addEventListener(event, handler);
-      this.eventListeners.push({ element, event, handler });
-    });
-  }
+
 
   /**
    * 破棄処理

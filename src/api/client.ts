@@ -15,7 +15,7 @@ export class FileApi {
    */
   static async getFiles(folderId?: string): Promise<ApiResponse<FileData[]>> {
     const params = folderId ? `?folder_id=${encodeURIComponent(folderId)}` : '';
-    return get<FileData[]>(`/api/simple-files.php${params}`);
+    return get<FileData[]>(`./app/api/simple-files.php${params}`);
   }
 
   /**
@@ -34,15 +34,15 @@ export class FileApi {
    * ファイルを削除
    */
   static async deleteFile(fileId: string): Promise<ApiResponse> {
-    return post('/api/verifydelete.php', { id: fileId });
+    return post('./app/api/verifydelete.php', { id: fileId });
   }
 
   /**
    * ファイルのコメントを更新
    */
   static async updateComment(fileId: string, comment: string): Promise<ApiResponse> {
-    return post('/api/edit-comment.php', {
-      fileId: fileId,
+    return post('./app/api/edit-comment.php', {
+      file_id: fileId,
       comment: comment
     });
   }
@@ -52,19 +52,19 @@ export class FileApi {
    */
   static async replaceFile(fileId: string, file: File): Promise<ApiResponse> {
     const formData = new FormData();
-    formData.append('fileId', fileId);
-    formData.append('file', file);
+    formData.append('file_id', fileId);
+    formData.append('files[]', file);
     
-    return post('/api/replace-file.php', formData);
+    return post('./app/api/replace-file.php', formData);
   }
 
   /**
    * ファイルを移動
    */
   static async moveFile(fileId: string, targetFolderId: string): Promise<ApiResponse> {
-    return post('/api/move-file.php', {
-      fileId: fileId,
-      folderId: targetFolderId
+    return post('./app/api/move-file.php', {
+      file_id: fileId,
+      folder_id: targetFolderId
     });
   }
 
@@ -72,9 +72,9 @@ export class FileApi {
    * 複数ファイルを移動
    */
   static async moveFiles(fileIds: string[], targetFolderId: string): Promise<ApiResponse> {
-    return post('/api/move-files.php', {
-      fileIds: fileIds,
-      folderId: targetFolderId
+    return post('./app/api/move-files.php', {
+      file_ids: fileIds,
+      folder_id: targetFolderId
     });
   }
 
@@ -105,10 +105,10 @@ export class ShareApi {
     max_downloads?: number;
     expires_days?: number;
   }>> {
-    return post('/api/generatesharelink.php', {
-      fileId: params.fileId,
-      maxDownloads: params.maxDownloads || null,
-      expiresDays: params.expiresDays || null
+    return post('./app/api/generatesharelink.php', {
+      id: params.fileId,
+      max_downloads: params.maxDownloads || null,
+      expires_days: params.expiresDays || null
     });
   }
 
@@ -135,14 +135,14 @@ export class FolderApi {
    * フォルダ一覧を取得
    */
   static async getFolders(): Promise<ApiResponse<FolderData[]>> {
-    return get<FolderData[]>('/api/folders.php');
+    return get<FolderData[]>('./app/api/folders.php');
   }
 
   /**
    * フォルダを作成
    */
   static async createFolder(name: string, parentId?: string): Promise<ApiResponse<FolderData>> {
-    return post('/api/folders.php', {
+    return post('./app/api/folders.php', {
       action: 'create',
       name: name,
       parent_id: parentId || null
@@ -153,7 +153,7 @@ export class FolderApi {
    * フォルダを更新
    */
   static async updateFolder(folderId: string, name: string): Promise<ApiResponse> {
-    return put('/api/folders.php', {
+    return put('./app/api/folders.php', {
       action: 'update',
       id: folderId,
       name: name
@@ -164,14 +164,14 @@ export class FolderApi {
    * フォルダを削除
    */
   static async deleteFolder(folderId: string): Promise<ApiResponse> {
-    return del(`/api/folders.php?id=${encodeURIComponent(folderId)}`);
+    return del(`./app/api/folders.php?id=${encodeURIComponent(folderId)}`);
   }
 
   /**
    * フォルダ内のファイル数を取得
    */
   static async getFolderFileCount(folderId: string): Promise<ApiResponse<{ count: number }>> {
-    return get(`/api/folders/count.php?id=${encodeURIComponent(folderId)}`);
+    return get(`./app/api/folders.php?id=${encodeURIComponent(folderId)}&check=true`);
   }
 }
 
@@ -202,7 +202,7 @@ export class UploadApi {
     if (options.expiresDays) formData.append('expiresDays', options.expiresDays.toString());
     if (options.folderId) formData.append('folderId', options.folderId);
     
-    return post('/api/upload.php', formData);
+    return post('./app/api/upload.php', formData);
   }
 
   /**
@@ -231,7 +231,7 @@ export class UploadApi {
     if (options.expiresDays) formData.append('expiresDays', options.expiresDays.toString());
     if (options.folderId) formData.append('folderId', options.folderId);
     
-    return post('/api/upload.php', formData);
+    return post('./app/api/upload.php', formData);
   }
 
   /**
@@ -241,7 +241,7 @@ export class UploadApi {
     comment?: string;
     folderId?: string;
   } = {}): Promise<ApiResponse<{ upload_url: string }>> {
-    return post('/api/tus-upload.php', {
+    return post('./app/api/tus-upload.php', {
       filename: file.name,
       filesize: file.size,
       filetype: file.type,

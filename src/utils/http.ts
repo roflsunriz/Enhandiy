@@ -24,7 +24,7 @@ const defaultHeaders: Record<string, string> = {
 
 // CSRFトークンを取得
 function getCsrfToken(): string {
-  return window.config?.csrf_token || '';
+  return (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '';
 }
 
 // タイムアウト付きfetch

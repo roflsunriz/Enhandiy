@@ -80,9 +80,77 @@ export class FileManagerCore {
    * ファイルデータを設定
    */
   public setFiles(files: FileData[]): void {
-    this.state.files = [...files];
+    // PHPからのデータを正規化
+    this.state.files = files.map(file => this.normalizeFileData(file));
     this.applyFiltersAndSort();
     this.render();
+  }
+
+  /**
+   * PHPからのファイルデータを正規化
+   */
+  private normalizeFileData(file: FileData): FileData {
+    const normalized = { ...file };
+    
+    // name プロパティが存在しない場合は origin_file_name を使用
+    if (!normalized.name && normalized.origin_file_name) {
+      normalized.name = normalized.origin_file_name;
+    }
+    
+    // upload_date が存在しない場合は input_date から変換
+    if (!normalized.upload_date && normalized.input_date) {
+      // Unix timestamp を ISO 文字列に変換
+      normalized.upload_date = new Date(normalized.input_date * 1000).toISOString();
+    }
+    
+    // id を string に変換
+    if (typeof normalized.id === 'number') {
+      normalized.id = normalized.id.toString();
+    }
+    
+    // type プロパティが存在しない場合はファイル名から推測
+    if (!normalized.type && normalized.name) {
+      normalized.type = this.guessFileTypeFromName(normalized.name);
+    }
+    
+    return normalized;
+  }
+
+  /**
+   * ファイル名からMIMEタイプを推測
+   */
+  private guessFileTypeFromName(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    
+    const mimeMap: Record<string, string> = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'pdf': 'application/pdf',
+      'txt': 'text/plain',
+      'json': 'application/json',
+      'js': 'application/javascript',
+      'html': 'text/html',
+      'css': 'text/css',
+      'xml': 'application/xml',
+      'zip': 'application/zip',
+      'rar': 'application/x-rar-compressed',
+      '7z': 'application/x-7z-compressed',
+      'mp4': 'video/mp4',
+      'avi': 'video/x-msvideo',
+      'mp3': 'audio/mpeg',
+      'wav': 'audio/wav',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'ppt': 'application/vnd.ms-powerpoint',
+      'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    };
+    
+    return mimeMap[ext] || 'application/octet-stream';
   }
 
   /**
@@ -161,17 +229,18 @@ export class FileManagerCore {
    * 選択されたファイルを取得
    */
   public getSelectedFiles(): FileData[] {
-    return this.state.files.filter(file => this.state.selectedFiles.has(file.id));
+    return this.state.files.filter(file => this.state.selectedFiles.has(file.id.toString()));
   }
 
   /**
    * ファイルの選択状態を切り替え
    */
-  public toggleFileSelection(fileId: string): void {
-    if (this.state.selectedFiles.has(fileId)) {
-      this.state.selectedFiles.delete(fileId);
+  public toggleFileSelection(fileId: string | number): void {
+    const id = fileId.toString();
+    if (this.state.selectedFiles.has(id)) {
+      this.state.selectedFiles.delete(id);
     } else {
-      this.state.selectedFiles.add(fileId);
+      this.state.selectedFiles.add(id);
     }
     this.render();
   }
@@ -181,14 +250,14 @@ export class FileManagerCore {
    */
   public toggleAllSelection(): void {
     const currentPageFiles = this.getCurrentPageFiles();
-    const allSelected = currentPageFiles.every(file => this.state.selectedFiles.has(file.id));
+    const allSelected = currentPageFiles.every(file => this.state.selectedFiles.has(file.id.toString()));
     
     if (allSelected) {
       // 全選択解除
-      currentPageFiles.forEach(file => this.state.selectedFiles.delete(file.id));
+      currentPageFiles.forEach(file => this.state.selectedFiles.delete(file.id.toString()));
     } else {
       // 全選択
-      currentPageFiles.forEach(file => this.state.selectedFiles.add(file.id));
+      currentPageFiles.forEach(file => this.state.selectedFiles.add(file.id.toString()));
     }
     
     this.render();
@@ -281,10 +350,20 @@ export class FileManagerCore {
     // 検索フィルター
     if (this.state.searchQuery) {
       const query = this.state.searchQuery.toLowerCase();
-      filtered = filtered.filter(file => 
-        file.name.toLowerCase().includes(query) ||
-        (file.comment && file.comment.toLowerCase().includes(query))
-      );
+      filtered = filtered.filter(file => {
+        // データ検証: name プロパティが存在するかチェック
+        if (!file || typeof file.name !== 'string') {
+          console.warn('Invalid file data (missing name):', file);
+          return false;
+        }
+        
+        const nameMatch = file.name.toLowerCase().includes(query);
+        const commentMatch = file.comment && typeof file.comment === 'string' 
+          ? file.comment.toLowerCase().includes(query) 
+          : false;
+        
+        return nameMatch || commentMatch;
+      });
     }
 
     // ソート
@@ -303,20 +382,43 @@ export class FileManagerCore {
    * ファイルの比較関数
    */
   private compareFiles(a: FileData, b: FileData): number {
+    // データ検証
+    if (!a || !b) {
+      console.warn('Invalid file data in comparison:', { a, b });
+      return 0;
+    }
+    
     const [field, direction] = this.state.sortBy.split('_') as [SortField, SortDirection];
     const multiplier = direction === 'asc' ? 1 : -1;
 
-    switch (field) {
-      case 'name':
-        return a.name.localeCompare(b.name) * multiplier;
-      case 'size':
-        return (a.size - b.size) * multiplier;
-      case 'date':
-        return (new Date(a.upload_date).getTime() - new Date(b.upload_date).getTime()) * multiplier;
-      case 'type':
-        return a.type.localeCompare(b.type) * multiplier;
-      default:
-        return 0;
+    try {
+      switch (field) {
+        case 'name': {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB) * multiplier;
+        }
+        case 'size': {
+          const sizeA = typeof a.size === 'number' ? a.size : 0;
+          const sizeB = typeof b.size === 'number' ? b.size : 0;
+          return (sizeA - sizeB) * multiplier;
+        }
+        case 'date': {
+          const dateA = new Date(a.upload_date || 0).getTime();
+          const dateB = new Date(b.upload_date || 0).getTime();
+          return (dateA - dateB) * multiplier;
+        }
+        case 'type': {
+          const typeA = a.type || '';
+          const typeB = b.type || '';
+          return typeA.localeCompare(typeB) * multiplier;
+        }
+        default:
+          return 0;
+      }
+    } catch (error) {
+      console.error('Error in file comparison:', error, { a, b });
+      return 0;
     }
   }
 

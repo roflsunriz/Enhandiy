@@ -2,13 +2,16 @@
  * グローバル変数とPHPから渡されるデータの型定義
  */
 
-// ファイルデータの型定義
+// ファイルデータの型定義（実際のPHPデータ構造に合わせて修正）
 export interface FileData {
-  id: string;
-  name: string;
+  id: string | number;
+  name?: string; // 計算プロパティとして後で設定
+  origin_file_name: string; // 実際のプロパティ名
+  stored_file_name?: string;
   size: number;
-  type: string;
-  upload_date: string;
+  type?: string;
+  upload_date?: string;
+  input_date?: number; // Unix timestamp
   comment?: string;
   share_key?: string;
   share_expires?: string;
@@ -16,6 +19,10 @@ export interface FileData {
   share_downloads?: number;
   folder_id?: string;
   original_name?: string;
+  count?: number; // ダウンロード回数
+  dl_key_hash?: string | null;
+  del_key_hash?: string | null;
+  file_hash?: string;
 }
 
 // フォルダデータの型定義

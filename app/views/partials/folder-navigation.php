@@ -56,14 +56,14 @@
             <?php // 全てのフォルダに管理メニューを表示 ?>
             <div class="folder-menu" style="position: absolute; top: 5px; right: 5px; opacity: 0; transition: opacity 0.2s;">
               <div class="dropdown">
-                <button class="btn btn-xs btn-default dropdown-toggle" type="button" data-toggle="dropdown" style="padding: 2px 6px; border-radius: 50%; width: 24px; height: 24px;">
-                  <span class="glyphicon glyphicon-option-vertical" style="font-size: 10px;"></span>
+                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 2px 6px; border-radius: 50%; width: 24px; height: 24px; font-size: 10px;">
+                  ⋮
                 </button>
-                <ul class="dropdown-menu dropdown-menu-right" style="min-width: 120px;">
-                  <li><a href="#" class="rename-folder" data-folder-id="<?php echo $folder['id']; ?>"><span class="glyphicon glyphicon-edit"></span> 名前変更</a></li>
-                  <li><a href="#" class="move-folder" data-folder-id="<?php echo $folder['id']; ?>"><span class="glyphicon glyphicon-move"></span> 移動</a></li>
-                  <li class="divider"></li>
-                  <li><a href="#" class="delete-folder" data-folder-id="<?php echo $folder['id']; ?>" style="color: #d9534f;"><span class="glyphicon glyphicon-trash"></span> 削除</a></li>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 120px;">
+                  <li><a class="dropdown-item rename-folder" href="#" data-folder-id="<?php echo $folder['id']; ?>">✏️ 名前変更</a></li>
+                  <li><a class="dropdown-item move-folder" href="#" data-folder-id="<?php echo $folder['id']; ?>">📁 移動</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item delete-folder" href="#" data-folder-id="<?php echo $folder['id']; ?>" style="color: #d9534f;">🗑 削除</a></li>
                 </ul>
               </div>
             </div>

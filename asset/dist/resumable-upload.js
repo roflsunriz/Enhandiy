@@ -1,4 +1,4 @@
-import{r as L,i as z,$ as u,c as m,d as v,s as O}from"./errorHandling.js";const y={};let q=!1;L(()=>{console.log("Resumable Upload functionality initialized (TypeScript)"),z(),P(),u(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
+import{r as L,i as z,$ as u,d as m,e as v,a as O}from"./errorHandling.js";const y={};let q=!1;L(()=>{console.log("Resumable Upload functionality initialized (TypeScript)"),z(),P(),u(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
       <div class="global-upload-status">
         <h6>アップロード進行状況</h6>
         <div class="global-upload-progress">

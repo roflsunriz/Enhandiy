@@ -13,6 +13,10 @@ import './utils/modal'; // モーダル機能をグローバルに公開
 // 型定義のインポート
 import './types/global';
 
+// APIクライアントをインポート（グローバルに公開されるため）
+// ファイルマネージャーや他のコンポーネントから使用される
+import './api/client';
+
 // グローバル初期化
 ready(() => {
   console.log('PHPUploader v2.0 - Modern TypeScript Edition');

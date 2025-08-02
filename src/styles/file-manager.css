@@ -523,89 +523,114 @@
   }
 }
 
-/* ===== ダークモード対応 ===== */
-@media (prefers-color-scheme: dark) {
-  .file-manager-v2 {
-    background: #212529;
-    border-color: #495057;
-    color: #fff;
-  }
-  
-  .file-manager__header {
-    background: #343a40;
-    border-color: #495057;
-  }
-  
-  .file-manager__search-input {
-    background: #495057;
-    border-color: #6c757d;
-    color: #fff;
-  }
-  
-  .file-manager__search-input:focus {
-    border-color: #0d6efd;
-  }
-  
-  .file-manager__view-btn {
-    background: #495057;
-    color: #fff;
-    border-color: #6c757d;
-  }
-  
-  .file-manager__view-btn:hover {
-    background: #5a6268;
-  }
-  
-  .file-grid-item {
-    background: #343a40;
-    border-color: #495057;
-  }
-  
-  .file-grid-item:hover {
-    border-color: #0d6efd;
-  }
-  
-  .file-grid-item.selected {
-    background: #1e2833;
-  }
-  
-  .file-list-table th {
-    background: #343a40;
-    color: #fff;
-  }
-  
-  .file-list-item:hover {
-    background: #343a40;
-  }
-  
-  .file-list-item.selected {
-    background: #1e2833;
-  }
-  
-  .file-action-btn {
-    background: #495057;
-    border-color: #6c757d;
-    color: #fff;
-  }
-  
-  .file-action-btn:hover {
-    background: #5a6268;
-  }
-  
-  .file-manager__pagination {
-    background: #343a40;
-    border-color: #495057;
-  }
-  
-  .pagination-btn {
-    background: #495057;
-    border-color: #6c757d;
-    color: #fff;
-  }
-  
-  .pagination-btn:hover:not(:disabled) {
-    background: #5a6268;
-  }
+/* ===== ソート機能の追加スタイル ===== */
+.file-manager__sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-manager__sort label {
+  font-size: 14px;
+  color: #495057;
+  margin: 0;
+}
+
+.file-manager__sort-select {
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.file-manager__sort-select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.sort-icon {
+  font-size: 12px;
+  opacity: 0.5;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.sortable:hover .sort-icon {
+  opacity: 1;
+}
+
+/* ===== 追加のアクションボタンスタイル ===== */
+.file-action-btn--edit {
+  border-color: #fd7e14;
+  color: #fd7e14;
+}
+
+.file-action-btn--edit:hover {
+  background: #fd7e14;
+  color: #fff;
+  border-color: #fd7e14;
+}
+
+.file-action-btn--move {
+  border-color: #6f42c1;
+  color: #6f42c1;
+}
+
+.file-action-btn--move:hover {
+  background: #6f42c1;
+  color: #fff;
+  border-color: #6f42c1;
+}
+
+.file-action-btn--replace {
+  border-color: #20c997;
+  color: #20c997;
+}
+
+.file-action-btn--replace:hover {
+  background: #20c997;
+  color: #fff;
+  border-color: #20c997;
+}
+
+/* ===== グリッドビューの追加情報 ===== */
+.file-grid-item__folder {
+  color: #6c757d;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.file-grid-item__downloads {
+  color: #6c757d;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+/* ===== リストビューの新しいカラム ===== */
+.file-list__folder {
+  width: 120px;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.file-list__downloads {
+  width: 80px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+/* ===== フォルダナビゲーションとの調和 ===== */
+.folder-item-wrapper:hover .folder-menu {
+  opacity: 1 !important;
+}
+
+/* ===== 明るいテーマの確保 ===== */
+.file-manager-v2 {
+  background: #fff !important;
+  color: #212529 !important;
 }
 
 /* ===== アニメーション ===== */

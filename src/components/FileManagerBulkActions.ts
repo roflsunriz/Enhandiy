@@ -58,7 +58,7 @@ export class FileManagerBulkActions {
 
     try {
       // 削除APIを並列実行
-      const deletePromises = selectedFiles.map(file => this.deleteFile(file.id));
+      const deletePromises = selectedFiles.map(file => this.deleteFile(file.id.toString()));
       const results = await Promise.allSettled(deletePromises);
       
       // 結果を集計
@@ -70,7 +70,7 @@ export class FileManagerBulkActions {
         
         // 成功したファイルをUIから削除
         selectedFiles.forEach(file => {
-          this.core.removeFile(file.id);
+          this.core.removeFile(file.id.toString());
         });
       }
       
@@ -98,7 +98,7 @@ export class FileManagerBulkActions {
     try {
       // 移動APIを並列実行
       const movePromises = selectedFiles.map(file => 
-        this.moveFile(file.id, targetFolderId)
+        this.moveFile(file.id.toString(), targetFolderId)
       );
       
       const results = await Promise.allSettled(movePromises);
@@ -112,7 +112,7 @@ export class FileManagerBulkActions {
         
         // 成功したファイルの情報を更新
         selectedFiles.forEach(file => {
-          this.core.updateFile(file.id, { folder_id: targetFolderId });
+          this.core.updateFile(file.id.toString(), { folder_id: targetFolderId });
         });
       }
       
@@ -144,7 +144,7 @@ export class FileManagerBulkActions {
     try {
       // 共有設定APIを並列実行
       const sharePromises = selectedFiles.map(file => 
-        this.setFileSharing(file.id, shareSettings)
+        this.setFileSharing(file.id.toString(), shareSettings)
       );
       
       const results = await Promise.allSettled(sharePromises);
@@ -187,7 +187,7 @@ export class FileManagerBulkActions {
     try {
       // メタデータ更新APIを並列実行
       const updatePromises = selectedFiles.map(file => 
-        this.updateFileMetadata(file.id, updates)
+        this.updateFileMetadata(file.id.toString(), updates)
       );
       
       const results = await Promise.allSettled(updatePromises);
@@ -201,7 +201,7 @@ export class FileManagerBulkActions {
         
         // 成功したファイルの情報を更新
         selectedFiles.forEach(file => {
-          this.core.updateFile(file.id, updates);
+          this.core.updateFile(file.id.toString(), updates);
         });
       }
       
@@ -240,11 +240,11 @@ export class FileManagerBulkActions {
       stats.totalSize += file.size;
       
       // ファイルタイプを集計
-      const type = file.type.split('/')[0]; // image, video, text, etc.
+      const type = (file.type || '').split('/')[0]; // image, video, text, etc.
       stats.types[type] = (stats.types[type] || 0) + 1;
       
       // 日付の範囲を計算
-      const date = new Date(file.upload_date);
+      const date = new Date(file.upload_date || 0);
       if (!stats.oldestDate || date < stats.oldestDate) {
         stats.oldestDate = date;
       }
@@ -266,7 +266,7 @@ export class FileManagerBulkActions {
   private downloadSingleFile(file: FileData): void {
     const link = document.createElement('a');
     link.href = `./download.php?id=${encodeURIComponent(file.id)}`;
-    link.download = file.name;
+    link.download = file.name || 'download';
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();

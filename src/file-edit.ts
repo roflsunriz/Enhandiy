@@ -446,16 +446,23 @@ function activateTab(tabId: string, contentId: string): void {
   }
 }
 
+// editFile関数（openEditDialogのエイリアス）
+export function editFile(fileId: string, fileName: string = '', comment: string = ''): void {
+  openEditDialog(fileId, fileName, comment);
+}
+
 // グローバル関数として公開（後方互換性）
 if (typeof window !== 'undefined') {
   const globalWindow = window as typeof window & {
     openEditDialog: typeof openEditDialog;
+    editFile: typeof editFile;
     editComment: typeof editComment;
     replaceFile: typeof replaceFile;
     openShareModal: typeof openShareModal;
   };
   
   globalWindow.openEditDialog = openEditDialog;
+  globalWindow.editFile = editFile;
   globalWindow.editComment = editComment;
   globalWindow.replaceFile = replaceFile;
   globalWindow.openShareModal = openShareModal;

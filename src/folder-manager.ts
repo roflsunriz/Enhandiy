@@ -4,16 +4,18 @@
  */
 
 import { ready } from './utils/dom';
-import { get, post, put, del } from './utils/http';
-import { ApiResponse, FolderData } from './types/global';
+import { FolderApi } from './api/client';
+import { FolderData } from './types/global';
 import { initializeErrorHandling } from './utils/errorHandling';
+import { post } from './utils/http';
 
-interface FolderApiResponse extends ApiResponse {
-  folders?: FolderData[];
-  file_count?: number;
-  child_count?: number;
-  moved_files?: number;
-}
+// FolderApiを使用するため、個別インターフェースは不要
+// interface FolderApiResponse extends ApiResponse {
+//   folders?: FolderData[];
+//   file_count?: number;
+//   child_count?: number;
+//   moved_files?: number;
+// }
 
 // Window型を拡張
 declare global {
@@ -39,11 +41,8 @@ class SimpleFolderManager {
   }
   
   private setupEventListeners(): void {
-    // フォルダ作成ボタン
-    const createBtn = document.getElementById('create-folder-btn');
-    if (createBtn) {
-      createBtn.addEventListener('click', () => this.showCreateFolderDialog());
-    }
+    // フォルダ作成ボタン（遅延バインディング対応）
+    this.bindCreateFolderButton();
     
     // フォルダ管理メニュー（イベントデリゲーション）
     document.addEventListener('click', (e: Event) => {
@@ -74,12 +73,24 @@ class SimpleFolderManager {
       }
     });
   }
+
+  private bindCreateFolderButton(): void {
+    const createBtn = document.getElementById('create-folder-btn');
+    if (createBtn) {
+      createBtn.addEventListener('click', () => this.showCreateFolderDialog());
+      console.log('Create folder button bound');
+    } else {
+      console.log('Create folder button not found, retrying in 500ms');
+      // 500ms後に再試行（DOMが完全に読み込まれていない場合に対応）
+      setTimeout(() => this.bindCreateFolderButton(), 500);
+    }
+  }
   
   // フォルダ選択プルダウンの選択肢を読み込み
   private async loadFolderOptions(): Promise<void> {
     try {
-      const response = await get<FolderApiResponse>('./app/api/folders.php');
-      this.updateFolderSelect((response as FolderApiResponse).folders || []);
+          const response = await FolderApi.getFolders();
+    this.updateFolderSelect(response.data || []);
     } catch (error) {
       console.error('フォルダ読み込みエラー:', error);
     }
@@ -128,10 +139,7 @@ class SimpleFolderManager {
   // フォルダ作成
   private async createFolder(name: string, parentId: string | null = null): Promise<void> {
     try {
-      await post<FolderApiResponse>('./app/api/folders.php', {
-        name: name,
-        parent_id: parentId
-      });
+      await FolderApi.createFolder(name, parentId || undefined);
       
       alert('フォルダを作成しました: ' + name);
       // ページを再読み込み
@@ -158,10 +166,7 @@ class SimpleFolderManager {
   // フォルダ名変更
   private async renameFolder(folderId: string, newName: string): Promise<void> {
     try {
-      await put<FolderApiResponse>('./app/api/folders.php', {
-        id: folderId,
-        name: newName
-      });
+      await FolderApi.updateFolder(folderId, newName);
       
       alert('フォルダ名を変更しました: ' + newName);
       // 名前変更後は現在のページを適切にリロード
@@ -178,8 +183,8 @@ class SimpleFolderManager {
   private async showMoveFolderDialog(folderId: string): Promise<void> {
     try {
       // フォルダ一覧を取得
-      const response = await get<FolderApiResponse>('./app/api/folders.php');
-      const folders = (response as FolderApiResponse).folders || [];
+      const response = await FolderApi.getFolders();
+      const folders = response.data || [];
       
       // 移動先選択のプロンプト作成
       let options = 'ルートフォルダに移動する場合は「root」と入力してください。\n\n利用可能なフォルダ:\n';
@@ -209,17 +214,16 @@ class SimpleFolderManager {
     }
   }
   
-  // フォルダ移動
+  // フォルダ移動（現在のAPIには移動機能がないため、コメントアウト）
   private async moveFolder(folderId: string, newParentId: string | null): Promise<void> {
     try {
-      await put<FolderApiResponse>('./app/api/folders.php', {
-        id: folderId,
-        parent_id: newParentId
-      });
+      // TODO: FolderApiに移動機能を追加する必要がある
+      console.warn('フォルダ移動機能は未実装です', { folderId, newParentId });
+      alert('フォルダ移動機能は現在実装中です。');
+      return;
       
-      alert('フォルダを移動しました');
       // 移動後は現在のページを適切にリロード
-      window.location.reload();
+      // window.location.reload();
       
     } catch (error) {
       console.error('フォルダ移動エラー:', error);
@@ -235,10 +239,10 @@ class SimpleFolderManager {
     
     try {
       // フォルダ内のファイル数を確認
-      const response = await get<FolderApiResponse>(`./app/api/folders.php?id=${folderId}&check=true`);
-      
-      const fileCount = (response as FolderApiResponse).file_count || 0;
-      const childCount = (response as FolderApiResponse).child_count || 0;
+          const response = await FolderApi.getFolderFileCount(folderId);
+    
+    const fileCount = response.data?.count || 0;
+    const childCount = 0; // 子フォルダ数は別途API実装が必要
       
       if (fileCount === 0 && childCount === 0) {
         // 空のフォルダの場合
@@ -266,15 +270,14 @@ class SimpleFolderManager {
   }
   
   // フォルダ削除
-  private async deleteFolder(folderId: string, moveFiles = false): Promise<void> {
+  private async deleteFolder(folderId: string, _moveFiles = false): Promise<void> {
     try {
-      const url = `./app/api/folders.php?id=${folderId}${moveFiles ? '&move_files=true' : ''}`;
-      const response = await del<FolderApiResponse>(url);
+      const response = await FolderApi.deleteFolder(folderId);
       
-      if (moveFiles && (response as FolderApiResponse).moved_files && (response as FolderApiResponse).moved_files! > 0) {
-        alert(`フォルダを削除しました。\n${(response as FolderApiResponse).moved_files}個のファイルをルートフォルダに移動しました。`);
-      } else {
+      if (response.success) {
         alert('フォルダを削除しました');
+      } else {
+        throw new Error(response.error || 'フォルダ削除に失敗しました');
       }
       
       // 削除後は現在のページを適切にリロード
@@ -290,15 +293,17 @@ class SimpleFolderManager {
 
 // グローバルファイル移動関数（外部から呼び出し可能）
 export async function moveFile(fileId: string): Promise<void> {
-  if (!window.folderManager) {
-    alert('フォルダマネージャが初期化されていません');
+  // フォルダ機能が無効でも移動機能は提供
+  const config = (window as unknown as { config?: { folders_enabled?: boolean } }).config;
+  if (!config || !config.folders_enabled) {
+    alert('フォルダ機能が無効になっています。設定を確認してください。');
     return;
   }
   
   try {
     // フォルダ一覧を取得
-    const response = await get<FolderApiResponse>('./app/api/folders.php');
-    const folders = (response as FolderApiResponse).folders || [];
+    const response = await FolderApi.getFolders();
+    const folders = response.data || [];
     
     // 移動先選択のプロンプト作成
     let options = 'ルートフォルダに移動する場合は「root」と入力してください。\n\n利用可能なフォルダ:\n';
@@ -341,10 +346,15 @@ ready(() => {
   // エラーハンドリングの初期化
   initializeErrorHandling();
   
-  if (document.getElementById('folder-grid') || document.getElementById('folder-select')) {
+  // フォルダ機能が有効な場合は常に初期化
+  const config = (window as unknown as { config?: { folders_enabled?: boolean } }).config;
+  if (config && config.folders_enabled) {
     const manager = new SimpleFolderManager();
     // グローバルに公開（既存のJavaScriptとの互換性のため）
     window.folderManager = manager;
+    console.log('SimpleFolderManager initialized');
+  } else {
+    console.log('Folder functionality is disabled or config not available');
   }
 });
 

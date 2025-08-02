@@ -36,6 +36,17 @@ export class FileManagerRenderer {
           <div class="file-manager__search">
             <input type="text" class="file-manager__search-input" placeholder="ファイル名または説明で検索...">
           </div>
+          <div class="file-manager__sort">
+            <label>並び順:</label>
+            <select class="file-manager__sort-select">
+              <option value="name_asc">名前 ↑</option>
+              <option value="name_desc">名前 ↓</option>
+              <option value="size_asc">サイズ ↑</option>
+              <option value="size_desc">サイズ ↓</option>
+              <option value="date_asc">日付 ↑</option>
+              <option value="date_desc" selected>日付 ↓</option>
+            </select>
+          </div>
           <div class="file-manager__view-toggle">
             <button class="file-manager__view-btn" data-view="grid" title="グリッド表示">
               <span class="view-icon view-icon--grid">⊞</span>
@@ -97,6 +108,7 @@ export class FileManagerRenderer {
    */
   private updateViewMode(): void {
     const viewMode = this.core.getViewMode();
+    const state = this.core.getState();
     
     // ビューボタンの状態更新
     const viewButtons = this.core.container.querySelectorAll('.file-manager__view-btn');
@@ -109,6 +121,12 @@ export class FileManagerRenderer {
       }
     });
     
+    // ソートセレクトの状態更新
+    const sortSelect = this.core.container.querySelector('.file-manager__sort-select') as HTMLSelectElement;
+    if (sortSelect) {
+      sortSelect.value = state.sortBy;
+    }
+    
     // コンテンツエリアの表示切り替え
     const gridView = this.core.container.querySelector('.file-manager__grid') as HTMLElement;
     const listView = this.core.container.querySelector('.file-manager__list') as HTMLElement;
@@ -119,6 +137,29 @@ export class FileManagerRenderer {
     } else {
       gridView.style.display = 'none';
       listView.style.display = 'block';
+    }
+    
+    // ソートアイコンの更新（リストビューのみ）
+    this.updateSortIcons();
+  }
+
+  /**
+   * ソートアイコンの更新
+   */
+  private updateSortIcons(): void {
+    const state = this.core.getState();
+    const [currentField, currentDirection] = state.sortBy.split('_');
+    
+    // 全てのソートアイコンをクリア
+    const sortIcons = this.core.container.querySelectorAll('.sort-icon');
+    sortIcons.forEach(icon => {
+      icon.textContent = '';
+    });
+    
+    // 現在のソートフィールドのアイコンを設定
+    const currentHeader = this.core.container.querySelector(`[data-sort="${currentField}"] .sort-icon`);
+    if (currentHeader) {
+      currentHeader.textContent = currentDirection === 'asc' ? ' ↑' : ' ↓';
     }
   }
 
@@ -168,9 +209,17 @@ export class FileManagerRenderer {
             <th class="file-list__select">
               <input type="checkbox" class="select-all-checkbox">
             </th>
-            <th class="file-list__name sortable" data-sort="name">ファイル名</th>
-            <th class="file-list__size sortable" data-sort="size">サイズ</th>
-            <th class="file-list__date sortable" data-sort="date">アップロード日時</th>
+            <th class="file-list__name sortable" data-sort="name">
+              ファイル名 <span class="sort-icon"></span>
+            </th>
+            <th class="file-list__size sortable" data-sort="size">
+              サイズ <span class="sort-icon"></span>
+            </th>
+            <th class="file-list__date sortable" data-sort="date">
+              アップロード日時 <span class="sort-icon"></span>
+            </th>
+            ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? '<th class="file-list__folder">フォルダ</th>' : ''}
+            <th class="file-list__downloads">DL数</th>
             <th class="file-list__actions">操作</th>
           </tr>
         </thead>
@@ -187,10 +236,10 @@ export class FileManagerRenderer {
    * グリッドアイテムのHTML作成
    */
   private createGridItem(file: FileData): string {
-    const isSelected = this.core.getState().selectedFiles.has(file.id);
-    const fileIcon = this.getFileIcon(file.type);
+    const isSelected = this.core.getState().selectedFiles.has(file.id.toString());
+    const fileIcon = this.getFileIcon(file.type || '');
     const fileSize = this.formatFileSize(file.size);
-    const uploadDate = this.formatDate(file.upload_date);
+    const uploadDate = this.formatDate(file.upload_date || '');
     
     return `
       <div class="file-grid-item ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
@@ -199,15 +248,17 @@ export class FileManagerRenderer {
         </div>
         
         <div class="file-grid-item__icon">
-          <span class="file-icon file-icon--${this.getFileTypeClass(file.type)}">${fileIcon}</span>
+          <span class="file-icon file-icon--${this.getFileTypeClass(file.type || '')}">${fileIcon}</span>
         </div>
         
         <div class="file-grid-item__info">
-          <div class="file-grid-item__name" title="${this.escapeHtml(file.name)}">
-            ${this.escapeHtml(this.truncateText(file.name, 20))}
+          <div class="file-grid-item__name" title="${this.escapeHtml(file.name || '')}">
+            ${this.escapeHtml(this.truncateText(file.name || '', 20))}
           </div>
           <div class="file-grid-item__size">${fileSize}</div>
           <div class="file-grid-item__date">${uploadDate}</div>
+          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled && file.folder_id ? `<div class="file-grid-item__folder">📁 ${this.getFolderPath(file.folder_id)}</div>` : ''}
+          <div class="file-grid-item__downloads">📥 ${this.formatDownloads(file)}</div>
           ${file.comment ? `<div class="file-grid-item__comment">${this.escapeHtml(this.truncateText(file.comment, 30))}</div>` : ''}
         </div>
         
@@ -218,6 +269,21 @@ export class FileManagerRenderer {
           <button class="file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
             🔗
           </button>
+          ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
+          <button class="file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
+            ✏️
+          </button>
+          ` : ''}
+          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
+          <button class="file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
+            📁
+          </button>
+          ` : ''}
+          ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
+          <button class="file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
+            🔄
+          </button>
+          ` : ''}
           <button class="file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
             🗑
           </button>
@@ -230,10 +296,10 @@ export class FileManagerRenderer {
    * リストアイテムのHTML作成
    */
   private createListItem(file: FileData): string {
-    const isSelected = this.core.getState().selectedFiles.has(file.id);
-    const fileIcon = this.getFileIcon(file.type);
+    const isSelected = this.core.getState().selectedFiles.has(file.id.toString());
+    const fileIcon = this.getFileIcon(file.type || '');
     const fileSize = this.formatFileSize(file.size);
-    const uploadDate = this.formatDate(file.upload_date);
+    const uploadDate = this.formatDate(file.upload_date || '');
     
     return `
       <tr class="file-list-item ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
@@ -241,12 +307,14 @@ export class FileManagerRenderer {
           <input type="checkbox" ${isSelected ? 'checked' : ''} class="file-checkbox" data-file-id="${file.id}">
         </td>
         <td class="file-list__name">
-          <span class="file-icon file-icon--${this.getFileTypeClass(file.type)}">${fileIcon}</span>
-          <span class="file-name" title="${this.escapeHtml(file.name)}">${this.escapeHtml(file.name)}</span>
+          <span class="file-icon file-icon--${this.getFileTypeClass(file.type || '')}">${fileIcon}</span>
+          <span class="file-name" title="${this.escapeHtml(file.name || '')}">${this.escapeHtml(file.name || '')}</span>
           ${file.comment ? `<div class="file-comment">${this.escapeHtml(file.comment)}</div>` : ''}
         </td>
         <td class="file-list__size">${fileSize}</td>
         <td class="file-list__date">${uploadDate}</td>
+        ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<td class="file-list__folder">${this.getFolderPath(file.folder_id)}</td>` : ''}
+        <td class="file-list__downloads">${this.formatDownloads(file)}</td>
         <td class="file-list__actions">
           <button class="file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
             ⬇
@@ -254,6 +322,21 @@ export class FileManagerRenderer {
           <button class="file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
             🔗
           </button>
+          ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
+          <button class="file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
+            ✏️
+          </button>
+          ` : ''}
+          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
+          <button class="file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
+            📁
+          </button>
+          ` : ''}
+          ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
+          <button class="file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
+            🔄
+          </button>
+          ` : ''}
           <button class="file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
             🗑
           </button>
@@ -354,14 +437,19 @@ export class FileManagerRenderer {
    * ユーティリティメソッド
    */
   private getFileIcon(mimeType: string): string {
-    if (!mimeType) return '📁';
+    if (!mimeType) return '📄'; // 未知のファイルタイプは文書アイコン
     if (mimeType.startsWith('image/')) return '🖼';
     if (mimeType.startsWith('video/')) return '🎥';
     if (mimeType.startsWith('audio/')) return '🎵';
     if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('zip') || mimeType.includes('archive')) return '📦';
-    if (mimeType.includes('text')) return '📝';
-    return '📁';
+    if (mimeType.includes('zip') || mimeType.includes('archive') || mimeType.includes('compressed')) return '📦';
+    if (mimeType.includes('text') || mimeType.includes('plain')) return '📝';
+    if (mimeType.includes('javascript') || mimeType.includes('json')) return '📜';
+    if (mimeType.includes('html') || mimeType.includes('xml')) return '🌐';
+    if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+    if (mimeType.includes('excel') || mimeType.includes('sheet')) return '📊';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📽';
+    return '📄'; // デフォルトは文書アイコン
   }
 
   private getFileTypeClass(mimeType: string): string {
@@ -370,8 +458,13 @@ export class FileManagerRenderer {
     if (mimeType.startsWith('video/')) return 'video';
     if (mimeType.startsWith('audio/')) return 'audio';
     if (mimeType.includes('pdf')) return 'pdf';
-    if (mimeType.includes('zip')) return 'archive';
-    if (mimeType.includes('text')) return 'text';
+    if (mimeType.includes('zip') || mimeType.includes('archive') || mimeType.includes('compressed')) return 'archive';
+    if (mimeType.includes('text') || mimeType.includes('plain')) return 'text';
+    if (mimeType.includes('javascript') || mimeType.includes('json')) return 'code';
+    if (mimeType.includes('html') || mimeType.includes('xml')) return 'web';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'document';
+    if (mimeType.includes('excel') || mimeType.includes('sheet')) return 'spreadsheet';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'presentation';
     return 'file';
   }
 
@@ -389,14 +482,48 @@ export class FileManagerRenderer {
   }
 
   private formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return '不明';
+    
+    let date: Date;
+    
+    // 様々な日付形式に対応
+    if (typeof dateString === 'string') {
+      // MySQLのDATETIME形式（YYYY-MM-DD HH:MM:SS）を処理
+      if (dateString.includes(' ')) {
+        const parts = dateString.split(' ');
+        if (parts.length === 2) {
+          const [datePart, timePart] = parts;
+          // YYYY-MM-DD HH:MM:SS 形式をISO形式に変換
+          const isoString = `${datePart}T${timePart}`;
+          date = new Date(isoString);
+        } else {
+          date = new Date(dateString);
+        }
+      } else {
+        date = new Date(dateString);
+      }
+    } else {
+      date = new Date(dateString);
+    }
+    
+    // 無効な日付の場合
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date format:', dateString);
+      return '不明';
+    }
+    
+    try {
+      return date.toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error, dateString);
+      return '不明';
+    }
   }
 
   private escapeHtml(text: string): string {
@@ -409,6 +536,47 @@ export class FileManagerRenderer {
   private truncateText(text: string, length: number): string {
     if (!text) return '';
     return text.length > length ? text.substring(0, length) + '...' : text;
+  }
+
+  private getFolderPath(folderId?: string): string {
+    if (!folderId) return 'ルート';
+    
+    // フォルダデータからフォルダ名を取得
+    const folderData = (window as unknown as { folderData?: unknown[] }).folderData || [];
+    
+    const findFolder = (folders: unknown[], id: string): { name?: string } | null => {
+      for (const folder of folders) {
+        const f = folder as { id?: string; name?: string; children?: unknown[] };
+        if (f.id === id) return f;
+        if (f.children) {
+          const found = findFolder(f.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    
+    const folder = findFolder(folderData, folderId);
+    return folder?.name || '不明なフォルダ';
+  }
+
+  private formatDownloads(file: FileData): string {
+    // 実際のダウンロード数（count プロパティ）があれば表示
+    if (file.count && typeof file.count === 'number') {
+      return `${file.count}回`;
+    }
+    
+    // 共有ダウンロード数があれば表示
+    if (file.share_downloads && typeof file.share_downloads === 'number') {
+      return `${file.share_downloads}回`;
+    }
+    
+    // 共有リンクが存在するかチェック
+    if (file.share_key) {
+      return '共有中';
+    }
+    
+    return '0回';
   }
 }
 
