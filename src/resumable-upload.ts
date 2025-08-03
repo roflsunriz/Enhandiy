@@ -8,6 +8,7 @@ import { ready, $, addClass, removeClass } from './utils/dom';
 import { showError } from './utils/messages';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { ApiResponse } from './types/global';
+import { showAlert } from './utils/modal';
 
 // 外部ライブラリの型定義
 declare global {
@@ -608,19 +609,19 @@ export function cancelUpload(filename: string): boolean {
 /**
  * 既存のアップロード関数を拡張
  */
-export function enhancedFileUpload(): void {
+export async function enhancedFileUpload(): Promise<void> {
   console.log('Enhanced file upload called');
   
   // 差し替えキー必須チェック
   const replaceKeyInput = $('#replaceKeyInput') as HTMLInputElement;
   if (!replaceKeyInput) {
-    alert('差し替えキー入力フィールドが見つかりません。');
+    await showAlert('差し替えキー入力フィールドが見つかりません。');
     return;
   }
   
   const replaceKey = replaceKeyInput.value;
   if (!replaceKey || replaceKey.trim() === '') {
-    alert('差し替えキーの入力は必須です。');
+    await showAlert('差し替えキーの入力は必須です。');
     return;
   }
   
@@ -650,7 +651,7 @@ export function enhancedFileUpload(): void {
   }
   
   console.warn('No files selected for upload');
-  alert('ファイルが選択されていません。ファイルを選択してからアップロードボタンを押してください。');
+  await showAlert('ファイルが選択されていません。ファイルを選択してからアップロードボタンを押してください。');
 }
 
 /**

@@ -96,6 +96,83 @@
   </div>
 </div>
 
+<!-- 汎用アラートモーダル -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="alertModalLabel">お知らせ</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="alertModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 汎用確認モーダル -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="confirmModalLabel">確認</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmModalCancel">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="confirmModalOk">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 汎用入力モーダル -->
+<div class="modal fade" id="promptModal" tabindex="-1" aria-labelledby="promptModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="promptModalLabel">入力</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="promptModalMessage"></p>
+        <input type="text" class="form-control" id="promptModalInput" placeholder="">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="promptModalCancel">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="promptModalOk">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- パスワード入力モーダル -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="passwordModalLabel">パスワード入力</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="passwordModalMessage"></p>
+        <input type="password" class="form-control" id="passwordModalInput" placeholder="パスワードを入力してください">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="passwordModalCancel">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="passwordModalOk">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 共有リンクモーダル -->
 <div class="modal fade" id="shareLinkModal" tabindex="-1" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">

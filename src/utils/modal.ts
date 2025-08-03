@@ -228,6 +228,218 @@ export function alertModal(message: string, title: string = 'お知らせ'): voi
   openModal('ok', title, message);
 }
 
+/**
+ * 新しいアラートモーダル（Promise版）
+ */
+export function showAlert(message: string, title: string = 'お知らせ'): Promise<void> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('alertModal');
+    if (!modal) {
+      resolve();
+      return;
+    }
+
+    // モーダルの内容を設定
+    const titleElement = modal.querySelector('#alertModalLabel');
+    const messageElement = modal.querySelector('#alertModalMessage');
+    
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+
+    // OKボタンのイベントリスナー設定
+    const okButton = modal.querySelector('[data-bs-dismiss="modal"]');
+    const handleOk = () => {
+      okButton?.removeEventListener('click', handleOk);
+      resolve();
+    };
+    okButton?.addEventListener('click', handleOk);
+
+    // モーダルを表示
+    showModal('alertModal');
+  });
+}
+
+/**
+ * 新しい確認モーダル（Promise版）
+ */
+export function showConfirm(message: string, title: string = '確認'): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmModal');
+    if (!modal) {
+      resolve(false);
+      return;
+    }
+
+    // モーダルの内容を設定
+    const titleElement = modal.querySelector('#confirmModalLabel');
+    const messageElement = modal.querySelector('#confirmModalMessage');
+    const okButton = modal.querySelector('#confirmModalOk');
+    const cancelButton = modal.querySelector('#confirmModalCancel');
+    
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+
+    // イベントリスナー設定
+    const handleOk = () => {
+      cleanup();
+      hideModal('confirmModal');
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      hideModal('confirmModal');
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      okButton?.removeEventListener('click', handleOk);
+      cancelButton?.removeEventListener('click', handleCancel);
+      modal.removeEventListener('hidden.bs.modal', handleCancel);
+    };
+
+    okButton?.addEventListener('click', handleOk);
+    cancelButton?.addEventListener('click', handleCancel);
+    modal.addEventListener('hidden.bs.modal', handleCancel, { once: true });
+
+    // モーダルを表示
+    showModal('confirmModal');
+  });
+}
+
+/**
+ * 新しい入力モーダル（Promise版）
+ */
+export function showPrompt(message: string, defaultValue: string = '', title: string = '入力'): Promise<string | null> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('promptModal');
+    if (!modal) {
+      resolve(null);
+      return;
+    }
+
+    // モーダルの内容を設定
+    const titleElement = modal.querySelector('#promptModalLabel');
+    const messageElement = modal.querySelector('#promptModalMessage');
+    const inputElement = modal.querySelector('#promptModalInput') as HTMLInputElement;
+    const okButton = modal.querySelector('#promptModalOk');
+    const cancelButton = modal.querySelector('#promptModalCancel');
+    
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+    if (inputElement) {
+      inputElement.value = defaultValue;
+      // モーダルが表示されたらフォーカスを設定
+      modal.addEventListener('shown.bs.modal', () => {
+        inputElement.focus();
+        inputElement.select();
+      }, { once: true });
+    }
+
+    // イベントリスナー設定
+    const handleOk = () => {
+      const value = inputElement?.value?.trim() || '';
+      cleanup();
+      hideModal('promptModal');
+      resolve(value || null);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      hideModal('promptModal');
+      resolve(null);
+    };
+
+    const handleEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleOk();
+      }
+    };
+
+    const cleanup = () => {
+      okButton?.removeEventListener('click', handleOk);
+      cancelButton?.removeEventListener('click', handleCancel);
+      inputElement?.removeEventListener('keypress', handleEnter);
+      modal.removeEventListener('hidden.bs.modal', handleCancel);
+    };
+
+    okButton?.addEventListener('click', handleOk);
+    cancelButton?.addEventListener('click', handleCancel);
+    inputElement?.addEventListener('keypress', handleEnter);
+    modal.addEventListener('hidden.bs.modal', handleCancel, { once: true });
+
+    // モーダルを表示
+    showModal('promptModal');
+  });
+}
+
+/**
+ * パスワード入力モーダル（Promise版）
+ */
+export function showPasswordPrompt(message: string, title: string = 'パスワード入力'): Promise<string | null> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('passwordModal');
+    if (!modal) {
+      resolve(null);
+      return;
+    }
+
+    // モーダルの内容を設定
+    const titleElement = modal.querySelector('#passwordModalLabel');
+    const messageElement = modal.querySelector('#passwordModalMessage');
+    const inputElement = modal.querySelector('#passwordModalInput') as HTMLInputElement;
+    const okButton = modal.querySelector('#passwordModalOk');
+    const cancelButton = modal.querySelector('#passwordModalCancel');
+    
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+    if (inputElement) {
+      inputElement.value = '';
+      // モーダルが表示されたらフォーカスを設定
+      modal.addEventListener('shown.bs.modal', () => {
+        inputElement.focus();
+      }, { once: true });
+    }
+
+    // イベントリスナー設定
+    const handleOk = () => {
+      const value = inputElement?.value || '';
+      cleanup();
+      hideModal('passwordModal');
+      resolve(value || null);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      hideModal('passwordModal');
+      resolve(null);
+    };
+
+    const handleEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleOk();
+      }
+    };
+
+    const cleanup = () => {
+      okButton?.removeEventListener('click', handleOk);
+      cancelButton?.removeEventListener('click', handleCancel);
+      inputElement?.removeEventListener('keypress', handleEnter);
+      modal.removeEventListener('hidden.bs.modal', handleCancel);
+    };
+
+    okButton?.addEventListener('click', handleOk);
+    cancelButton?.addEventListener('click', handleCancel);
+    inputElement?.addEventListener('keypress', handleEnter);
+    modal.addEventListener('hidden.bs.modal', handleCancel, { once: true });
+
+    // モーダルを表示
+    showModal('passwordModal');
+  });
+}
+
 // グローバル関数として公開（後方互換性）
 if (typeof window !== 'undefined') {
   (window as typeof window & {

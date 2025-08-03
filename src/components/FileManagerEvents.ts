@@ -6,6 +6,7 @@
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
 import { ShareApi, FileApi, AuthApi } from '../api/client';
+import { showAlert, showConfirm, showPrompt, showPasswordPrompt } from '../utils/modal';
 
 export class FileManagerEvents {
   private core: FileManagerCore;
@@ -440,16 +441,16 @@ export class FileManagerEvents {
         // 認証要求 or キー不一致
         const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
         if (errCode === 'AUTH_REQUIRED' || errCode === 'INVALID_KEY') {
-          key = window.prompt('ダウンロードキーを入力してください:') ?? '';
+          key = await showPasswordPrompt('ダウンロードキーを入力してください:') ?? '';
           if (!key) return; // キャンセル
           continue; // 再トライ
         }
 
-        alert(res.message || 'ダウンロードエラー');
+        await showAlert(res.message || 'ダウンロードエラー');
         return;
       } catch (e) {
         console.error('verifyDownload error', e);
-        alert('ダウンロード処理でエラーが発生しました。');
+        await showAlert('ダウンロード処理でエラーが発生しました。');
         return;
       }
     }
@@ -458,20 +459,20 @@ export class FileManagerEvents {
   /**
    * 選択ファイルのダウンロード
    */
-  private downloadSelectedFiles(): void {
+  private async downloadSelectedFiles(): Promise<void> {
     const selectedFiles = this.core.getSelectedFiles();
     
     if (selectedFiles.length === 0) {
-      alert('ダウンロードするファイルを選択してください。');
+      await showAlert('ダウンロードするファイルを選択してください。');
       return;
     }
     
     if (selectedFiles.length === 1) {
-      this.downloadFile(selectedFiles[0].id.toString());
+      await this.downloadFile(selectedFiles[0].id.toString());
     } else {
       // 複数ファイルの場合はZIP化など
       console.log('複数ファイルダウンロード:', selectedFiles.length, '件');
-      alert('複数ファイルのダウンロード機能は実装中です。');
+      await showAlert('複数ファイルのダウンロード機能は実装中です。');
     }
   }
 
@@ -494,17 +495,17 @@ export class FileManagerEvents {
         
         if (navigator.clipboard) {
           await navigator.clipboard.writeText(shareUrl);
-          alert(`共有リンクをクリップボードにコピーしました:\n${shareUrl}`);
+          await showAlert(`共有リンクをクリップボードにコピーしました:\n${shareUrl}`);
         } else {
           // クリップボードAPIが使えない場合
-          window.prompt('共有リンク（Ctrl+Cでコピー）:', shareUrl);
+          await showPrompt('共有リンク（Ctrl+Cでコピー）:', shareUrl);
         }
       } else {
-        alert('共有リンクの生成に失敗しました: ' + (result.error || '不明なエラー'));
+        await showAlert('共有リンクの生成に失敗しました: ' + (result.error || '不明なエラー'));
       }
     } catch (error) {
       console.error('共有エラー:', error);
-      alert('共有機能でエラーが発生しました。');
+      await showAlert('共有機能でエラーが発生しました。');
     }
   }
 
@@ -515,12 +516,11 @@ export class FileManagerEvents {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
 
-    if (!confirm(`「${file.name}」を削除しますか？この操作は取り消せません。`)) {
+    if (!(await showConfirm(`「${file.name}」を削除しますか？この操作は取り消せません。`))) {
       return;
     }
 
     let key = '';
-    let needsKey = false;
     
     while (true) {
       try {
@@ -533,23 +533,22 @@ export class FileManagerEvents {
 
         const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
         if (errCode === 'AUTH_REQUIRED') {
-          needsKey = true;
-          key = window.prompt('削除キーを入力してください:') ?? '';
+          key = await showPasswordPrompt('削除キーを入力してください:') ?? '';
           if (!key) return; // キャンセル
           continue; // 再トライ
         }
         
         if (errCode === 'INVALID_KEY') {
-          key = window.prompt('削除キーが正しくありません。再入力してください:') ?? '';
+          key = await showPasswordPrompt('削除キーが正しくありません。再入力してください:') ?? '';
           if (!key) return;
           continue;
         }
 
-        alert(res.message || '削除検証エラー');
+        await showAlert(res.message || '削除検証エラー');
         return;
       } catch (e) {
         console.error('verifyDelete error', e);
-        alert('削除処理でエラーが発生しました。');
+        await showAlert('削除処理でエラーが発生しました。');
         return;
       }
     }
@@ -562,11 +561,11 @@ export class FileManagerEvents {
     const selectedFiles = this.core.getSelectedFiles();
     
     if (selectedFiles.length === 0) {
-      alert('削除するファイルを選択してください。');
+      await showAlert('削除するファイルを選択してください。');
       return;
     }
     
-    if (!confirm(`選択した${selectedFiles.length}件のファイルを削除しますか？この操作は取り消せません。`)) {
+    if (!(await showConfirm(`選択した${selectedFiles.length}件のファイルを削除しますか？この操作は取り消せません。`))) {
       return;
     }
     
@@ -593,20 +592,20 @@ export class FileManagerEvents {
       }
       
       if (successCount > 0) {
-        alert(`${successCount}件のファイルを削除しました。${errorCount > 0 ? `\n${errorCount}件の削除に失敗しました。` : ''}`);
+        await showAlert(`${successCount}件のファイルを削除しました。${errorCount > 0 ? `\n${errorCount}件の削除に失敗しました。` : ''}`);
       } else {
-        alert('ファイルの削除に失敗しました。');
+        await showAlert('ファイルの削除に失敗しました。');
       }
     } catch (error) {
       console.error('一括削除エラー:', error);
-      alert('ファイル削除でエラーが発生しました。');
+      await showAlert('ファイル削除でエラーが発生しました。');
     }
   }
 
   /**
    * ファイル編集
    */
-  private editFile(fileId: string): void {
+  private async editFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
     
@@ -614,7 +613,7 @@ export class FileManagerEvents {
     if (typeof (window as unknown as { editFile?: (id: string, name?: string, comment?: string) => void }).editFile === 'function') {
       (window as unknown as { editFile: (id: string, name?: string, comment?: string) => void }).editFile(fileId, file.name, file.comment);
     } else {
-      alert('編集機能が読み込まれていません。ページを再読み込みしてください。');
+      await showAlert('編集機能が読み込まれていません。ページを再読み込みしてください。');
     }
   }
 
@@ -629,14 +628,14 @@ export class FileManagerEvents {
     if (typeof (window as unknown as { moveFile?: (id: string) => Promise<void> }).moveFile === 'function') {
       await (window as unknown as { moveFile: (id: string) => Promise<void> }).moveFile(fileId);
     } else {
-      alert('フォルダマネージャーが読み込まれていません。');
+      await showAlert('フォルダマネージャーが読み込まれていません。');
     }
   }
 
   /**
    * ファイル差し替え
    */
-  private replaceFile(fileId: string): void {
+  private async replaceFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
     
@@ -644,7 +643,7 @@ export class FileManagerEvents {
     if (typeof (window as unknown as { replaceFile?: (id: string, name?: string) => void }).replaceFile === 'function') {
       (window as unknown as { replaceFile: (id: string, name?: string) => void }).replaceFile(fileId, file.name);
     } else {
-      alert('差し替え機能が読み込まれていません。ページを再読み込みしてください。');
+      await showAlert('差し替え機能が読み込まれていません。ページを再読み込みしてください。');
     }
   }
 

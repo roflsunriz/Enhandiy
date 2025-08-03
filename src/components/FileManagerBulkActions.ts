@@ -7,6 +7,7 @@ import { FileData } from '../types/global';
 import { FileManagerCore } from './FileManagerCore';
 import { post, del } from '../utils/http';
 import { showSuccess, showError } from '../utils/messages';
+import { showConfirm } from '../utils/modal';
 
 export class FileManagerBulkActions {
   private core: FileManagerCore;
@@ -47,7 +48,7 @@ export class FileManagerBulkActions {
       return;
     }
 
-    const confirmed = confirm(
+    const confirmed = await showConfirm(
       `選択した${selectedFiles.length}件のファイルを削除しますか？\n\n` +
       `削除されるファイル:\n${selectedFiles.map(f => f.name).slice(0, 5).join('\n')}` +
       `${selectedFiles.length > 5 ? `\n...他${selectedFiles.length - 5}件` : ''}\n\n` +

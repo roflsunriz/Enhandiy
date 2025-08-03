@@ -6,6 +6,7 @@
 import { ready, $, addClass, removeClass } from './utils/dom';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { ApiResponse } from './types/global';
+import { showAlert } from './utils/modal';
 
 // 型定義
 interface UploadedFile extends File {
@@ -138,7 +139,7 @@ function initializeDragDrop(): void {
             // 単一ファイルアップロード
             uploadSingleFile(fileInput.files[0]);
           } else {
-            alert('ファイルが選択されていません。');
+            showAlert('ファイルが選択されていません。');
           }
         }
       }
@@ -380,14 +381,14 @@ function clearSelectedFiles(): void {
   if (folderInput) folderInput.value = '';
 }
 
-function uploadMultipleFiles(): void {
+async function uploadMultipleFiles(): Promise<void> {
   if (selectedFiles.length === 0) {
-    alert('ファイルが選択されていません。');
+    await showAlert('ファイルが選択されていません。');
     return;
   }
   
   if (isUploading) {
-    alert('アップロード中です。しばらくお待ちください。');
+    await showAlert('アップロード中です。しばらくお待ちください。');
     return;
   }
   

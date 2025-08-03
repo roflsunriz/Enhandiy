@@ -8,6 +8,7 @@ import { FolderApi } from './api/client';
 import { FolderData } from './types/global';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { post } from './utils/http';
+import { showAlert, showConfirm, showPrompt } from './utils/modal';
 
 // FolderApiを使用するため、個別インターフェースは不要
 // interface FolderApiResponse extends ApiResponse {
@@ -129,8 +130,8 @@ class SimpleFolderManager {
   }
   
   // フォルダ作成ダイアログ
-  private showCreateFolderDialog(): void {
-    const folderName = window.prompt('新しいフォルダ名を入力してください:');
+  private async showCreateFolderDialog(): Promise<void> {
+    const folderName = await showPrompt('新しいフォルダ名を入力してください:');
     if (!folderName || !folderName.trim()) return;
     
     this.createFolder(folderName.trim(), this.currentFolderId);
@@ -141,23 +142,23 @@ class SimpleFolderManager {
     try {
       await FolderApi.createFolder(name, parentId || undefined);
       
-      alert('フォルダを作成しました: ' + name);
+      await showAlert('フォルダを作成しました: ' + name);
       // ページを再読み込み
       window.location.reload();
       
     } catch (error) {
       console.error('フォルダ作成エラー:', error);
       const errorMessage = error instanceof Error ? error.message : 'フォルダ作成に失敗しました';
-      alert('エラー: ' + errorMessage);
+      await showAlert('エラー: ' + errorMessage);
     }
   }
   
   // フォルダ名変更ダイアログ
-  private showRenameFolderDialog(folderId: string): void {
+  private async showRenameFolderDialog(folderId: string): Promise<void> {
     const folderElement = document.querySelector(`[data-folder-id="${folderId}"] .folder-item`);
     const currentName = folderElement ? folderElement.textContent?.trim().replace('📁', '').trim() : '';
     
-    const newName = window.prompt('新しいフォルダ名を入力してください:', currentName);
+    const newName = await showPrompt('新しいフォルダ名を入力してください:', currentName);
     if (!newName || !newName.trim() || newName.trim() === currentName) return;
     
     this.renameFolder(folderId, newName.trim());
@@ -168,14 +169,14 @@ class SimpleFolderManager {
     try {
       await FolderApi.updateFolder(folderId, newName);
       
-      alert('フォルダ名を変更しました: ' + newName);
+      await showAlert('フォルダ名を変更しました: ' + newName);
       // 名前変更後は現在のページを適切にリロード
       window.location.reload();
       
     } catch (error) {
       console.error('フォルダ名変更エラー:', error);
       const errorMessage = error instanceof Error ? error.message : 'フォルダ名変更に失敗しました';
-      alert('エラー: ' + errorMessage);
+      await showAlert('エラー: ' + errorMessage);
     }
   }
   
@@ -201,7 +202,7 @@ class SimpleFolderManager {
       };
       addFolderOptions(folders);
       
-      const targetId = window.prompt(options + '\n移動先のフォルダIDを入力してください:');
+      const targetId = await showPrompt(options + '\n移動先のフォルダIDを入力してください:');
       if (targetId === null) return; // キャンセル
       
       const parentId = targetId.toLowerCase() === 'root' ? null : targetId;
@@ -210,7 +211,7 @@ class SimpleFolderManager {
     } catch (error) {
       console.error('フォルダ移動ダイアログエラー:', error);
       const errorMessage = error instanceof Error ? error.message : 'フォルダ移動の準備に失敗しました';
-      alert('エラー: ' + errorMessage);
+      await showAlert('エラー: ' + errorMessage);
     }
   }
   
@@ -219,7 +220,7 @@ class SimpleFolderManager {
     try {
       // TODO: FolderApiに移動機能を追加する必要がある
       console.warn('フォルダ移動機能は未実装です', { folderId, newParentId });
-      alert('フォルダ移動機能は現在実装中です。');
+      await showAlert('フォルダ移動機能は現在実装中です。');
       return;
       
       // 移動後は現在のページを適切にリロード
@@ -228,7 +229,7 @@ class SimpleFolderManager {
     } catch (error) {
       console.error('フォルダ移動エラー:', error);
       const errorMessage = error instanceof Error ? error.message : 'フォルダ移動に失敗しました';
-      alert('エラー: ' + errorMessage);
+      await showAlert('エラー: ' + errorMessage);
     }
   }
   
@@ -246,7 +247,7 @@ class SimpleFolderManager {
       
       if (fileCount === 0 && childCount === 0) {
         // 空のフォルダの場合
-        if (confirm(`フォルダ「${folderName}」を削除しますか？`)) {
+        if (await showConfirm(`フォルダ「${folderName}」を削除しますか？`)) {
           this.deleteFolder(folderId, false);
         }
       } else {
@@ -258,14 +259,14 @@ class SimpleFolderManager {
         message += '「OK」= 中身をルートフォルダに移動して削除\n';
         message += '「キャンセル」= 削除を中止';
         
-        if (confirm(message)) {
+        if (await showConfirm(message)) {
           this.deleteFolder(folderId, true);
         }
       }
     } catch (error) {
       console.error('フォルダ削除確認エラー:', error);
       const errorMessage = error instanceof Error ? error.message : 'フォルダ情報の取得に失敗しました';
-      alert('エラー: ' + errorMessage);
+      await showAlert('エラー: ' + errorMessage);
     }
   }
   
@@ -275,7 +276,7 @@ class SimpleFolderManager {
       const response = await FolderApi.deleteFolder(folderId);
       
       if (response.success) {
-        alert('フォルダを削除しました');
+        await showAlert('フォルダを削除しました');
       } else {
         throw new Error(response.error || 'フォルダ削除に失敗しました');
       }
@@ -286,7 +287,7 @@ class SimpleFolderManager {
     } catch (error) {
       console.error('フォルダ削除エラー:', error);
       const errorMessage = error instanceof Error ? error.message : 'フォルダ削除に失敗しました';
-      alert('エラー: ' + errorMessage);
+      await showAlert('エラー: ' + errorMessage);
     }
   }
 }
@@ -296,7 +297,7 @@ export async function moveFile(fileId: string): Promise<void> {
   // フォルダ機能が無効でも移動機能は提供
   const config = (window as unknown as { config?: { folders_enabled?: boolean } }).config;
   if (!config || !config.folders_enabled) {
-    alert('フォルダ機能が無効になっています。設定を確認してください。');
+    await showAlert('フォルダ機能が無効になっています。設定を確認してください。');
     return;
   }
   
@@ -318,7 +319,7 @@ export async function moveFile(fileId: string): Promise<void> {
     };
     addFolderOptions(folders);
     
-    const targetId = window.prompt(options + '\n移動先のフォルダIDを入力してください:');
+    const targetId = await showPrompt(options + '\n移動先のフォルダIDを入力してください:');
     if (targetId === null) return; // キャンセル
     
     const folderId = targetId.toLowerCase() === 'root' ? null : targetId;
@@ -329,13 +330,13 @@ export async function moveFile(fileId: string): Promise<void> {
       folder_id: folderId
     });
     
-    alert('ファイルを移動しました');
+    await showAlert('ファイルを移動しました');
     window.location.reload();
     
   } catch (error) {
     console.error('ファイル移動エラー:', error);
     const errorMessage = error instanceof Error ? error.message : 'ファイル移動に失敗しました';
-    alert('エラー: ' + errorMessage);
+    await showAlert('エラー: ' + errorMessage);
   }
 }
 

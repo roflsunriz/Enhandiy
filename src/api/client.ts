@@ -6,6 +6,14 @@
 import { post, get, del, put } from '../utils/http';
 import { ApiResponse, FileData, FolderData } from '../types/global';
 
+// 内部レスポンス型の定義
+interface RawApiResponse {
+  status: string;
+  data?: unknown;
+  message?: string;
+  error_code?: string;
+}
+
 /**
  * ファイル操作API
  */
@@ -299,11 +307,11 @@ export class AuthApi {
     fd.append('id', id);
     if (key) fd.append('key', key);
     fd.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
-    const raw = await post('./app/api/verifydownload.php', fd);
-    if ((raw as any).status === 'success') {
-      return { success: true, data: (raw as any).data, message: (raw as any).message } as ApiResponse<{ token: string; expires_at: number }>;
+    const raw = await post('./app/api/verifydownload.php', fd) as unknown as RawApiResponse;
+    if (raw.status === 'success') {
+      return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
     }
-    return { success: false, error: (raw as any).error_code || (raw as any).message } as ApiResponse;
+    return { success: false, error: raw.error_code || raw.message };
   }
 
   /**
@@ -314,11 +322,11 @@ export class AuthApi {
     fd.append('id', id);
     if (key) fd.append('key', key);
     fd.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
-    const raw = await post('./app/api/verifydelete.php', fd);
-    if ((raw as any).status === 'success') {
-      return { success: true, data: (raw as any).data, message: (raw as any).message } as ApiResponse<{ token: string; expires_at: number }>;
+    const raw = await post('./app/api/verifydelete.php', fd) as unknown as RawApiResponse;
+    if (raw.status === 'success') {
+      return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
     }
-    return { success: false, error: (raw as any).error_code || (raw as any).message } as ApiResponse;
+    return { success: false, error: raw.error_code || raw.message };
   }
 
   /**

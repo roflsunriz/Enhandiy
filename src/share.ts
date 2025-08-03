@@ -7,6 +7,7 @@ import { ready, $, attr } from './utils/dom';
 import { post } from './utils/http';
 import { showSuccess, showError } from './utils/messages';
 import { initializeErrorHandling } from './utils/errorHandling';
+import { showConfirm } from './utils/modal';
 
 // 型定義のインポート
 import './types/global';
@@ -178,7 +179,7 @@ function handleShareFormatChange(): void {
  * 共有リンク再生成処理
  */
 async function handleRegenerateShareLink(): Promise<void> {
-  if (confirm('既存の共有リンクは無効になります。新しい共有リンクを生成しますか？')) {
+  if (await showConfirm('既存の共有リンクは無効になります。新しい共有リンクを生成しますか？')) {
     await handleGenerateShareLink();
   }
 }
