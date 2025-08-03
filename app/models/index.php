@@ -53,6 +53,19 @@ class Index
         $stmt = $db->prepare($query);
         $stmt->execute($params);
         $r = $stmt->fetchAll();
+        // 数値フィールドの型を修正
+        foreach ($r as &$row) {
+            if (isset($row['count'])) {
+                $row['count'] = (int)$row['count'];
+            }
+            if (isset($row['size'])) {
+                $row['size'] = (int)$row['size'];
+            }
+            if (isset($row['input_date'])) {
+                $row['input_date'] = (int)$row['input_date'];
+            }
+        }
+
 
         // フォルダ一覧も取得
         $folder_stmt = $db->prepare("SELECT * FROM folders ORDER BY name");

@@ -292,11 +292,41 @@ export class SystemApi {
  */
 export class AuthApi {
   /**
-   * 認証情報を検証
+   * ダウンロード検証（ワンタイムトークン生成）
+   */
+  static async verifyDownload(id: string, key: string = ''): Promise<ApiResponse<{ token: string; expires_at: number }>> {
+    const fd = new FormData();
+    fd.append('id', id);
+    if (key) fd.append('key', key);
+    fd.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
+    const raw = await post('./app/api/verifydownload.php', fd);
+    if ((raw as any).status === 'success') {
+      return { success: true, data: (raw as any).data, message: (raw as any).message } as ApiResponse<{ token: string; expires_at: number }>;
+    }
+    return { success: false, error: (raw as any).error_code || (raw as any).message } as ApiResponse;
+  }
+
+  /**
+   * 削除検証（ワンタイムトークン生成）
+   */
+  static async verifyDelete(id: string, key: string = ''): Promise<ApiResponse<{ token: string; expires_at: number }>> {
+    const fd = new FormData();
+    fd.append('id', id);
+    if (key) fd.append('key', key);
+    fd.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
+    const raw = await post('./app/api/verifydelete.php', fd);
+    if ((raw as any).status === 'success') {
+      return { success: true, data: (raw as any).data, message: (raw as any).message } as ApiResponse<{ token: string; expires_at: number }>;
+    }
+    return { success: false, error: (raw as any).error_code || (raw as any).message } as ApiResponse;
+  }
+
+  /**
+   * （旧API）汎用認証検証 - 互換用
    */
   static async verify(key: string, type: 'download' | 'delete'): Promise<ApiResponse> {
-    const endpoint = type === 'download' ? '/api/verifydownload.php' : '/api/verifydelete.php';
-    return post(endpoint, { key: key });
+    const endpoint = type === 'download' ? './app/api/verifydownload.php' : './app/api/verifydelete.php';
+    return post(endpoint, { key });
   }
 
   /**

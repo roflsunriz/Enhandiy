@@ -5,7 +5,7 @@
 
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
-import { ShareApi, FileApi } from '../api/client';
+import { ShareApi, FileApi, AuthApi } from '../api/client';
 
 export class FileManagerEvents {
   private core: FileManagerCore;
@@ -416,20 +416,43 @@ export class FileManagerEvents {
   /**
    * ファイルダウンロード
    */
-  private downloadFile(fileId: string): void {
+  private async downloadFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
-    
-    // ダウンロードリンクを作成して実行
-    const link = document.createElement('a');
-    link.href = `./download.php?id=${encodeURIComponent(fileId)}`;
-    link.download = file.name || 'download';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    console.log('ダウンロード:', file.name);
+
+    let key = '';
+    while (true) {
+      try {
+        const res = await AuthApi.verifyDownload(fileId, key);
+        if (res.success && res.data?.token) {
+          // トークン付きでダウンロード開始
+          const link = document.createElement('a');
+          link.href = `./download.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(res.data.token)}`;
+          link.download = file.name || 'download';
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          console.log('ダウンロード:', file.name);
+          return;
+        }
+
+        // 認証要求 or キー不一致
+        const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
+        if (errCode === 'AUTH_REQUIRED' || errCode === 'INVALID_KEY') {
+          key = window.prompt('ダウンロードキーを入力してください:') ?? '';
+          if (!key) return; // キャンセル
+          continue; // 再トライ
+        }
+
+        alert(res.message || 'ダウンロードエラー');
+        return;
+      } catch (e) {
+        console.error('verifyDownload error', e);
+        alert('ダウンロード処理でエラーが発生しました。');
+        return;
+      }
+    }
   }
 
   /**
@@ -491,25 +514,44 @@ export class FileManagerEvents {
   private async deleteFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
-    
+
     if (!confirm(`「${file.name}」を削除しますか？この操作は取り消せません。`)) {
       return;
     }
+
+    let key = '';
+    let needsKey = false;
     
-    try {
-      // 削除API呼び出し
-              const result = await FileApi.deleteFile(fileId);
-      
-      if (result.success) {
-        // UIからファイルを削除
-        this.core.removeFile(fileId);
-        alert('ファイルを削除しました。');
-      } else {
-        alert('ファイル削除に失敗しました: ' + (result.error || '不明なエラー'));
+    while (true) {
+      try {
+        const res = await AuthApi.verifyDelete(fileId, key);
+        if (res.success && res.data?.token) {
+          // トークン OK → delete.php へ遷移
+          window.location.href = `./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(res.data.token)}`;
+          return;
+        }
+
+        const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
+        if (errCode === 'AUTH_REQUIRED') {
+          needsKey = true;
+          key = window.prompt('削除キーを入力してください:') ?? '';
+          if (!key) return; // キャンセル
+          continue; // 再トライ
+        }
+        
+        if (errCode === 'INVALID_KEY') {
+          key = window.prompt('削除キーが正しくありません。再入力してください:') ?? '';
+          if (!key) return;
+          continue;
+        }
+
+        alert(res.message || '削除検証エラー');
+        return;
+      } catch (e) {
+        console.error('verifyDelete error', e);
+        alert('削除処理でエラーが発生しました。');
+        return;
       }
-    } catch (error) {
-      console.error('削除エラー:', error);
-      alert('ファイル削除でエラーが発生しました。');
     }
   }
 

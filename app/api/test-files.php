@@ -34,7 +34,7 @@ try {
     $sql = "SELECT id, origin_file_name as original_name, origin_file_name as filename, 
                    comment, dl_key as password_dl, del_key as password_del, 
                    size as file_size, 'application/octet-stream' as mime_type, 
-                   input_date as upload_date, count as download_count, folder_id 
+                   input_date as upload_date, count as count, folder_id 
             FROM uploaded WHERE 1=1";
     $params = array();
 

@@ -41,7 +41,7 @@ class FileApiHandler
 
             $sql = "SELECT id, origin_file_name as original_name, origin_file_name as filename, 
                            comment, size as file_size, 'application/octet-stream' as mime_type, 
-                           input_date as upload_date, \"count\" as download_count, folder_id 
+                           input_date as upload_date, \"count\" as count, folder_id 
                     FROM uploaded WHERE 1=1";
             $params = array();
 
@@ -58,6 +58,12 @@ class FileApiHandler
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // 数値フィールドを正しい型にキャスト
+            foreach ($files as &$file) {
+                if (isset($file['count'])) {
+                    $file['count'] = (int)$file['count'];
+                }
+            }
 
             // 総件数取得
             $countSql = "SELECT COUNT(*) FROM uploaded WHERE 1=1";
@@ -130,10 +136,13 @@ class FileApiHandler
 
             $stmt = $pdo->prepare("SELECT id, origin_file_name as original_name, origin_file_name as filename, 
                                           comment, size as file_size, 'application/octet-stream' as mime_type, 
-                                          input_date as upload_date, \"count\" as download_count, folder_id 
+                                          input_date as upload_date, \"count\" as count, folder_id 
                                    FROM uploaded WHERE id = ?");
             $stmt->execute(array($fileId));
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($file && isset($file['count'])) {
+                $file['count'] = (int)$file['count'];
+            }
 
             if (!$file) {
                 $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
@@ -163,6 +172,9 @@ class FileApiHandler
             $stmt = $pdo->prepare("SELECT origin_file_name as filename FROM uploaded WHERE id = ?");
             $stmt->execute(array($fileId));
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($file && isset($file['count'])) {
+                $file['count'] = (int)$file['count'];
+            }
 
             if (!$file) {
                 $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');

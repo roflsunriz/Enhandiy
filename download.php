@@ -32,7 +32,7 @@ try {
     $fileId = (int)($_GET['id'] ?? 0);
     $token = $_GET['key'] ?? '';
 
-    if ($fileId <= 0 || empty($token)) {
+    if ($fileId <= 0) {
         $logger->warning('Invalid download parameters', ['file_id' => $fileId, 'token_provided' => !empty($token)]);
         header('Location: ./');
         exit;
@@ -111,7 +111,7 @@ try {
     }
 
     // ダウンロード回数の更新
-    $updateStmt = $db->prepare("UPDATE uploaded SET count = count + 1, updated_at = :updated_at WHERE id = :id");
+    $updateStmt = $db->prepare('UPDATE uploaded SET "count" = "count" + 1, updated_at = :updated_at WHERE id = :id');
     $updateStmt->execute([
         'id' => $fileId,
         'updated_at' => time()
@@ -236,7 +236,7 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger)
     }
 
     // ダウンロード回数を増加
-    $updateStmt = $db->prepare("UPDATE uploaded SET count = count + 1 WHERE id = :id");
+    $updateStmt = $db->prepare('UPDATE uploaded SET "count" = "count" + 1 WHERE id = :id');
     $updateStmt->execute(['id' => $id]);
 
     // ファイルダウンロード
