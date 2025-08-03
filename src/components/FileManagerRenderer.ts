@@ -34,25 +34,25 @@ export class FileManagerRenderer {
       <div class="file-manager__header">
         <div class="file-manager__controls">
           <div class="file-manager__search">
-            <input type="text" class="file-manager__search-input" placeholder="ファイル名または説明で検索...">
+            <input type="text" class="file-manager__search-input" placeholder="ファイル名・コメントで検索">
           </div>
           <div class="file-manager__sort">
             <label>並び順:</label>
             <select class="file-manager__sort-select">
-              <option value="name_asc">名前 ↑</option>
-              <option value="name_desc">名前 ↓</option>
-              <option value="size_asc">サイズ ↑</option>
-              <option value="size_desc">サイズ ↓</option>
-              <option value="date_asc">日付 ↑</option>
-              <option value="date_desc" selected>日付 ↓</option>
+              <option value="name_asc">名前順</option>
+              <option value="name_desc">名前順 (逆)</option>
+              <option value="size_asc">サイズ小順</option>
+              <option value="size_desc">サイズ大順</option>
+              <option value="date_asc">古い順</option>
+              <option value="date_desc" selected>新しい順</option>
             </select>
           </div>
           <div class="file-manager__view-toggle">
             <button class="file-manager__view-btn" data-view="grid" title="グリッド表示">
-              <span class="view-icon view-icon--grid">⊞</span>
+              グリッド
             </button>
             <button class="file-manager__view-btn" data-view="list" title="リスト表示">
-              <span class="view-icon view-icon--list">☰</span>
+              リスト
             </button>
           </div>
         </div>
@@ -247,46 +247,59 @@ export class FileManagerRenderer {
           <input type="checkbox" ${isSelected ? 'checked' : ''} class="file-checkbox" data-file-id="${file.id}">
         </div>
         
-        <div class="file-grid-item__icon">
-          <span class="file-icon file-icon--${this.getFileTypeClass(file.type || '')}">${fileIcon}</span>
-        </div>
-        
-        <div class="file-grid-item__info">
+        <!-- アイコンとコメント部分（薄いねずみ色背景） -->
+        <div class="file-grid-item__header">
+          <div class="file-grid-item__icon">
+            <span class="file-icon file-icon--${this.getFileTypeClass(file.type || '')}">${fileIcon}</span>
+          </div>
           <div class="file-grid-item__name" title="${this.escapeHtml(file.name || '')}">
             ${this.escapeHtml(this.truncateText(file.name || '', 20))}
           </div>
-          <div class="file-grid-item__size">${fileSize}</div>
-          <div class="file-grid-item__date">${uploadDate}</div>
-          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled && file.folder_id ? `<div class="file-grid-item__folder">📁 ${this.getFolderPath(file.folder_id)}</div>` : ''}
-          <div class="file-grid-item__downloads">📥 ${this.formatDownloads(file)}</div>
-          ${file.comment ? `<div class="file-grid-item__comment">${this.escapeHtml(this.truncateText(file.comment, 30))}</div>` : ''}
+          ${file.comment ? `<div class="file-grid-item__comment">${this.escapeHtml(this.truncateText(file.comment, 50))}</div>` : ''}
         </div>
         
+        <!-- メタデータ部分（白背景、二段構成） -->
+        <div class="file-grid-item__metadata">
+          <div class="file-grid-item__metadata-row">
+            <div class="file-grid-item__size"><span class="meta-label">サイズ:</span> ${fileSize}</div>
+            <div class="file-grid-item__downloads"><span class="meta-label">DL:</span> ${this.formatDownloads(file)}</div>
+          </div>
+          <div class="file-grid-item__metadata-row">
+            <div class="file-grid-item__date"><span class="meta-label">投稿:</span> ${uploadDate}</div>
+            ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<div class="file-grid-item__folder"><span class="meta-label">場所:</span> ${this.getFolderPath(file.folder_id)}</div>` : ''}
+          </div>
+        </div>
+        
+        <!-- アクションボタン部分（二段構成） -->
         <div class="file-grid-item__actions">
-          <button class="file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
-            ⬇
-          </button>
-          <button class="file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
-            🔗
-          </button>
-          ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
-          <button class="file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
-            ✏️
-          </button>
-          ` : ''}
-          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
-          <button class="file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
-            📁
-          </button>
-          ` : ''}
-          ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
-          <button class="file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
-            🔄
-          </button>
-          ` : ''}
-          <button class="file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
-            🗑
-          </button>
+          <div class="file-grid-item__actions-row">
+            <button class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
+              ダウンロード
+            </button>
+            <button class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
+              共有
+            </button>
+            ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
+            <button class="btn btn-xs btn-warning file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
+              移動
+            </button>
+            ` : ''}
+            ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
+            <button class="btn btn-xs btn-success file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
+              編集
+            </button>
+            ` : ''}
+          </div>
+          <div class="file-grid-item__actions-row">
+            ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
+            <button class="btn btn-xs btn-warning file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
+              差し替え
+            </button>
+            ` : ''}
+            <button class="btn btn-xs btn-danger file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
+              削除
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -316,28 +329,28 @@ export class FileManagerRenderer {
         ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<td class="file-list__folder">${this.getFolderPath(file.folder_id)}</td>` : ''}
         <td class="file-list__downloads">${this.formatDownloads(file)}</td>
         <td class="file-list__actions">
-          <button class="file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
+          <button class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
             ⬇
           </button>
-          <button class="file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
+          <button class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
             🔗
           </button>
           ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
-          <button class="file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
-            ✏️
+          <button class="btn btn-xs btn-success file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
+            ✏
           </button>
           ` : ''}
           ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
-          <button class="file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
+          <button class="btn btn-xs btn-warning file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
             📁
           </button>
           ` : ''}
           ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
-          <button class="file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
+          <button class="btn btn-xs btn-warning file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
             🔄
           </button>
           ` : ''}
-          <button class="file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
+          <button class="btn btn-xs btn-danger file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
             🗑
           </button>
         </td>
@@ -469,7 +482,9 @@ export class FileManagerRenderer {
   }
 
   private formatFileSize(bytes: number): string {
-    const units = ['B', 'KB', 'MB', 'GB'];
+    if (!bytes || bytes === 0) return '0 B';
+    
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
     let size = bytes;
     let unitIndex = 0;
     
@@ -478,7 +493,17 @@ export class FileManagerRenderer {
       unitIndex++;
     }
     
-    return `${size.toFixed(unitIndex > 0 ? 1 : 0)} ${units[unitIndex]}`;
+    // 小数点以下の桁数を調整
+    let decimalPlaces = 0;
+    if (unitIndex > 0) {
+      if (size < 10) {
+        decimalPlaces = 2;
+      } else if (size < 100) {
+        decimalPlaces = 1;
+      }
+    }
+    
+    return `${size.toFixed(decimalPlaces)} ${units[unitIndex]}`;
   }
 
   private formatDate(dateString: string): string {

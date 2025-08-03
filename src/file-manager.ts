@@ -7,9 +7,6 @@ import { ready } from './utils/dom';
 import { FileManager } from './components/FileManager';
 import { initializeErrorHandling } from './utils/errorHandling';
 
-// スタイルの読み込み
-import './styles/file-manager.css';
-
 // 型定義のインポート
 import './types/global';
 

@@ -217,12 +217,7 @@
   margin-bottom: 8px;
 }
 
-.file-grid-item__actions {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 8px;
-}
+/* 古いスタイルは削除 - 新しいスタイル（761行目以降）を使用 */
 
 /* ===== リストビュー ===== */
 .file-manager__list {
@@ -732,4 +727,199 @@
   background: #d1ecf1;
   border: 1px solid #bee5eb;
   color: #0c5460;
+}
+
+/* === アップロードボタン固定配置 === */
+.upload-button-fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 50px;
+}
+
+.upload-button-fixed .btn {
+  border-radius: 50px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.upload-button-fixed .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+/* === ファイルアクションボタンスタイル（強制適用版） === */
+.file-grid-item__actions {
+  background: white;
+  padding: 10px 15px;
+}
+
+.file-grid-item__actions-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin-bottom: 6px !important;
+  width: 100% !important;
+}
+
+.file-grid-item__actions-row:last-child {
+  margin-bottom: 0;
+}
+
+.file-grid-item__actions .btn {
+  width: 50px !important;
+  height: 24px !important;
+  font-size: 9px !important;
+  padding: 2px 3px !important;
+  border-radius: 3px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* グリッドアクションボタンの色付きボーダー */
+.file-grid-item__actions .btn-primary {
+  border-color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+.file-grid-item__actions .btn-primary:hover {
+  background: #007bff;
+  color: white;
+}
+
+.file-grid-item__actions .btn-info {
+  border-color: #17a2b8;
+  background: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+}
+
+.file-grid-item__actions .btn-info:hover {
+  background: #17a2b8;
+  color: white;
+}
+
+.file-grid-item__actions .btn-success {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.file-grid-item__actions .btn-success:hover {
+  background: #28a745;
+  color: white;
+}
+
+.file-grid-item__actions .btn-warning {
+  border-color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+  color: #856404;
+}
+
+.file-grid-item__actions .btn-warning:hover {
+  background: #ffc107;
+  color: #856404;
+}
+
+.file-grid-item__actions .btn-danger {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.file-grid-item__actions .btn-danger:hover {
+  background: #dc3545;
+  color: white;
+}
+
+/* === リストアクションボタンスタイル === */
+.file-list__actions .btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0 2px;
+  border-radius: 50%;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 2px;
+  border-style: solid;
+  line-height: 1;
+}
+
+/* リストアクションボタンの色付きボーダー */
+.file-list__actions .btn-primary {
+  border-color: #007bff;
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+.file-list__actions .btn-primary:hover {
+  background: #007bff;
+  color: white;
+}
+
+.file-list__actions .btn-info {
+  border-color: #17a2b8;
+  background: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+}
+
+.file-list__actions .btn-info:hover {
+  background: #17a2b8;
+  color: white;
+}
+
+.file-list__actions .btn-success {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.file-list__actions .btn-success:hover {
+  background: #28a745;
+  color: white;
+}
+
+.file-list__actions .btn-warning {
+  border-color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+  color: #856404;
+}
+
+.file-list__actions .btn-warning:hover {
+  background: #ffc107;
+  color: #856404;
+}
+
+.file-list__actions .btn-danger {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.file-list__actions .btn-danger:hover {
+  background: #dc3545;
+  color: white;
+}
+
+/* DataTablesスタイルの上書き */
+.dataTables_wrapper {
+  display: none;
 }

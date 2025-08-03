@@ -15,17 +15,14 @@
         crossorigin="anonymous"
     >
 
-    <!-- TypeScript版CSS -->
-    <link rel="stylesheet" href="./asset/dist/file-manager.css">
-    
-    <!-- 従来のCSS（段階的移行のため一時的に保持） -->
-    <link rel="stylesheet" href="./asset/css/common.css">
-    <link rel="stylesheet" href="./asset/css/responsive.css">
-    <link rel="stylesheet" href="./asset/css/responsive-extra.css">
-    <!-- <link rel="stylesheet" href="./asset/css/file-manager.css"> -->
-    <link rel="stylesheet" href="./asset/css/share.css">
-    <link rel="stylesheet" href="./asset/css/dragdrop.css">
-    <link rel="stylesheet" href="./asset/css/folders.css">
+    <!-- Viteビルド済みCSS -->
+    <link rel="stylesheet" href="./asset/dist/common.css">
+    <link rel="stylesheet" href="./asset/dist/responsive.css">
+    <link rel="stylesheet" href="./asset/dist/responsive-extra.css">
+    <link rel="stylesheet" href="./asset/dist/file-manager-css.css">
+    <link rel="stylesheet" href="./asset/dist/share-css.css">
+    <link rel="stylesheet" href="./asset/dist/dragdrop.css">
+    <link rel="stylesheet" href="./asset/dist/folders.css">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->

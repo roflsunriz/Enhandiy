@@ -131,9 +131,13 @@
       </div>
 
       <div class="form-section text-right">
-        <input type="submit" class="btn btn-success btn-lg btn-upload" value="📁 ファイルをアップロード" id="uploadBtn">
         <button type="button" class="btn btn-default btn-lg" id="cancelBtn" style="display: none;">キャンセル</button>
       </div>
     </form>
+    
+    <!-- 右下固定のアップロードボタン -->
+    <div class="upload-button-fixed">
+      <input type="submit" form="upload" class="btn btn-success btn-lg btn-upload" value="📁 ファイルをアップロード" id="uploadBtn">
+    </div>
   </div>
 </div>
