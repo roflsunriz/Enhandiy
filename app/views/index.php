@@ -36,8 +36,8 @@
   <div class="row">
     <div class="col-sm-12">
       <p class="text-right">@<a href="https://github.com/roflsunriz/phpUploader" target="_blank">
-        roflsunriz/phpUploader</a> v<?php echo $version ?? '2.0.0-roflsunriz'; ?> -
-        roflsunriz コミュニティフォーク - 機能強化版 (GitHub)</p>
+        roflsunriz/phpUploader</a> v<?php echo $version ?? '2.2.0-roflsunriz'; ?> -
+        コミュニティフォーク - 機能強化版 (GitHub)</p>
     </div>
   </div>
 </div>
