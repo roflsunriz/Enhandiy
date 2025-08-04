@@ -153,26 +153,6 @@ function activateTab(tabId: string, contentId: string): void {
 }
 
 /**
- * 共有設定をリセット
- */
-function resetShareSettings(): void {
-  const modal = document.getElementById('shareLinkModal');
-  if (!modal) return;
-  
-  // フォーム要素をリセット
-  const form = modal.querySelector('form');
-  if (form) {
-    form.reset();
-  }
-  
-  // 生成されたリンクをクリア
-  const linkContainer = modal.querySelector('#generatedLinkContainer');
-  if (linkContainer) {
-    linkContainer.innerHTML = '';
-  }
-}
-
-/**
  * HTMLエスケープ
  */
 function escapeHtml(text: string): string {

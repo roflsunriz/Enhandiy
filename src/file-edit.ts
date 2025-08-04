@@ -3,7 +3,7 @@
  * file-edit.jsのjQuery依存を除去したモダン実装
  */
 
-import { ready, $, attr, text, addClass, removeClass } from './utils/dom';
+import { ready, $, attr, addClass, removeClass } from './utils/dom';
 import { get, post } from './utils/http';
 import { showSuccess, showError } from './utils/messages';
 import { initializeErrorHandling } from './utils/errorHandling';
@@ -598,6 +598,6 @@ function updateCurrentShareSettings(): void {
 }
 
 // グローバル公開: シェアモーダルを開く関数
-(window as any).openShareModal = openShareModal;
+(window as unknown as { openShareModal?: typeof openShareModal }).openShareModal = openShareModal;
 
 export {};

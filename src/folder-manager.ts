@@ -134,8 +134,7 @@ class SimpleFolderManager {
    */
   private async updateFolderNavigation(): Promise<void> {
     try {
-      const response = await FolderApi.getFolders();
-      const folders = response.data || [];
+      await FolderApi.getFolders();
       // ここでナビゲーション部分のHTMLを再構築する処理を追加
       // 実装は既存のフォルダナビゲーション表示ロジックに依存
     } catch (error) {

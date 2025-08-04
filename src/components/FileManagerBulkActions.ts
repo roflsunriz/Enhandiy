@@ -5,7 +5,7 @@
 
 import { FileData } from '../types/global';
 import { FileManagerCore } from './FileManagerCore';
-import { post, del } from '../utils/http';
+import { post } from '../utils/http';
 import { showSuccess, showError } from '../utils/messages';
 import { showConfirm, showPasswordPrompt } from '../utils/modal';
 import { AuthApi } from '../api/client';
@@ -371,11 +371,13 @@ export class FileManagerBulkActions {
       throw new Error('削除トークンの取得に失敗しました');
     }
     
+    const token = res.data.token;
+    
     // delete.phpを非表示のiframeで呼び出して削除実行
     return new Promise<void>((resolve, reject) => {
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
-      iframe.src = `./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(res.data.token)}`;
+      iframe.src = `./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(token)}`;
       
       iframe.onload = () => {
         // 削除成功とみなす

@@ -5,8 +5,8 @@
 
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
-import { ShareApi, AuthApi } from '../api/client';
-import { showAlert, showConfirm, showPrompt, showPasswordPrompt } from '../utils/modal';
+import { AuthApi } from '../api/client';
+import { showAlert, showConfirm, showPasswordPrompt } from '../utils/modal';
 // import { openShareModal } from '../file-edit'; // 使用しない
 
 export class FileManagerEvents {
@@ -477,39 +477,6 @@ export class FileManagerEvents {
       // 複数ファイルの場合はZIP化など
       console.log('複数ファイルダウンロード:', selectedFiles.length, '件');
       await showAlert('複数ファイルのダウンロード機能は実装中です。');
-    }
-  }
-
-  /**
-   * ファイル共有
-   */
-  private async _shareFile(fileId: string): Promise<void> {
-    const file = this.core.getFiles().find(f => f.id === fileId);
-    if (!file) return;
-    
-    try {
-      // 共有リンク生成APIを呼び出し
-      const result = await ShareApi.generateShareLink({
-        fileId: fileId
-      });
-      
-      if (result.success && result.data?.share_url) {
-        // 共有リンクをクリップボードにコピー
-        const shareUrl = result.data.share_url;
-        
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(shareUrl);
-          await showAlert(`共有リンクをクリップボードにコピーしました:\n${shareUrl}`);
-        } else {
-          // クリップボードAPIが使えない場合
-          await showPrompt('共有リンク（Ctrl+Cでコピー）:', shareUrl);
-        }
-      } else {
-        await showAlert('共有リンクの生成に失敗しました: ' + (result.error || '不明なエラー'));
-      }
-    } catch (error) {
-      console.error('共有エラー:', error);
-      await showAlert('共有機能でエラーが発生しました。');
     }
   }
 
