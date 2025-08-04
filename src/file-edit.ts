@@ -25,6 +25,8 @@ ready(() => {
   initializeFileEditEvents();
 });
 
+
+
 /**
  * ファイル編集関連のイベント初期化
  */
@@ -120,6 +122,10 @@ export function editComment(fileId: string, fileName: string, currentComment: st
   if (replaceFileNameElement) (replaceFileNameElement as HTMLInputElement).value = fileName;
   if (editCommentInput) editCommentInput.value = currentComment;
   
+  // 差し替えキーフィールドをクリア（新しい編集セッション用）
+  const editReplaceKeyInput = $('#editReplaceKeyInput') as HTMLInputElement;
+  if (editReplaceKeyInput) editReplaceKeyInput.value = '';
+  
   // コメントタブを表示
   activateTab('comment-tab', 'commentTab');
   
@@ -199,6 +205,7 @@ export function openShareModal(fileId: string, filename: string, comment: string
 async function handleSaveComment(): Promise<void> {
   const editFileIdInput = $('#editFileId') as HTMLInputElement;
   const editCommentInput = $('#editComment') as HTMLInputElement;
+  const editReplaceKeyInput = $('#editReplaceKeyInput') as HTMLInputElement;
   
   if (!editFileIdInput || !editCommentInput) {
     showError('必要な入力項目が見つかりません。');
@@ -207,9 +214,16 @@ async function handleSaveComment(): Promise<void> {
   
   const fileId = editFileIdInput.value;
   const comment = editCommentInput.value;
+  const replaceKey = editReplaceKeyInput?.value || '';
   
   if (!fileId) {
     showError('ファイルIDが指定されていません。');
+    return;
+  }
+  
+  // 差し替えキーのバリデーション（全ファイル必須）
+  if (!replaceKey.trim()) {
+    showError('差し替えキーが必要です。');
     return;
   }
   
@@ -217,6 +231,7 @@ async function handleSaveComment(): Promise<void> {
     const formData = new FormData();
     formData.append('file_id', fileId);
     formData.append('comment', comment);
+    formData.append('replace_key', replaceKey);
     formData.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
     
     const response = await post('./app/api/edit-comment.php', formData);

@@ -45,6 +45,12 @@
                 <input type="text" class="form-control" id="editComment" placeholder="コメントを入力...">
                 <p class="help-block"><?php echo isset($max_comment) ? $max_comment : 80; ?>字まで入力できます。</p>
               </div>
+              <div class="form-group" id="editReplaceKeyGroup">
+                <label for="editReplaceKeyInput">差し替えキー <span class="text-danger">*必須</span></label>
+                <input type="password" class="form-control" id="editReplaceKeyInput"
+                       name="replace_key" placeholder="差し替えキーを入力してください" required>
+                <p class="help-block">コメント編集には、アップロード時に設定した差し替えキーが必要です。</p>
+              </div>
               <input type="hidden" id="editFileId">
             </form>
           </div>

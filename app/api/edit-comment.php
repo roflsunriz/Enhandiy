@@ -60,6 +60,7 @@ try {
     // パラメータ取得
     $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;
     $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
+    $replaceKey = isset($_POST['replace_key']) ? trim($_POST['replace_key']) : '';
 
     if (!$fileId) {
         http_response_code(400);
@@ -137,6 +138,31 @@ try {
         exit;
     }
 
+    // 差し替えキー照合（全ファイル必須）
+    if (empty($replaceKey)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => '差し替えキーが必要です',
+            'error_code' => 'REPLACE_KEY_REQUIRED',
+            'timestamp' => date('c')
+        ]);
+        exit;
+    }
+
+    // 差し替えキー検証
+    $storedKey = openssl_decrypt($existingFile['replace_key'], 'aes-256-ecb', $config['key']);
+    if ($replaceKey !== $storedKey) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'message' => '差し替えキーが正しくありません',
+            'error_code' => 'INVALID_REPLACE_KEY',
+            'timestamp' => date('c')
+        ]);
+        exit;
+    }
+
     // コメント更新
     $sanitizedComment = SecurityUtils::escapeHtml($comment);
     $stmt = $pdo->prepare("UPDATE uploaded SET comment = ? WHERE id = ?");
@@ -150,7 +176,9 @@ try {
                 'file_id' => $fileId,
                 'old_comment' => $existingFile['comment'],
                 'new_comment' => $sanitizedComment,
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'replace_key_required' => true,
+                'auth_method' => 'csrf_and_replace_key'
             ]);
         } catch (Exception $logError) {
             // ログ記録失敗時は処理を継続

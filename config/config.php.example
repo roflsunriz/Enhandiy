@@ -57,7 +57,7 @@ class config {
             'allow_file_replace' => true,   // ファイル差し替え機能の有効/無効
             'allow_comment_edit' => true,   // コメント編集機能の有効/無効
             'file_edit_admin_only' => false, // true: 管理者のみ編集可能, false: 誰でも編集可能
-            'force_replace_key' => true,     // true: 差し替えキー入力を常に強制, false: 任意
+            // 注意: 差し替えキーはシステムレベルで必須のため設定項目はありません
 
             // ディレクトリ設定
             'db_directory' => dirname(__DIR__) . '/db',

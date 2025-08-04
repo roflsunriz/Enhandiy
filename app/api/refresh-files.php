@@ -42,9 +42,54 @@ try {
     // フォルダIDの取得
     $folderId = isset($_GET['folder']) && $_GET['folder'] !== '' ? intval($_GET['folder']) : null;
 
+    // 単一ファイル取得モードのチェック
+    $singleFileId = isset($_GET['single_file']) && $_GET['single_file'] !== '' ? intval($_GET['single_file']) : null;
+
     // アプリケーション初期化
     require_once '../../app/models/init.php';
     $db = initializeApp($config);
+
+    // 単一ファイル取得モード
+    if ($singleFileId) {
+        $sql = "SELECT * FROM uploaded WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$singleFileId]);
+        $fileData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$fileData) {
+            throw new Exception('指定されたファイルが見つかりません。');
+        }
+
+        // 単一ファイル情報をレスポンス
+        $normalizedFile = [
+            'id' => (int)$fileData['id'],
+            'name' => $fileData['origin_file_name'],
+            'original_name' => $fileData['origin_file_name'],
+            'filename' => $fileData['origin_file_name'],
+            'comment' => $fileData['comment'] ?? '',
+            'password_dl' => $fileData['dl_key'],
+            'password_del' => $fileData['del_key'],
+            'dl_key_hash' => !empty($fileData['dl_key']),
+            'del_key_hash' => !empty($fileData['del_key']),
+            'replace_key_required' => true, // 差し替えキー要件（全ファイル必須）
+            'file_size' => (int)$fileData['size'],
+            'size' => (int)$fileData['size'],
+            'mime_type' => 'application/octet-stream',
+            'type' => 'application/octet-stream',
+            'upload_date' => $fileData['input_date'],
+            'count' => (int)$fileData['count'],
+            'folder_id' => $fileData['folder_id'] ? (int)$fileData['folder_id'] : null,
+            'max_downloads' => $fileData['max_downloads'] ? (int)$fileData['max_downloads'] : null,
+            'expires_at' => $fileData['expires_at'] ?? null
+        ];
+
+        echo json_encode([
+            'success' => true,
+            'file' => $normalizedFile,
+            'timestamp' => date('c')
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
     // ファイル一覧を取得（既存のindexモデルのロジックを使用）
     $files = [];
@@ -94,6 +139,7 @@ try {
             'password_del' => $file['del_key'],
             'dl_key_hash' => !empty($file['dl_key']),
             'del_key_hash' => !empty($file['del_key']),
+            'replace_key_required' => true, // 差し替えキー要件（全ファイル必須）
             'file_size' => (int)$file['size'],
             'size' => (int)$file['size'],
             'mime_type' => 'application/octet-stream', // 簡略化
