@@ -58,10 +58,10 @@ try {
         $stmt = $db->prepare($sql);
         $stmt->execute();
         $allFolders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // 階層構造の構築
         $folders = buildFolderTree($allFolders);
-        
+
         // パンくずリストの構築
         if ($folderId) {
             $breadcrumb = buildBreadcrumb($db, $folderId);
@@ -78,7 +78,7 @@ try {
         $stmt = $db->prepare($sql);
         $stmt->execute();
     }
-    
+
     $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // ファイルデータの正規化
@@ -115,7 +115,6 @@ try {
         'current_folder' => $folderId,
         'timestamp' => date('c')
     ], JSON_UNESCAPED_UNICODE);
-
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
@@ -128,7 +127,8 @@ try {
 /**
  * フォルダ階層構造を構築
  */
-function buildFolderTree($allFolders, $parentId = null) {
+function buildFolderTree($allFolders, $parentId = null)
+{
     $folders = [];
     foreach ($allFolders as $folder) {
         if (($folder['parent_id'] ?? null) == $parentId) {
@@ -142,16 +142,17 @@ function buildFolderTree($allFolders, $parentId = null) {
 /**
  * パンくずリストを構築
  */
-function buildBreadcrumb($db, $folderId) {
+function buildBreadcrumb($db, $folderId)
+{
     $breadcrumb = [];
     $currentId = $folderId;
-    
+
     while ($currentId) {
         $sql = "SELECT id, name, parent_id FROM folders WHERE id = ?";
         $stmt = $db->prepare($sql);
         $stmt->execute([$currentId]);
         $folder = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($folder) {
             array_unshift($breadcrumb, [
                 'id' => (int)$folder['id'],
@@ -162,6 +163,6 @@ function buildBreadcrumb($db, $folderId) {
             break;
         }
     }
-    
+
     return $breadcrumb;
 }

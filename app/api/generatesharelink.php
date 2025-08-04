@@ -45,7 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
         $remaining = $current_expires_at - time();
         $expires_days = $remaining > 0 ? ceil($remaining / (24 * 60 * 60)) : 0;
     }
-    echo json_encode(['success' => true, 'data' => ['max_downloads' => $current_max_downloads, 'expires_days' => $expires_days]]);
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'max_downloads' => $current_max_downloads,
+            'expires_days' => $expires_days
+        ]
+    ]);
     exit;
 }
 $id = $_POST['id'];
@@ -72,7 +78,9 @@ if ($action === 'updateSettings') {
     try {
         $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
         $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        $update = $db->prepare('UPDATE uploaded SET max_downloads = :max_downloads, expires_at = :expires_at WHERE id = :id');
+        $update = $db->prepare(
+            'UPDATE uploaded SET max_downloads = :max_downloads, expires_at = :expires_at WHERE id = :id'
+        );
         $update->bindValue(':max_downloads', $max_downloads);
         $update->bindValue(':expires_at', $expires_at);
         $update->bindValue(':id', $id);
@@ -81,7 +89,13 @@ if ($action === 'updateSettings') {
         echo json_encode(['success' => false, 'error' => 'sqlerror']);
         exit;
     }
-    echo json_encode(['success' => true, 'data' => ['max_downloads' => $max_downloads, 'expires_days' => $expires_days]]);
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'max_downloads' => $max_downloads,
+            'expires_days' => $expires_days
+        ]
+    ]);
     exit;
 }
 // 有効期限を計算（日数から UNIX タイムスタンプに変換）
