@@ -99,7 +99,7 @@ function handleOptions()
  */
 function handleCreate()
 {
-    global $db, $data_directory, $max_file_size;
+    global $db, $data_directory, $max_file_size, $config;
 
     // Upload-Lengthヘッダーをチェック
     $uploadLength = $_SERVER['HTTP_UPLOAD_LENGTH'] ?? null;
@@ -117,6 +117,28 @@ function handleCreate()
         echo json_encode(['error' => 'File size exceeds limit']);
         exit;
     }
+
+    // TUSアップロードのレート制限チェック
+    $clientIP = SecurityUtils::getClientIP();
+    $rateLimitResult = SecurityUtils::checkUploadRateLimit(
+        $clientIP,
+        $config['security']['max_uploads_per_hour'] ?? 50,
+        $config['security']['max_concurrent_uploads'] ?? 5
+    );
+    
+    if (!$rateLimitResult['allowed']) {
+        error_log("TUS upload rate limit exceeded for IP: {$clientIP}, reason: {$rateLimitResult['reason']}");
+        
+        http_response_code(429);
+        header('Retry-After: ' . $rateLimitResult['retry_after']);
+        echo json_encode([
+            'error' => $rateLimitResult['message'],
+            'retry_after' => $rateLimitResult['retry_after']
+        ]);
+        exit;
+    }
+    
+    $uploadToken = $rateLimitResult['upload_token'];
 
     // メタデータの解析
     $metadata = parseMetadata($_SERVER['HTTP_UPLOAD_METADATA'] ?? '');
@@ -144,12 +166,14 @@ function handleCreate()
             exit;
         }
 
+        // upload_token列とclient_ip列を追加
         $sql = $db->prepare("
             INSERT INTO tus_uploads (
                 id, file_size, offset, metadata, chunk_path, 
                 created_at, updated_at, expires_at, comment, 
-                dl_key, del_key, replace_key, max_downloads, share_expires_at, folder_id
-            ) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                dl_key, del_key, replace_key, max_downloads, share_expires_at, folder_id,
+                upload_token, client_ip
+            ) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $result = $sql->execute([
@@ -166,7 +190,9 @@ function handleCreate()
             $metadata['replacekey'],
             isset($metadata['max_downloads']) ? intval($metadata['max_downloads']) : null,
             isset($metadata['expires_days']) ? $currentTime + (intval($metadata['expires_days']) * 24 * 60 * 60) : null,
-            isset($metadata['folder_id']) ? intval($metadata['folder_id']) : null
+            isset($metadata['folder_id']) ? intval($metadata['folder_id']) : null,
+            $uploadToken,
+            $clientIP
         ]);
 
         if (!$result) {
@@ -369,12 +395,12 @@ function completeUpload($uploadId, $upload)
     $metadata = json_decode($upload['metadata'], true);
     $originalFileName = $metadata['filename'] ?? 'unknown';
 
-    error_log("DEBUG completeUpload - metadata: " . print_r($metadata, true));
+            // セキュリティ：メタデータのログ出力を削除（機密情報が含まれる可能性）
     error_log("DEBUG completeUpload - originalFileName: $originalFileName");
 
     // 拡張子チェック
     $ext = pathinfo($originalFileName, PATHINFO_EXTENSION);
-    error_log("DEBUG completeUpload - extension: $ext, allowed: " . print_r($extension, true));
+            error_log("DEBUG completeUpload - validating extension: $ext");
     if (!in_array(strtolower($ext), $extension)) {
         // 不正な拡張子の場合は削除
         error_log("DEBUG completeUpload - REJECTED: Invalid extension $ext");
@@ -401,19 +427,19 @@ function completeUpload($uploadId, $upload)
             time(),
             empty($upload['dl_key']) ? null : SecurityUtils::hashPassword($upload['dl_key']),
             empty($upload['del_key']) ? null : SecurityUtils::hashPassword($upload['del_key']),
-            empty($metadata['replacekey']) ? null : openssl_encrypt($metadata['replacekey'], 'aes-256-ecb', $key),
+            empty($metadata['replacekey']) ? null : SecurityUtils::encryptSecure($metadata['replacekey'], $key),
             $upload['max_downloads'],
             $upload['share_expires_at'],
             $upload['folder_id']
         ];
 
-        error_log("DEBUG completeUpload - Insert data: " . print_r($insertData, true));
+        error_log("DEBUG completeUpload - Preparing database insert");
         $result = $sql->execute($insertData);
 
         if (!$result) {
             $errorInfo = $sql->errorInfo();
-            error_log("DEBUG completeUpload - SQL Error: " . print_r($errorInfo, true));
-            throw new Exception('Failed to insert into uploaded table: ' . $errorInfo[2]);
+            error_log("DEBUG completeUpload - Database insert failed: " . $errorInfo[0]);
+            throw new Exception('Failed to insert into uploaded table');
         }
         error_log("DEBUG completeUpload - Database insert successful");
 
@@ -443,6 +469,16 @@ function completeUpload($uploadId, $upload)
         // tus_uploadsテーブルを更新
         $sql = $db->prepare("UPDATE tus_uploads SET completed = 1, final_file_id = ? WHERE id = ?");
         $sql->execute([$fileId, $uploadId]);
+
+        // アップロード完了時にトークンを解放
+        $tusUploadInfo = $db->prepare("SELECT upload_token, client_ip FROM tus_uploads WHERE id = ?");
+        $tusUploadInfo->execute([$uploadId]);
+        $tusInfo = $tusUploadInfo->fetch(PDO::FETCH_ASSOC);
+        
+        if ($tusInfo && !empty($tusInfo['upload_token']) && !empty($tusInfo['client_ip'])) {
+            SecurityUtils::releaseUploadToken($tusInfo['client_ip'], $tusInfo['upload_token']);
+            error_log("DEBUG completeUpload - Released upload token: " . $tusInfo['upload_token']);
+        }
 
         return true;
     } catch (Exception $e) {

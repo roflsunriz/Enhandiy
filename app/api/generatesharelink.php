@@ -170,11 +170,13 @@ if ($should_update) {
     $current_expires_at = $expires_at;
 }
 
-// 共有用のトークンを生成（DLキーなしで直接ダウンロード可能にする）
-if (PHP_MAJOR_VERSION == '5' and PHP_MINOR_VERSION == '3') {
-    $share_key = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $key, true));
-} else {
-    $share_key = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $key, OPENSSL_RAW_DATA));
+// 共有用のトークンを生成（セキュアなGCMモード使用）
+try {
+    $share_key = bin2hex(SecurityUtils::encryptSecure($origin_dlkey, $key));
+} catch (Exception $e) {
+    error_log('Share link generation failed: ' . $e->getMessage());
+    header('Location: ./');
+    exit;
 }
 
 // 現在のプロトコルとホストを取得してベースURLを構築

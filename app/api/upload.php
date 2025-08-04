@@ -63,6 +63,28 @@ try {
         $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
     }
 
+    // アップロードレート制限チェック
+    $clientIP = SecurityUtils::getClientIP();
+    $rateLimitResult = SecurityUtils::checkUploadRateLimit(
+        $clientIP,
+        $config['security']['max_uploads_per_hour'] ?? 50,
+        $config['security']['max_concurrent_uploads'] ?? 5
+    );
+    
+    if (!$rateLimitResult['allowed']) {
+        $logger->warning('Upload rate limit exceeded', [
+            'ip' => $clientIP,
+            'reason' => $rateLimitResult['reason']
+        ]);
+        
+        // レート制限のHTTPヘッダーを設定
+        header('Retry-After: ' . $rateLimitResult['retry_after']);
+        $responseHandler->error($rateLimitResult['message'], [], 429);
+    }
+    
+    // アップロードトークンを保存（後でリリースするため）
+    $uploadToken = $rateLimitResult['upload_token'];
+
     // ファイルアップロードエラーチェック
     $uploadErrors = [];
     if (!isset($_FILES['file'])) {
@@ -202,8 +224,8 @@ try {
     $dlKeyHash = (!empty($dlKey) && trim($dlKey) !== '') ? SecurityUtils::hashPassword($dlKey) : null;
     $delKeyHash = (!empty($delKey) && trim($delKey) !== '') ? SecurityUtils::hashPassword($delKey) : null;
 
-    // 差し替えキーの暗号化
-    $encryptedReplaceKey = openssl_encrypt($replaceKey, 'aes-256-ecb', $config['key']);
+    // 差し替えキーの暗号化（セキュアなGCMモード使用）
+    $encryptedReplaceKey = SecurityUtils::encryptSecure($replaceKey, $config['key']);
 
     // まず仮のデータベース登録（stored_file_nameは後で更新）
     $insertStmt = $db->prepare("
@@ -232,7 +254,7 @@ try {
 
     if (!$insertStmt->execute($insertData)) {
         $errorInfo = $insertStmt->errorInfo();
-        error_log('Database insert failed: ' . print_r($errorInfo, true));
+        error_log('Database insert failed - Error code: ' . $errorInfo[0]);
         $responseHandler->error('データベースへの保存に失敗しました。', [], 500);
     }
 
@@ -263,6 +285,9 @@ try {
 
     // アクセスログの記録
     $logger->access($fileId, 'upload', 'success');
+
+    // アップロード完了時にトークンを解放
+    SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
 
     // 成功レスポンス
     $responseHandler->success('ファイルのアップロードが完了しました。', [

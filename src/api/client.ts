@@ -192,7 +192,7 @@ export class FolderApi {
  */
 export class UploadApi {
   /**
-   * 単一ファイルをアップロード
+   * 単一ファイルをアップロード（セキュリティ検証付き）
    */
   static async uploadFile(file: File, options: {
     comment?: string;
@@ -203,6 +203,16 @@ export class UploadApi {
     expiresDays?: number;
     folderId?: string;
   } = {}): Promise<ApiResponse> {
+    
+    // ファイル検証
+    if (!this.validateFile(file)) {
+      throw new Error('無効なファイルです');
+    }
+
+    // オプション検証
+    if (!this.validateUploadOptions(options)) {
+      throw new Error('無効なアップロードオプションです');
+    }
     const formData = new FormData();
     formData.append('files[]', file);
     
@@ -215,6 +225,128 @@ export class UploadApi {
     if (options.folderId) formData.append('folderId', options.folderId);
     
     return post('./app/api/upload.php', formData);
+  }
+  
+  /**
+   * ファイルの検証
+   */
+  private static validateFile(file: File): boolean {
+    if (!file || !(file instanceof File)) {
+      console.error('Invalid file object');
+      return false;
+    }
+
+    // ファイル名検証
+    if (!file.name || file.name.trim() === '') {
+      console.error('Empty filename');
+      return false;
+    }
+
+    const filename = file.name.trim();
+
+    // 危険なファイル名パターン
+    const dangerousPatterns = [
+      /\.\./,                    // パストラバーサル
+      /[<>:"|?*]/,              // Windows禁止文字
+      /^\./,                    // 隠しファイル（先頭ドット）
+      /\0/,                     // NULLバイト
+      /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i // Windows予約名
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(filename)) {
+        console.error('Dangerous filename pattern:', filename);
+        return false;
+      }
+    }
+
+    // ファイル名長さ制限
+    if (filename.length > 255) {
+      console.error('Filename too long:', filename.length);
+      return false;
+    }
+
+    // ファイルサイズ制限（クライアントサイド基本チェック）
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      console.error('File size exceeds limit:', file.size);
+      return false;
+    }
+
+    // 危険な拡張子チェック
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const dangerousExts = ['exe', 'scr', 'bat', 'cmd', 'com', 'pif', 'vbs', 'js', 'jar'];
+    if (ext && dangerousExts.includes(ext)) {
+      console.error('Dangerous file extension:', ext);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * アップロードオプションの検証
+   */
+  private static validateUploadOptions(options: import('../types/upload').UploadOptions): boolean {
+    if (!options || typeof options !== 'object') {
+      return true; // 空のオプションは許可
+    }
+
+    // コメント検証
+    if (options.comment !== undefined) {
+      if (typeof options.comment !== 'string' || options.comment.length > 1024) {
+        console.error('Invalid comment');
+        return false;
+      }
+    }
+
+    // キー検証
+    if (options.dlkey !== undefined) {
+      if (typeof options.dlkey !== 'string' || options.dlkey.length > 256) {
+        console.error('Invalid download key');
+        return false;
+      }
+    }
+
+    if (options.delkey !== undefined) {
+      if (typeof options.delkey !== 'string' || options.delkey.length > 256) {
+        console.error('Invalid delete key');
+        return false;
+      }
+    }
+
+    if (options.replacekey !== undefined) {
+      if (typeof options.replacekey !== 'string' || options.replacekey.length > 256) {
+        console.error('Invalid replace key');
+        return false;
+      }
+    }
+
+    // 数値系の検証
+    if (options.maxDownloads !== undefined) {
+      const maxDownloads = options.maxDownloads;
+      if (!Number.isInteger(maxDownloads) || maxDownloads < 0 || maxDownloads > 10000) {
+        console.error('Invalid maxDownloads');
+        return false;
+      }
+    }
+
+    if (options.expiresDays !== undefined) {
+      const expiresDays = options.expiresDays;
+      if (!Number.isInteger(expiresDays) || expiresDays < 0 || expiresDays > 365) {
+        console.error('Invalid expiresDays');
+        return false;
+      }
+    }
+
+    if (options.folderId !== undefined) {
+      if (typeof options.folderId !== 'string' || !/^\d+$/.test(options.folderId)) {
+        console.error('Invalid folderId');
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**

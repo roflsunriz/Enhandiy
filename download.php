@@ -191,16 +191,46 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger)
 
     // DLキーがNULL（空）の場合は認証不要、そうでない場合は認証チェック
     if ($origin_dlkey !== null) {
-        // 共有リンクトークンの検証（暗号化されたDLキーと照合）
+        // 共有リンクトークンの検証（新形式のGCMと旧形式のECBの両方をサポート）
         $expectedToken = '';
-        if (PHP_MAJOR_VERSION == '5' and PHP_MINOR_VERSION == '3') {
-            $expectedToken = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $config['key'], true));
-        } else {
-            $expectedToken = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $config['key'], OPENSSL_RAW_DATA));
+        $validToken = false;
+
+        try {
+            // まず新しいGCM形式で生成
+            $expectedToken = bin2hex(SecurityUtils::encryptSecure($origin_dlkey, $config['key']));
+            if ($dlkey === $expectedToken) {
+                $validToken = true;
+            }
+        } catch (Exception $e) {
+            // GCM形式の生成に失敗した場合はログ記録
+            $logger->warning('GCM token generation failed', ['error' => $e->getMessage()]);
         }
 
-        if ($dlkey !== $expectedToken) {
-            $logger->warning('Invalid legacy share link token', ['file_id' => $id]);
+        // 新形式で一致しない場合は、レガシーのECB形式も試行
+        if (!$validToken) {
+            try {
+                if (PHP_MAJOR_VERSION == '5' and PHP_MINOR_VERSION == '3') {
+                    $expectedToken = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $config['key'], true));
+                } else {
+                    $expectedToken = bin2hex(openssl_encrypt(
+                        $origin_dlkey,
+                        'aes-256-ecb',
+                        $config['key'],
+                        OPENSSL_RAW_DATA
+                    ));
+                }
+
+                if ($dlkey === $expectedToken) {
+                    $validToken = true;
+                    $logger->info('Legacy ECB token used', ['file_id' => $id]);
+                }
+            } catch (Exception $e) {
+                $logger->warning('Legacy token verification failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        if (!$validToken) {
+            $logger->warning('Invalid share link token', ['file_id' => $id]);
             header('Location: ./');
             exit;
         }

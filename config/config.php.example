@@ -70,7 +70,13 @@ class config {
                 'min_key_length' => 4,
                 'log_ip_address' => true,
                 'max_login_attempts' => 5,
-                'lockout_duration' => 900 // 15分
+                'lockout_duration' => 900, // 15分
+                
+                // ファイルアップロード制限
+                'max_uploads_per_hour' => 50,      // 1時間あたりの最大アップロード数
+                'max_concurrent_uploads' => 5,     // 同時並行アップロード数
+                'max_file_size_per_ip' => 1000,    // IPあたりの1時間最大アップロードサイズ（MB）
+                'cleanup_interval' => 3600         // レート制限データクリーンアップ間隔（秒）
             ],
 
             // ログ設定
@@ -158,16 +164,44 @@ class config {
         $config = $this->index();
 
         // 必須設定の確認
-        if ($config['master'] === 'CHANGE_THIS_MASTER_KEY_Ver2') {
-            $errors[] = 'マスターキーを変更してください';
+        if ($config['master'] === 'CHANGE_THIS_MASTER_KEY' || 
+            $config['master'] === 'CHANGE_THIS_MASTER_KEY_Ver2' ||
+            strpos($config['master'], 'CHANGE_THIS') !== false) {
+            $errors[] = '⚠️ マスターキーを変更してください（セキュリティリスク）';
         }
 
-        if ($config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY_Ver2') {
-            $errors[] = '暗号化キーを変更してください';
+        if ($config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY' || 
+            $config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY_Ver2' ||
+            strpos($config['key'], 'CHANGE_THIS') !== false) {
+            $errors[] = '⚠️ 暗号化キーを変更してください（セキュリティリスク）';
         }
 
-        if ($config['session_salt'] === 'CHANGE_THIS_SESSION_SALT') {
-            $errors[] = 'セッションソルトを変更してください';
+        if ($config['session_salt'] === 'CHANGE_THIS_SESSION_SALT' ||
+            strpos($config['session_salt'], 'CHANGE_THIS') !== false) {
+            $errors[] = '⚠️ セッションソルトを変更してください（セキュリティリスク）';
+        }
+
+        // APIキーの検証
+        if ($config['api_enabled'] && isset($config['api_keys'])) {
+            foreach ($config['api_keys'] as $key => $keyConfig) {
+                if (strpos($key, 'CHANGE_THIS') !== false) {
+                    $errors[] = '⚠️ APIキーを変更してください（セキュリティリスク）';
+                    break;
+                }
+            }
+        }
+
+        // キーの長さ検証
+        if (strlen($config['master']) < 16) {
+            $errors[] = '⚠️ マスターキーは16文字以上にしてください';
+        }
+
+        if (strlen($config['key']) < 32) {
+            $errors[] = '⚠️ 暗号化キーは32文字以上にしてください';
+        }
+
+        if (strlen($config['session_salt']) < 16) {
+            $errors[] = '⚠️ セッションソルトは16文字以上にしてください';
         }
 
         // ディレクトリの存在確認

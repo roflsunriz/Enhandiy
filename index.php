@@ -12,9 +12,13 @@ declare(strict_types=1);
 ini_set('display_errors', '0'); // 本番環境では 0 に設定
 error_reporting(E_ALL);
 
-// セッション開始
+// セキュアなセッション開始
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    // セキュリティクラスがまだ読み込まれていない場合の対処
+    if (!class_exists('SecurityUtils')) {
+        require_once './src/Core/Utils.php';
+    }
+    SecurityUtils::startSecureSession();
 }
 
 try {
@@ -46,8 +50,14 @@ try {
     $config = $configInstance->index();
 
     // 設定の検証
+    $configValidation = $configInstance->validate();
+    if (!empty($configValidation)) {
+        $errorMessage = '⚠️ セキュリティ設定エラー：' . implode(', ', $configValidation);
+        throw new Exception($errorMessage);
+    }
+
     if (!$configInstance->validateSecurityConfig()) {
-        throw new Exception('設定ファイルのセキュリティ設定が不完全です。config.php を確認してください。');
+        throw new Exception('⚠️ 重要：デフォルトのセキュリティキーが使用されています。config.php で master、key、session_salt を変更してください。');
     }
 
     // ページパラメータの取得
@@ -118,27 +128,39 @@ try {
     // フッターの出力
     require './app/views/footer.php';
 } catch (Exception $e) {
-    // 緊急時のエラーハンドリング
-    $errorMessage = htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+    // セキュアなエラーハンドリング
+    $isDebugMode = (ini_get('display_errors') == '1');
+    $errorId = uniqid('SYS_ERR_');
 
-    // ログが利用可能な場合はエラーログに記録
+    // 詳細なエラー情報をログに記録
     if (isset($logger)) {
-        $logger->error('Application Error: ' . $e->getMessage(), [
+        $logger->error("System Error [{$errorId}]: " . $e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $isDebugMode ? $e->getTraceAsString() : '[TRACE_HIDDEN]'
         ]);
     } else {
         // ログが利用できない場合はファイルに直接記録
-        $logMessage = date('Y-m-d H:i:s') . " [CRITICAL] " . $e->getMessage() .
+        $logMessage = date('Y-m-d H:i:s') . " [CRITICAL] [{$errorId}] " . $e->getMessage() .
             " in " . $e->getFile() . " on line " . $e->getLine() . PHP_EOL;
         @file_put_contents('./logs/critical.log', $logMessage, FILE_APPEND | LOCK_EX);
+    }
+
+    // セキュアなエラーメッセージを生成
+    if ($isDebugMode) {
+        $errorMessage = htmlspecialchars(
+            SecurityUtils::sanitizeErrorMessage($e->getMessage(), true),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+    } else {
+        $errorMessage = "システムエラーが発生しました。エラーID: {$errorId}";
     }
 
     // シンプルなエラーページの表示
     http_response_code(500);
     echo '<!DOCTYPE html>';
-    echo '<html><head><meta charset="UTF-8"><title>エラー</title></head>';
+    echo '<html><head><meta charset="UTF-8"><title>システムエラー</title></head>';
     echo '<body><h1>システムエラー</h1>';
     echo '<p>' . $errorMessage . '</p>';
     echo '<p><a href="./index.php">トップページに戻る</a></p>';

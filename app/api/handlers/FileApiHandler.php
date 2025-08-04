@@ -212,8 +212,7 @@ class FileApiHandler
         }
 
         // ファイルアップロードチェック
-        error_log('DEBUG: $_FILES = ' . print_r($_FILES, true));
-        error_log('DEBUG: $_POST = ' . print_r($_POST, true));
+        // セキュリティ：機密情報のログ出力を削除（$_FILES, $_POSTには機密情報が含まれる可能性）
 
         if (!isset($_FILES['file'])) {
             $this->response->error('ファイルが送信されていません', [], 400, 'FILE_UPLOAD_ERROR');
@@ -258,8 +257,23 @@ class FileApiHandler
                 return;
             }
 
-            // 差し替えキーの検証
-            $storedReplaceKey = openssl_decrypt($existingFile['replace_key'], 'aes-256-ecb', $this->config['key']);
+            // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
+            try {
+                // まず新しいGCM形式で試行
+                $storedReplaceKey = SecurityUtils::decryptSecure($existingFile['replace_key'], $this->config['key']);
+            } catch (Exception $e) {
+                try {
+                    // レガシーのECB形式で試行（既存データとの互換性のため）
+                    $storedReplaceKey = SecurityUtils::decryptLegacyECB(
+                        $existingFile['replace_key'],
+                        $this->config['key']
+                    );
+                } catch (Exception $e2) {
+                    $this->response->error('差し替えキーの復号化に失敗しました', [], 500, 'DECRYPTION_FAILED');
+                    return;
+                }
+            }
+
             if ($inputReplaceKey !== $storedReplaceKey) {
                 $this->response->error('差し替えキーが正しくありません', [], 403, 'INVALID_REPLACE_KEY');
                 return;
@@ -283,27 +297,46 @@ class FileApiHandler
                 return;
             }
 
-            // 新しいファイルパスを決定
-            $data_directory = '../../data';
-            if (isset($this->config['encrypt_filename']) && $this->config['encrypt_filename']) {
-                $encryptedId = openssl_encrypt(
-                    $fileId,
-                    'aes-256-ecb',
-                    $this->config['key']
-                );
-                $cleanId = str_replace(
-                    ['\\', '/', ':', '*', '?', '"', '<', '>', '|'],
-                    '',
-                    $encryptedId
-                );
-                $newFilePath = $data_directory . '/file_' . $cleanId . '.' . $ext;
-            } else {
-                $newFilePath = $data_directory . '/file_' . $fileId . '.' . $ext;
+            // セキュアなファイルパスを決定
+            $data_directory = $this->config['data_directory'] ?? dirname(__DIR__, 2) . '/data';
+
+            // パストラバーサル攻撃対策：絶対パスに正規化
+            $data_directory = realpath($data_directory);
+            if ($data_directory === false) {
+                $this->response->error('データディレクトリが見つかりません', [], 500, 'DATA_DIR_NOT_FOUND');
+                return;
             }
 
-            // 古いファイルを削除
-            $oldFilePath = $data_directory . '/' . $existingFile['origin_file_name'];
-            if (file_exists($oldFilePath)) {
+            if (isset($this->config['encrypt_filename']) && $this->config['encrypt_filename']) {
+                // セキュアなファイル名生成を使用
+                $hashedFileName = SecurityUtils::generateSecureFileName($fileId, $newFileName);
+                $storedFileName = SecurityUtils::generateStoredFileName($hashedFileName, $ext);
+                $newFilePath = $data_directory . DIRECTORY_SEPARATOR . $storedFileName;
+            } else {
+                $safeFileName = 'file_' . $fileId . '.' . $ext;
+                $newFilePath = $data_directory . DIRECTORY_SEPARATOR . $safeFileName;
+            }
+
+            // 生成されたパスがデータディレクトリ内にあることを確認
+            $realNewPath = realpath(dirname($newFilePath));
+            if ($realNewPath === false || strpos($realNewPath, $data_directory) !== 0) {
+                $this->response->error('不正なファイルパスが検出されました', [], 500, 'INVALID_FILE_PATH');
+                return;
+            }
+
+            // 古いファイルをセキュアに削除
+            if (!empty($existingFile['stored_file_name'])) {
+                // 新形式（ハッシュ化されたファイル名）
+                $oldFilePath = $data_directory . DIRECTORY_SEPARATOR . $existingFile['stored_file_name'];
+            } else {
+                // 旧形式（互換性のため）
+                $oldFileExt = pathinfo($existingFile['origin_file_name'], PATHINFO_EXTENSION);
+                $oldFilePath = $data_directory . DIRECTORY_SEPARATOR . 'file_' . $fileId . '.' . $oldFileExt;
+            }
+
+            // パス検証後に削除
+            $realOldPath = realpath($oldFilePath);
+            if ($realOldPath !== false && strpos($realOldPath, $data_directory) === 0 && file_exists($oldFilePath)) {
                 unlink($oldFilePath);
             }
 

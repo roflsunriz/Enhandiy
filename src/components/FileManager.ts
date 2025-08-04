@@ -151,10 +151,79 @@ export class FileManager {
   }
 
   /**
-   * ファイルを追加
+   * ファイルを追加（セキュリティ検証付き）
    */
   public addFile(file: FileData): void {
+    // 入力検証
+    if (!this.validateFileData(file)) {
+      console.error('Invalid file data provided to addFile:', file);
+      return;
+    }
+    
     this.core.addFile(file);
+  }
+
+  /**
+   * ファイルデータの検証
+   */
+  private validateFileData(file: FileData): boolean {
+    // 必須フィールドの検証
+    if (!file || typeof file !== 'object') {
+      return false;
+    }
+
+    // IDの検証（数値または数値文字列）
+    if (!file.id || (typeof file.id !== 'string' && typeof file.id !== 'number')) {
+      return false;
+    }
+
+    // ファイル名の検証
+    if (!file.origin_file_name || typeof file.origin_file_name !== 'string' || file.origin_file_name.trim() === '') {
+      return false;
+    }
+
+    // ファイル名のセキュリティチェック
+    const filename = file.origin_file_name.trim();
+    
+    // 危険なファイル名パターンをチェック
+    const dangerousPatterns = [
+      /\.\./,                    // パストラバーサル
+      /[<>:"|?*]/,              // Windows禁止文字
+      /^\./,                    // 隠しファイル
+      /\0/,                     // NULLバイト
+      /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i // Windows予約名
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(filename)) {
+        console.warn('Dangerous filename pattern detected:', filename);
+        return false;
+      }
+    }
+
+    // ファイル名の長さ制限
+    if (filename.length > 255) {
+      console.warn('Filename too long:', filename.length);
+      return false;
+    }
+
+    // ファイルサイズの検証
+    if (file.size !== undefined) {
+      if (typeof file.size !== 'number' || file.size < 0 || file.size > 10 * 1024 * 1024 * 1024) { // 10GB制限
+        console.warn('Invalid file size:', file.size);
+        return false;
+      }
+    }
+
+    // コメントの検証
+    if (file.comment !== undefined) {
+      if (typeof file.comment !== 'string' || file.comment.length > 1024) {
+        console.warn('Invalid comment:', file.comment);
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
