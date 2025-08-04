@@ -415,8 +415,21 @@ async function uploadFilesSequentially(index: number): Promise<void> {
   if (index >= selectedFiles.length) {
     // 全ファイルのアップロード完了
     isUploading = false;
+    
+    // アップロードリストをクリア
+    selectedFiles.length = 0;
     const uploadContainer = $('#uploadContainer') as HTMLElement;
+    const selectedFilesList = $('#selectedFilesList') as HTMLElement;
+    
     if (uploadContainer) uploadContainer.style.display = 'none';
+    if (selectedFilesList) selectedFilesList.innerHTML = '';
+    
+    // ファイルカウンターをリセット
+    const fileCountSpan = document.querySelector('#selectedFilesContainer .file-count');
+    if (fileCountSpan) fileCountSpan.textContent = '0';
+    
+    // 選択コンテナを非表示
+    hideSelectedFilesContainer();
     
     // FileManagerの動的更新
     if (window.fileManagerInstance) {
@@ -432,6 +445,7 @@ async function uploadFilesSequentially(index: number): Promise<void> {
     if (!window.fileManagerInstance && !window.folderManager) {
       window.location.reload();
     }
+
     
     return;
   }

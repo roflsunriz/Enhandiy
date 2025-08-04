@@ -317,13 +317,21 @@ export class FileManagerCore {
    */
   public async refreshFromServer(): Promise<void> {
     try {
-      const response = await fetch('./app/api/simple-files.php');
+      // 現在のフォルダIDを取得
+      const urlParams = new URLSearchParams(window.location.search);
+      const folderId = urlParams.get('folder') || '';
+      
+      // 新しいAPIエンドポイントを使用
+      const url = folderId ? `./app/api/refresh-files.php?folder=${encodeURIComponent(folderId)}` : './app/api/refresh-files.php';
+      const response = await fetch(url);
       const data = await response.json();
       
       if (data.success && Array.isArray(data.files)) {
-        this.state.files = data.files;
+        this.state.files = data.files.map((file: FileData) => this.normalizeFileData(file));
         this.applyFiltersAndSort();
         this.render();
+      } else {
+        console.error('ファイルリスト更新エラー:', data.error || 'データが無効です');
       }
     } catch (error) {
       console.error('ファイルリストの更新に失敗:', error);

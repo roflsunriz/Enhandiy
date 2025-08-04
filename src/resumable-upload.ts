@@ -496,6 +496,25 @@ function onUploadComplete(filename: string, _method: string): void {
         removeClass(globalStatus, 'active');
       }
       
+      // アップロードコンテナをクリア
+      const progressContainers = document.querySelectorAll('.file-item');
+      progressContainers.forEach(container => {
+        if (container.parentNode) {
+          container.parentNode.removeChild(container);
+        }
+      });
+      
+      // 選択ファイルコンテナを非表示
+      const selectedFilesContainer = document.getElementById('selectedFilesContainer');
+      if (selectedFilesContainer) {
+        selectedFilesContainer.style.transition = 'all 0.3s ease';
+        selectedFilesContainer.style.opacity = '0';
+        selectedFilesContainer.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+          selectedFilesContainer.style.display = 'none';
+        }, 300);
+      }
+      
       // FileManagerの動的更新
       if (window.fileManagerInstance) {
         await window.fileManagerInstance.refreshFromServer();
@@ -510,6 +529,7 @@ function onUploadComplete(filename: string, _method: string): void {
       if (!window.fileManagerInstance && !window.folderManager) {
         window.location.reload();
       }
+
     }, 2000);
   }
 }

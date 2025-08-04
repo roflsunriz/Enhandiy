@@ -111,7 +111,7 @@ class SimpleFolderManager {
       }
       
       // フォルダナビゲーション部分も更新
-      this.refreshFolderNavigation();
+      await this.refreshFolderNavigation();
     } catch (error) {
       console.error('フォルダとファイル表示の更新に失敗:', error);
     }
@@ -120,26 +120,160 @@ class SimpleFolderManager {
   /**
    * フォルダナビゲーション部分の更新
    */
-  private refreshFolderNavigation(): void {
-    // フォルダナビゲーション部分が存在する場合は、内容を動的に更新
-    const folderNav = document.querySelector('.folder-navigation');
-    if (folderNav) {
-      // 現在のフォルダIDに基づいてナビゲーションを再構築
-      this.updateFolderNavigation();
+  private async refreshFolderNavigation(): Promise<void> {
+    // 新しいAPIからデータを取得してナビゲーション部分を更新
+    try {
+      const folderId = this.currentFolderId;
+      const url = folderId ? `./app/api/refresh-files.php?folder=${encodeURIComponent(folderId)}` : './app/api/refresh-files.php';
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // フォルダナビゲーション（パンくずリスト）を更新
+        this.updateBreadcrumb(data.breadcrumb || []);
+        
+        // フォルダリスト表示を更新
+        this.updateFolderDisplay(data.folders || []);
+      } else {
+        console.error('フォルダデータの取得に失敗:', data);
+      }
+    } catch (error) {
+      console.error('フォルダナビゲーション更新エラー:', error);
     }
   }
 
   /**
-   * フォルダナビゲーションの再構築
+   * パンくずリストの更新
    */
-  private async updateFolderNavigation(): Promise<void> {
-    try {
-      await FolderApi.getFolders();
-      // ここでナビゲーション部分のHTMLを再構築する処理を追加
-      // 実装は既存のフォルダナビゲーション表示ロジックに依存
-    } catch (error) {
-      console.error('フォルダナビゲーション更新エラー:', error);
+  private updateBreadcrumb(breadcrumb: Array<{id: number, name: string}>): void {
+    const breadcrumbContainer = document.querySelector('.breadcrumb');
+    if (breadcrumbContainer) {
+      let breadcrumbHtml = '<li><a href="?folder=" class="breadcrumb-link">🏠 ルート</a></li>';
+      
+      breadcrumb.forEach((folder, index) => {
+        if (index + 1 === breadcrumb.length) {
+          // 最後の要素（現在のフォルダ）は activeクラスを付ける
+          breadcrumbHtml += `<li class="active">${this.escapeHtml(folder.name)}</li>`;
+        } else {
+          breadcrumbHtml += `
+            <li>
+              <a href="?folder=${folder.id}" class="breadcrumb-link">
+                ${this.escapeHtml(folder.name)}
+              </a>
+            </li>
+          `;
+        }
+      });
+      
+      breadcrumbContainer.innerHTML = breadcrumbHtml;
     }
+  }
+
+  /**
+   * フォルダ表示の更新
+   */
+  private updateFolderDisplay(folders: FolderData[]): void {
+    const folderGridContainer = document.getElementById('folder-grid');
+    
+    if (folderGridContainer) {
+      // 現在のフォルダレベルの子フォルダのみ表示
+      const currentFolders = this.getChildFolders(folders, this.currentFolderId);
+      
+      if (currentFolders.length === 0) {
+        // フォルダがない場合の表示
+        folderGridContainer.innerHTML = '';
+        const parentContainer = folderGridContainer.parentElement;
+        if (parentContainer) {
+          const emptyMessage = parentContainer.querySelector('.text-center.text-muted');
+          if (!emptyMessage) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'text-center text-muted';
+            emptyDiv.style.padding = '20px';
+            emptyDiv.innerHTML = `
+              <span class="glyphicon glyphicon-folder-open" 
+                    style="font-size: 2em; margin-bottom: 10px; display: block;"></span>
+              フォルダがありません
+            `;
+            parentContainer.appendChild(emptyDiv);
+          }
+        }
+      } else {
+        // 空のメッセージを削除
+        const parentContainer = folderGridContainer.parentElement;
+        if (parentContainer) {
+          const emptyMessage = parentContainer.querySelector('.text-center.text-muted');
+          if (emptyMessage) {
+            emptyMessage.remove();
+          }
+        }
+        
+        let foldersHtml = '';
+        currentFolders.forEach(folder => {
+          foldersHtml += `
+            <div class="col-sm-3 col-xs-6" style="margin-bottom: 15px;" data-folder-id="${folder.id}">
+              <div class="folder-item-wrapper" style="position: relative;">
+                <a href="?folder=${folder.id}" class="folder-item">
+                  <span class="folder-icon">📁</span>
+                  <span class="folder-name">${this.escapeHtml(folder.name)}</span>
+                </a>
+                <div class="folder-menu" style="position: absolute; top: 5px; right: 5px; opacity: 0; transition: opacity 0.2s;">
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false"
+                            style="padding: 2px 6px; border-radius: 50%; width: 24px; height: 24px; font-size: 10px;">
+                      ⋮
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" style="min-width: 120px;">
+                      <li>
+                        <a class="dropdown-item rename-folder" href="#" data-folder-id="${folder.id}">
+                          ✏️ 名前変更
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item move-folder" href="#" data-folder-id="${folder.id}">
+                          📁 移動
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <a class="dropdown-item delete-folder" href="#" data-folder-id="${folder.id}" style="color: #d9534f;">
+                          🗑 削除
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        folderGridContainer.innerHTML = foldersHtml;
+      }
+    }
+  }
+
+  /**
+   * 指定された親フォルダの子フォルダを取得
+   */
+  private getChildFolders(folders: FolderData[], parentId: string | null): FolderData[] {
+    const targetParentId = parentId ? parseInt(parentId) : null;
+    return folders.filter(folder => (folder.parent_id ?? null) === targetParentId);
+  }
+
+  /**
+   * HTMLエスケープ
+   */
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   
   // フォルダ選択プルダウンを更新
@@ -177,7 +311,10 @@ class SimpleFolderManager {
   // フォルダ作成ダイアログ
   private async showCreateFolderDialog(): Promise<void> {
     const folderName = await showPrompt('新しいフォルダ名を入力してください:');
-    if (!folderName || !folderName.trim()) return;
+    
+    if (!folderName || !folderName.trim()) {
+      return;
+    }
     
     this.createFolder(folderName.trim(), this.currentFolderId);
   }
@@ -187,9 +324,18 @@ class SimpleFolderManager {
     try {
       await FolderApi.createFolder(name, parentId || undefined);
       
-      await showAlert('フォルダを作成しました: ' + name);
-      // 動的更新
+      // アラートを非同期で表示（待機しない）
+      showAlert('フォルダを作成しました: ' + name).catch(e => {
+        console.warn('アラート表示エラー:', e);
+      });
+      
+      // 作成後は動的更新を実行
       await this.refreshAll();
+      
+      // 少し遅延してからも更新（サーバー側の処理を確実に反映）
+      setTimeout(async () => {
+        await this.refreshAll();
+      }, 500);
       
     } catch (error) {
       console.error('フォルダ作成エラー:', error);
