@@ -79,9 +79,7 @@ class SimpleFolderManager {
     const createBtn = document.getElementById('create-folder-btn');
     if (createBtn) {
       createBtn.addEventListener('click', () => this.showCreateFolderDialog());
-      console.log('Create folder button bound');
     } else {
-      console.log('Create folder button not found, retrying in 500ms');
       // 500ms後に再試行（DOMが完全に読み込まれていない場合に対応）
       setTimeout(() => this.bindCreateFolderButton(), 500);
     }
@@ -90,8 +88,9 @@ class SimpleFolderManager {
   // フォルダ選択プルダウンの選択肢を読み込み
   private async loadFolderOptions(): Promise<void> {
     try {
-          const response = await FolderApi.getFolders();
-    this.updateFolderSelect(response.data || []);
+      const response = await FolderApi.getFolders();
+      const folders = response.folders || [];
+      this.updateFolderSelect(folders);
     } catch (error) {
       console.error('フォルダ読み込みエラー:', error);
     }
@@ -358,11 +357,24 @@ class SimpleFolderManager {
   // フォルダ名変更
   private async renameFolder(folderId: string, newName: string): Promise<void> {
     try {
-      await FolderApi.updateFolder(folderId, newName);
+      const response = await FolderApi.updateFolder(folderId, newName);
       
-      await showAlert('フォルダ名を変更しました: ' + newName);
-      // 動的更新
-      await this.refreshAll();
+      if (response.success) {
+        // アラートを非同期で表示（待機しない）
+        showAlert('フォルダ名を変更しました: ' + newName).catch(e => {
+          console.warn('アラート表示エラー:', e);
+        });
+        
+        // 動的更新
+        await this.refreshAll();
+        
+        // 少し遅延してからも更新（サーバー側の処理を確実に反映）
+        setTimeout(async () => {
+          await this.refreshAll();
+        }, 500);
+      } else {
+        throw new Error(response.error || 'フォルダ名変更に失敗しました');
+      }
       
     } catch (error) {
       console.error('フォルダ名変更エラー:', error);
@@ -376,27 +388,39 @@ class SimpleFolderManager {
     try {
       // フォルダ一覧を取得
       const response = await FolderApi.getFolders();
-      const folders = response.data || [];
+      const folders = response.folders || [];
       
-      // 移動先選択のプロンプト作成
-      let options = 'ルートフォルダに移動する場合は「root」と入力してください。\n\n利用可能なフォルダ:\n';
+      // 移動先選択のプロンプト作成（改行対応）
+      const optionLines = [
+        '移動先フォルダを選択してください:',
+        '',
+        '0: ルートフォルダ（最上位）'
+      ];
+      
       const addFolderOptions = (folders: FolderData[], level = 0): void => {
         folders.forEach(folder => {
-          if (folder.id !== folderId) { // 自分自身は除外
-            options += '　'.repeat(level) + `${folder.id}: ${folder.name}\n`;
+          // IDを文字列として比較（型安全性を確保）
+          if (String(folder.id) !== String(folderId)) { // 自分自身は除外
+            const indent = '　'.repeat(level + 1);
+            optionLines.push(`${indent}${folder.id}: ${folder.name}`);
           }
+          
           const folderWithChildren = folder as FolderData & { children?: FolderData[] };
           if ('children' in folder && folderWithChildren.children && folderWithChildren.children.length > 0) {
             addFolderOptions(folderWithChildren.children, level + 1);
           }
         });
       };
+      
       addFolderOptions(folders);
       
-      const targetId = await showPrompt(options + '\n移動先のフォルダIDを入力してください:');
+      optionLines.push('');
+      optionLines.push('移動先のフォルダ番号を入力してください（0でルート）:');
+      
+      const targetId = await showPrompt(optionLines.join('\n'));
       if (targetId === null) return; // キャンセル
       
-      const parentId = targetId.toLowerCase() === 'root' ? null : targetId;
+      const parentId = targetId === '0' ? null : targetId;
       this.moveFolder(folderId, parentId);
       
     } catch (error) {
@@ -406,16 +430,27 @@ class SimpleFolderManager {
     }
   }
   
-  // フォルダ移動（現在のAPIには移動機能がないため、コメントアウト）
+  // フォルダ移動
   private async moveFolder(folderId: string, newParentId: string | null): Promise<void> {
     try {
-      // TODO: FolderApiに移動機能を追加する必要がある
-      console.warn('フォルダ移動機能は未実装です', { folderId, newParentId });
-      await showAlert('フォルダ移動機能は現在実装中です。');
-      return;
+      const response = await FolderApi.moveFolder(folderId, newParentId);
       
-      // 移動後は現在のページを適切にリロード
-      // window.location.reload();
+      if (response.success) {
+        // アラートを非同期で表示（待機しない）
+        showAlert('フォルダを移動しました').catch(e => {
+          console.warn('アラート表示エラー:', e);
+        });
+        
+        // 動的更新
+        await this.refreshAll();
+        
+        // 少し遅延してからも更新（サーバー側の処理を確実に反映）
+        setTimeout(async () => {
+          await this.refreshAll();
+        }, 500);
+      } else {
+        throw new Error(response.error || 'フォルダ移動に失敗しました');
+      }
       
     } catch (error) {
       console.error('フォルダ移動エラー:', error);
@@ -467,13 +502,21 @@ class SimpleFolderManager {
       const response = await FolderApi.deleteFolder(folderId);
       
       if (response.success) {
-        await showAlert('フォルダを削除しました');
+        // アラートを非同期で表示（待機しない）
+        showAlert('フォルダを削除しました').catch(e => {
+          console.warn('アラート表示エラー:', e);
+        });
+        
+        // 動的更新
+        await this.refreshAll();
+        
+        // 少し遅延してからも更新（サーバー側の処理を確実に反映）
+        setTimeout(async () => {
+          await this.refreshAll();
+        }, 500);
       } else {
         throw new Error(response.error || 'フォルダ削除に失敗しました');
       }
-      
-      // 動的更新
-      await this.refreshAll();
       
     } catch (error) {
       console.error('フォルダ削除エラー:', error);
@@ -495,13 +538,19 @@ export async function moveFile(fileId: string): Promise<void> {
   try {
     // フォルダ一覧を取得
     const response = await FolderApi.getFolders();
-    const folders = response.data || [];
+    const folders = response.folders || [];
     
-    // 移動先選択のプロンプト作成
-    let options = 'ルートフォルダに移動する場合は「root」と入力してください。\n\n利用可能なフォルダ:\n';
+    // 移動先選択のプロンプト作成（改行対応）
+    const optionLines = [
+      'ファイルの移動先フォルダを選択してください:',
+      '',
+      '0: ルートフォルダ（最上位）'
+    ];
+    
     const addFolderOptions = (folders: FolderData[], level = 0): void => {
       folders.forEach(folder => {
-        options += '　'.repeat(level) + `${folder.id}: ${folder.name}\n`;
+        const indent = '　'.repeat(level + 1);
+        optionLines.push(`${indent}${folder.id}: ${folder.name}`);
         const folderWithChildren = folder as FolderData & { children?: FolderData[] };
         if ('children' in folder && folderWithChildren.children && folderWithChildren.children.length > 0) {
           addFolderOptions(folderWithChildren.children, level + 1);
@@ -510,10 +559,13 @@ export async function moveFile(fileId: string): Promise<void> {
     };
     addFolderOptions(folders);
     
-    const targetId = await showPrompt(options + '\n移動先のフォルダIDを入力してください:');
+    optionLines.push('');
+    optionLines.push('移動先のフォルダ番号を入力してください（0でルート）:');
+    
+    const targetId = await showPrompt(optionLines.join('\n'));
     if (targetId === null) return; // キャンセル
     
-    const folderId = targetId.toLowerCase() === 'root' ? null : targetId;
+    const folderId = targetId === '0' ? null : targetId;
     
     // ファイル移動API呼び出し
     await post('./app/api/move-file.php', {
@@ -522,7 +574,15 @@ export async function moveFile(fileId: string): Promise<void> {
     });
     
     await showAlert('ファイルを移動しました');
-    window.location.reload();
+    
+    // 動的更新
+    if (window.fileManagerInstance) {
+      await window.fileManagerInstance.refreshFromServer();
+    }
+    
+    if (window.folderManager) {
+      await window.folderManager.refreshAll();
+    }
     
   } catch (error) {
     console.error('ファイル移動エラー:', error);
@@ -533,8 +593,6 @@ export async function moveFile(fileId: string): Promise<void> {
 
 // モジュール初期化
 ready(() => {
-  console.log('Folder Manager functionality initialized (TypeScript)');
-  
   // エラーハンドリングの初期化
   initializeErrorHandling();
   
@@ -544,9 +602,6 @@ ready(() => {
     const manager = new SimpleFolderManager();
     // グローバルに公開（既存のJavaScriptとの互換性のため）
     window.folderManager = manager;
-    console.log('SimpleFolderManager initialized');
-  } else {
-    console.log('Folder functionality is disabled or config not available');
   }
 });
 

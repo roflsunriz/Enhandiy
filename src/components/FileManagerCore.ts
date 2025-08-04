@@ -74,6 +74,9 @@ export class FileManagerCore {
     if (this.events) {
       this.events.init();
     }
+    
+    // URLパラメータ監視機能を初期化
+    this.initializeUrlParamWatcher();
   }
 
   /**
@@ -335,6 +338,42 @@ export class FileManagerCore {
       }
     } catch (error) {
       console.error('ファイルリストの更新に失敗:', error);
+    }
+  }
+
+  /**
+   * URLパラメータを監視して自動更新
+   */
+  public initializeUrlParamWatcher(): void {
+    // ページ読み込み時のURLパラメータチェック
+    this.checkUrlParams();
+
+    // popstateイベントで戻る・進むボタンに対応
+    window.addEventListener('popstate', () => {
+      this.checkUrlParams();
+    });
+  }
+
+  /**
+   * URLパラメータをチェックして必要な処理を実行
+   */
+  private async checkUrlParams(): Promise<void> {
+    const urlParams = new URLSearchParams(window.location.search);
+    const deleted = urlParams.get('deleted');
+    
+    if (deleted === 'success') {
+      // deleted=successパラメータが検出された場合、UI更新を実行
+      await this.refreshFromServer();
+      
+      // FolderManagerがある場合も更新
+      if (window.folderManager) {
+        await window.folderManager.refreshAll();
+      }
+      
+      // URLパラメータをクリーンアップ（ブラウザ履歴を汚さずに）
+      urlParams.delete('deleted');
+      const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+      window.history.replaceState({}, '', newUrl);
     }
   }
 

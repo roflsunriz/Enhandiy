@@ -134,7 +134,18 @@ try {
         // アクセスログの記録
         $logger->access($fileId, 'delete', 'success');
 
-        // 成功時のリダイレクト
+        // Ajaxリクエストの場合はJSONレスポンスを返す
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'success' => true,
+                'message' => 'ファイルを削除しました'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        
+        // 通常のリクエストの場合は従来通りリダイレクト
         header('Location: ./?deleted=success');
         exit;
     } catch (Exception $e) {
@@ -152,6 +163,19 @@ try {
         ]);
     }
 
+    // Ajaxリクエストの場合はJSONエラーレスポンスを返す
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'ファイルの削除に失敗しました'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
+    // 通常のリクエストの場合は従来通りリダイレクト
     header('Location: ./?deleted=error');
     exit;
 }

@@ -289,7 +289,11 @@ export function showPrompt(message: string, defaultValue: string = '', title: st
     const cancelButton = modal.querySelector('#promptModalCancel');
     
     if (titleElement) titleElement.textContent = title;
-    if (messageElement) messageElement.textContent = message;
+    if (messageElement) {
+      messageElement.textContent = message;
+      // 改行を有効にするためのCSS設定
+      (messageElement as HTMLElement).style.whiteSpace = 'pre-line';
+    }
     if (inputElement) {
       inputElement.value = defaultValue;
       // モーダルが表示されたらフォーカスを設定

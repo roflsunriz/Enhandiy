@@ -142,8 +142,8 @@ export class FolderApi {
   /**
    * フォルダ一覧を取得
    */
-  static async getFolders(): Promise<ApiResponse<FolderData[]>> {
-    return get<FolderData[]>('./app/api/folders.php');
+  static async getFolders(): Promise<{ folders: FolderData[] }> {
+    return get<{ folders: FolderData[] }>('./app/api/folders.php');
   }
 
   /**
@@ -180,6 +180,17 @@ export class FolderApi {
    */
   static async getFolderFileCount(folderId: string): Promise<ApiResponse<{ count: number }>> {
     return get(`./app/api/folders.php?id=${encodeURIComponent(folderId)}&check=true`);
+  }
+
+  /**
+   * フォルダを移動
+   */
+  static async moveFolder(folderId: string, newParentId: string | null): Promise<ApiResponse> {
+    return post('./app/api/folders.php', {
+      action: 'move',
+      id: folderId,
+      new_parent_id: newParentId
+    });
   }
 }
 

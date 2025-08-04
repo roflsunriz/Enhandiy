@@ -481,7 +481,7 @@ export class FileManagerEvents {
   }
 
   /**
-   * ファイル削除
+   * ファイル削除（Ajax方式で動的UI更新）
    */
   private async deleteFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
@@ -503,8 +503,8 @@ export class FileManagerEvents {
       try {
         const res = await AuthApi.verifyDelete(fileId, key);
         if (res.success && res.data?.token) {
-          // トークン OK → delete.php へ遷移
-          window.location.href = `./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(res.data.token)}`;
+          // Ajax方式でファイル削除を実行
+          await this.executeFileDelete(fileId, res.data.token);
           return;
         }
 
@@ -538,6 +538,38 @@ export class FileManagerEvents {
         await showAlert('削除処理でエラーが発生しました。');
         return;
       }
+    }
+  }
+
+  /**
+   * ファイル削除の実行（Ajax方式）
+   */
+  private async executeFileDelete(fileId: string, token: string): Promise<void> {
+    try {
+      // delete.phpをAjax方式で呼び出し
+      const response = await fetch(`./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(token)}`, {
+        method: 'GET',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest' // Ajax リクエストであることを示す
+        }
+      });
+
+      if (response.ok) {
+        // 削除成功時にUIを動的更新
+        this.core.removeFile(fileId);
+        
+        // FolderManagerがある場合も更新
+        if (window.folderManager) {
+          await window.folderManager.refreshAll();
+        }
+        
+        await showAlert('ファイルを削除しました。');
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('ファイル削除実行エラー:', error);
+      await showAlert('ファイルの削除に失敗しました。');
     }
   }
 

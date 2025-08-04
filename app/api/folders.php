@@ -41,7 +41,7 @@ switch ($method) {
         handleGetFolders($db);
         break;
     case 'POST':
-        handleCreateFolder($db, $max_folder_depth, $max_folders_per_level, $allow_folder_creation);
+        handlePostRequest($db, $max_folder_depth, $max_folders_per_level, $allow_folder_creation);
         break;
     case 'PUT':
         handleUpdateFolder($db);
@@ -76,9 +76,32 @@ function handleGetFolders($db)
 }
 
 /**
+ * POST リクエストの処理（作成、移動などのaction別処理）
+ */
+function handlePostRequest($db, $max_depth, $max_per_level, $allow_creation)
+{
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    // actionパラメータで処理を分岐
+    $action = isset($input['action']) ? $input['action'] : 'create';
+    switch ($action) {
+        case 'create':
+            handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $input);
+            break;
+        case 'move':
+            handleMoveFolderViaPost($db, $input);
+            break;
+        default:
+            http_response_code(400);
+            echo json_encode(['error' => '無効なアクションです'], JSON_UNESCAPED_UNICODE);
+            break;
+    }
+}
+
+/**
  * フォルダ作成
  */
-function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation)
+function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $input = null)
 {
     if (!$allow_creation) {
         http_response_code(403);
@@ -86,7 +109,9 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation)
         return;
     }
 
-    $input = json_decode(file_get_contents('php://input'), true);
+    if ($input === null) {
+        $input = json_decode(file_get_contents('php://input'), true);
+    }
 
     if (!isset($input['name']) || trim($input['name']) === '') {
         http_response_code(400);
@@ -183,6 +208,22 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation)
         http_response_code(500);
         echo json_encode(['error' => 'フォルダの作成に失敗しました'], JSON_UNESCAPED_UNICODE);
     }
+}
+
+/**
+ * POST経由でのフォルダ移動
+ */
+function handleMoveFolderViaPost($db, $input)
+{
+    if (!isset($input['id']) || !isset($input['new_parent_id'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'フォルダIDと移動先の親IDが必要です'], JSON_UNESCAPED_UNICODE);
+        return;
+    }
+
+    $id = intval($input['id']);
+    $new_parent_id = $input['new_parent_id'] === null ? null : intval($input['new_parent_id']);
+    handleMoveFolder($db, $id, $new_parent_id);
 }
 
 /**
