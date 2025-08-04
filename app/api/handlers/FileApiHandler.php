@@ -157,45 +157,30 @@ class FileApiHandler
     }
 
     /**
-     * ファイル削除
+     * ファイル削除（削除キー検証付き）
+     *
+     * 注意: このメソッドは削除キーの検証を行います。
+     * 管理者権限による削除はverifydelete.php -> delete.phpフローを使用してください。
      */
     public function handleDeleteFile(int $fileId): void
     {
-        try {
-            // データベース接続パラメータの設定
-            $db_directory = '../../db';
-            $dsn = 'sqlite:' . $db_directory . '/uploader.db';
-            $pdo = new PDO($dsn);
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        // このAPIエンドポイントは削除キー検証が必要です
+        // 適切な削除フローは以下の通りです：
+        // 1. verifydelete.php で削除キー検証
+        // 2. 成功時にワンタイムトークンを生成
+        // 3. delete.php でトークンを使用して削除実行
 
-            // ファイル情報取得
-            $stmt = $pdo->prepare("SELECT origin_file_name as filename FROM uploaded WHERE id = ?");
-            $stmt->execute(array($fileId));
-            $file = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($file && isset($file['count'])) {
-                $file['count'] = (int)$file['count'];
-            }
-
-            if (!$file) {
-                $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
-                return;
-            }
-
-            // 物理ファイル削除
-            $filePath = '../../data/' . $file['filename'];
-            if (file_exists($filePath)) {
-                unlink($filePath);
-            }
-
-            // データベースから削除
-            $stmt = $pdo->prepare("DELETE FROM uploaded WHERE id = ?");
-            $stmt->execute(array($fileId));
-
-            $this->response->success('ファイルを削除しました', ['file_id' => $fileId]);
-        } catch (PDOException $e) {
-            error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
-        }
+        $this->response->error(
+            'このAPIエンドポイントは削除キー検証のためご利用いただけません。適切な削除手順を使用してください。',
+            [
+                'recommended_flow' => [
+                    'step1' => 'POST /app/api/verifydelete.php で削除キー検証',
+                    'step2' => 'GET /delete.php?id={fileId}&key={token} で削除実行'
+                ]
+            ],
+            403,
+            'DELETE_KEY_VALIDATION_REQUIRED'
+        );
     }
 
     /**

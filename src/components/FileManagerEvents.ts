@@ -516,12 +516,18 @@ export class FileManagerEvents {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
 
+    // 削除キーが設定されている場合はキー入力を促す
+    let key = '';
+    if (file.del_key_hash) {
+      key = await showPasswordPrompt('削除キーを入力してください:') ?? '';
+      if (!key) return; // キャンセルされた場合は中止
+    }
+    // 確認ダイアログ
     if (!(await showConfirm(`「${file.name}」を削除しますか？この操作は取り消せません。`))) {
       return;
     }
 
-    let key = '';
-    
+    // 削除トークン取得ループ
     while (true) {
       try {
         const res = await AuthApi.verifyDelete(fileId, key);
@@ -533,21 +539,31 @@ export class FileManagerEvents {
 
         const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
         if (errCode === 'AUTH_REQUIRED') {
-          key = await showPasswordPrompt('削除キーを入力してください:') ?? '';
-          if (!key) return; // キャンセル
+          // 削除キーが必要な場合
+          if (key === '') {
+            key = await showPasswordPrompt('削除キーを入力してください（選択した全ファイルに適用されます）:') ?? '';
+            if (!key) {
+              await showAlert('削除処理がキャンセルされました。');
+              return;
+            }
+          }
           continue; // 再トライ
         }
         
         if (errCode === 'INVALID_KEY') {
           key = await showPasswordPrompt('削除キーが正しくありません。再入力してください:') ?? '';
-          if (!key) return;
+          if (!key) {
+            await showAlert('削除処理がキャンセルされました。');
+            return;
+          }
           continue;
         }
 
+        // その他のエラー
         await showAlert(res.message || '削除検証エラー');
         return;
       } catch (e) {
-        console.error('verifyDelete error', e);
+        console.error('削除検証エラー:', file.name, e);
         await showAlert('削除処理でエラーが発生しました。');
         return;
       }

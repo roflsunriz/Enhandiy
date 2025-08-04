@@ -89,6 +89,7 @@ try {
             $logger->warning('Invalid delete key', ['file_id' => $fileId]);
             $responseHandler->error('削除キーが正しくありません。', [], 200, 'INVALID_KEY');
         }
+        exit;  // 追加: 認証失敗時は処理を中断してトークン生成を防止
     }
 
     // 既存の期限切れトークンをクリーンアップ

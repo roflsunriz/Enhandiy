@@ -512,18 +512,20 @@ async function uploadSingleFile(file: File, options?: UploadOptions, progressBar
 function getUploadOptions(): UploadOptions {
   const commentInput = $('#commentInput') as HTMLInputElement;
   const dleyInput = $('#dleyInput') as HTMLInputElement;
-  const deleyInput = $('#deleyInput') as HTMLInputElement;
+  const delkeyInput = $('#delkeyInput') as HTMLInputElement;
   const replaceKeyInput = $('#replaceKeyInput') as HTMLInputElement;
   const maxDownloadsInput = $('#maxDownloadsUploadInput') as HTMLInputElement;
   const expiresDaysInput = $('#expiresDaysUploadInput') as HTMLInputElement;
+  const folderSelect = $('#folder-select') as HTMLSelectElement;
   
   return {
     comment: commentInput?.value || '',
     dlkey: dleyInput?.value || '',
-    delkey: deleyInput?.value || '',
+    delkey: delkeyInput?.value || '',
     replacekey: replaceKeyInput?.value || '',
     maxDownloads: maxDownloadsInput ? parseInt(maxDownloadsInput.value) || undefined : undefined,
-    expiresDays: expiresDaysInput ? parseInt(expiresDaysInput.value) || undefined : undefined
+    expiresDays: expiresDaysInput ? parseInt(expiresDaysInput.value) || undefined : undefined,
+    folderId: folderSelect?.value || undefined
   };
 }
 
