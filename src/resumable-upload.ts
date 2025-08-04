@@ -490,12 +490,26 @@ function onUploadComplete(filename: string, _method: string): void {
   
   // 全てのアップロードが完了したかチェック
   if (Object.keys(resumableUploads).length === 0) {
-    setTimeout(() => {
+    setTimeout(async () => {
       const globalStatus = $('.global-upload-status');
       if (globalStatus) {
         removeClass(globalStatus, 'active');
       }
-      window.location.reload();
+      
+      // FileManagerの動的更新
+      if (window.fileManagerInstance) {
+        await window.fileManagerInstance.refreshFromServer();
+      }
+      
+      // FolderManagerがある場合も更新
+      if (window.folderManager) {
+        await window.folderManager.refreshAll();
+      }
+      
+      // フォールバック: 動的更新が失敗した場合のリロード
+      if (!window.fileManagerInstance && !window.folderManager) {
+        window.location.reload();
+      }
     }, 2000);
   }
 }

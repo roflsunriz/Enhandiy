@@ -225,8 +225,13 @@ async function handleSaveComment(): Promise<void> {
       showSuccess('コメントを保存しました。');
       hideModal('editModal');
       
-      // ページをリロードしてコメントを反映
-      window.location.reload();
+      // FileManagerの動的更新
+      if (window.fileManagerInstance) {
+        await window.fileManagerInstance.refreshFromServer();
+      } else {
+        // フォールバック: FileManagerが無い場合のみリロード
+        window.location.reload();
+      }
     } else {
       throw new Error(response.error || 'コメントの保存に失敗しました。');
     }
@@ -275,8 +280,13 @@ async function handleReplaceFile(): Promise<void> {
       showSuccess('ファイルを差し替えました。');
       hideModal('editModal');
       
-      // ページをリロードして変更を反映
-      window.location.reload();
+      // FileManagerの動的更新
+      if (window.fileManagerInstance) {
+        await window.fileManagerInstance.refreshFromServer();
+      } else {
+        // フォールバック: FileManagerが無い場合のみリロード
+        window.location.reload();
+      }
     } else {
       throw new Error(response.error || 'ファイルの差し替えに失敗しました。');
     }

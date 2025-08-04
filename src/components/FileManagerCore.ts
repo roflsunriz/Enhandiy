@@ -310,6 +310,26 @@ export class FileManagerCore {
     this.render();
   }
 
+
+
+  /**
+   * サーバーからファイルリストを再取得して更新
+   */
+  public async refreshFromServer(): Promise<void> {
+    try {
+      const response = await fetch('./app/api/simple-files.php');
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.files)) {
+        this.state.files = data.files;
+        this.applyFiltersAndSort();
+        this.render();
+      }
+    } catch (error) {
+      console.error('ファイルリストの更新に失敗:', error);
+    }
+  }
+
   /**
    * 統計情報を取得
    */

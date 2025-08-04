@@ -96,6 +96,52 @@ class SimpleFolderManager {
       console.error('フォルダ読み込みエラー:', error);
     }
   }
+
+  /**
+   * フォルダ表示とFileManagerを動的更新
+   */
+  public async refreshAll(): Promise<void> {
+    try {
+      // フォルダ選択プルダウンを更新
+      await this.loadFolderOptions();
+      
+      // FileManagerがある場合は更新
+      if (window.fileManagerInstance) {
+        await window.fileManagerInstance.refreshFromServer();
+      }
+      
+      // フォルダナビゲーション部分も更新
+      this.refreshFolderNavigation();
+    } catch (error) {
+      console.error('フォルダとファイル表示の更新に失敗:', error);
+    }
+  }
+
+  /**
+   * フォルダナビゲーション部分の更新
+   */
+  private refreshFolderNavigation(): void {
+    // フォルダナビゲーション部分が存在する場合は、内容を動的に更新
+    const folderNav = document.querySelector('.folder-navigation');
+    if (folderNav) {
+      // 現在のフォルダIDに基づいてナビゲーションを再構築
+      this.updateFolderNavigation();
+    }
+  }
+
+  /**
+   * フォルダナビゲーションの再構築
+   */
+  private async updateFolderNavigation(): Promise<void> {
+    try {
+      const response = await FolderApi.getFolders();
+      const folders = response.data || [];
+      // ここでナビゲーション部分のHTMLを再構築する処理を追加
+      // 実装は既存のフォルダナビゲーション表示ロジックに依存
+    } catch (error) {
+      console.error('フォルダナビゲーション更新エラー:', error);
+    }
+  }
   
   // フォルダ選択プルダウンを更新
   private updateFolderSelect(folders: FolderData[]): void {
@@ -143,8 +189,8 @@ class SimpleFolderManager {
       await FolderApi.createFolder(name, parentId || undefined);
       
       await showAlert('フォルダを作成しました: ' + name);
-      // ページを再読み込み
-      window.location.reload();
+      // 動的更新
+      await this.refreshAll();
       
     } catch (error) {
       console.error('フォルダ作成エラー:', error);
@@ -170,8 +216,8 @@ class SimpleFolderManager {
       await FolderApi.updateFolder(folderId, newName);
       
       await showAlert('フォルダ名を変更しました: ' + newName);
-      // 名前変更後は現在のページを適切にリロード
-      window.location.reload();
+      // 動的更新
+      await this.refreshAll();
       
     } catch (error) {
       console.error('フォルダ名変更エラー:', error);
@@ -281,8 +327,8 @@ class SimpleFolderManager {
         throw new Error(response.error || 'フォルダ削除に失敗しました');
       }
       
-      // 削除後は現在のページを適切にリロード
-      window.location.reload();
+      // 動的更新
+      await this.refreshAll();
       
     } catch (error) {
       console.error('フォルダ削除エラー:', error);

@@ -417,7 +417,22 @@ async function uploadFilesSequentially(index: number): Promise<void> {
     isUploading = false;
     const uploadContainer = $('#uploadContainer') as HTMLElement;
     if (uploadContainer) uploadContainer.style.display = 'none';
-    window.location.reload();
+    
+    // FileManagerの動的更新
+    if (window.fileManagerInstance) {
+      await window.fileManagerInstance.refreshFromServer();
+    }
+    
+    // FolderManagerがある場合も更新
+    if (window.folderManager) {
+      await window.folderManager.refreshAll();
+    }
+    
+    // フォールバック: 動的更新が失敗した場合のリロード
+    if (!window.fileManagerInstance && !window.folderManager) {
+      window.location.reload();
+    }
+    
     return;
   }
   

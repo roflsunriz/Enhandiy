@@ -165,6 +165,13 @@ export class FileManager {
   }
 
   /**
+   * サーバーからファイルリストを再取得して更新
+   */
+  public async refreshFromServer(): Promise<void> {
+    await this.core.refreshFromServer();
+  }
+
+  /**
    * 統計情報を取得
    */
   public getStats(): {
