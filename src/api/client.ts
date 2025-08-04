@@ -142,7 +142,7 @@ export class FolderApi {
   /**
    * フォルダ一覧を取得
    */
-  static async getFolders(): Promise<{ folders: FolderData[] }> {
+  static async getFolders(): Promise<ApiResponse<{ folders: FolderData[] }>> {
     return get<{ folders: FolderData[] }>('./app/api/folders.php');
   }
 

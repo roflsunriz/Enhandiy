@@ -89,7 +89,7 @@ class SimpleFolderManager {
   private async loadFolderOptions(): Promise<void> {
     try {
       const response = await FolderApi.getFolders();
-      const folders = response.folders || [];
+      const folders = response.data?.folders || [];
       this.updateFolderSelect(folders);
     } catch (error) {
       console.error('フォルダ読み込みエラー:', error);
@@ -388,7 +388,7 @@ class SimpleFolderManager {
     try {
       // フォルダ一覧を取得
       const response = await FolderApi.getFolders();
-      const folders = response.folders || [];
+      const folders = response.data?.folders || [];
       
       // 移動先選択のプロンプト作成（改行対応）
       const optionLines = [
@@ -538,7 +538,7 @@ export async function moveFile(fileId: string): Promise<void> {
   try {
     // フォルダ一覧を取得
     const response = await FolderApi.getFolders();
-    const folders = response.folders || [];
+    const folders = response.data?.folders || [];
     
     // 移動先選択のプロンプト作成（改行対応）
     const optionLines = [
