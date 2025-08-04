@@ -95,7 +95,8 @@ try {
         'responseHandler' => $responseHandler,
         'db' => $db,
         'csrf_token' => SecurityUtils::generateCSRFToken(),
-        'status_message' => $_GET['deleted'] ?? null,
+        'deleted_status' => $_GET['deleted'] ?? null,
+        'uploaded_status' => $_GET['uploaded'] ?? null,
         'error_message' => $error_message
     ]);
 
