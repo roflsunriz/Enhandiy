@@ -67,6 +67,16 @@ function initializeFileEditEvents(): void {
   if (copyBtn) {
     copyBtn.addEventListener('click', handleCopyShareUrl);
   }
+  
+  // 共有設定の動的反映
+  const shareMaxDownloadsInput = $('#shareMaxDownloads') as HTMLInputElement;
+  const shareExpiresDaysInput = $('#shareExpiresDays') as HTMLInputElement;
+  if (shareMaxDownloadsInput) {
+    shareMaxDownloadsInput.addEventListener('input', updateCurrentShareSettings);
+  }
+  if (shareExpiresDaysInput) {
+    shareExpiresDaysInput.addEventListener('input', updateCurrentShareSettings);
+  }
 }
 
 /**
@@ -82,8 +92,8 @@ export function openEditDialog(fileId: string, fileName: string, comment: string
   
   if (editFileIdInput) editFileIdInput.value = fileId;
   if (replaceFileIdInput) replaceFileIdInput.value = fileId;
-  if (editFileNameElement) text(editFileNameElement, fileName);
-  if (replaceFileNameElement) text(replaceFileNameElement, fileName);
+  if (editFileNameElement) (editFileNameElement as HTMLInputElement).value = fileName;
+  if (replaceFileNameElement) (replaceFileNameElement as HTMLInputElement).value = fileName;
   if (editCommentInput) editCommentInput.value = comment;
   
   // コメントタブを表示
@@ -106,8 +116,8 @@ export function editComment(fileId: string, fileName: string, currentComment: st
   
   if (editFileIdInput) editFileIdInput.value = fileId;
   if (replaceFileIdInput) replaceFileIdInput.value = fileId;
-  if (editFileNameElement) text(editFileNameElement, fileName);
-  if (replaceFileNameElement) text(replaceFileNameElement, fileName);
+  if (editFileNameElement) (editFileNameElement as HTMLInputElement).value = fileName;
+  if (replaceFileNameElement) (replaceFileNameElement as HTMLInputElement).value = fileName;
   if (editCommentInput) editCommentInput.value = currentComment;
   
   // コメントタブを表示
@@ -134,8 +144,8 @@ export function replaceFile(fileId: string, currentFilename: string = ''): void 
   const replaceFileNameElement = $('#replaceFileName');
   
   if (replaceFileIdInput) replaceFileIdInput.value = fileId;
-  if (editFileNameElement) text(editFileNameElement, currentFilename);
-  if (replaceFileNameElement) text(replaceFileNameElement, currentFilename);
+  if (editFileNameElement) (editFileNameElement as HTMLInputElement).value = currentFilename;
+  if (replaceFileNameElement) (replaceFileNameElement as HTMLInputElement).value = currentFilename;
   
   // 差し替えタブを表示
   activateTab('replace-tab', 'replaceTab');
@@ -165,6 +175,11 @@ export function openShareModal(fileId: string, filename: string, comment: string
   if (shareFileCommentInput) shareFileCommentInput.value = comment;
   // 現在の設定を取得して入力に反映
   fetchShareSettings(fileId);
+  
+  // 初期表示時も現在の設定を反映
+  setTimeout(() => {
+    updateCurrentShareSettings();
+  }, 100);
   
   // 結果パネルを隠す
   const shareResultPanel = $('#shareResultPanel') as HTMLElement;
@@ -199,10 +214,12 @@ async function handleSaveComment(): Promise<void> {
   }
   
   try {
-    const response = await post('/api/edit-comment.php', {
-      fileId: fileId,
-      comment: comment
-    });
+    const formData = new FormData();
+    formData.append('file_id', fileId);
+    formData.append('comment', comment);
+    formData.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
+    
+    const response = await post('./app/api/edit-comment.php', formData);
     
     if (response.success) {
       showSuccess('コメントを保存しました。');
@@ -247,11 +264,12 @@ async function handleReplaceFile(): Promise<void> {
   
   const file = files[0];
   const formData = new FormData();
-  formData.append('fileId', fileId);
   formData.append('file', file);
+  formData.append('replacekey', (document.getElementById('modalReplaceKeyInput') as HTMLInputElement)?.value || '');
+  formData.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
   
   try {
-    const response = await post('/api/replace-file.php', formData);
+    const response = await post(`./app/api/replace-file.php?id=${encodeURIComponent(fileId)}`, formData);
     
     if (response.success) {
       showSuccess('ファイルを差し替えました。');
@@ -490,7 +508,7 @@ if (typeof window !== 'undefined') {
 // 共有設定取得
 async function fetchShareSettings(fileId: string): Promise<void> {
   try {
-    const res = await get(`/app/api/generatesharelink.php?id=${encodeURIComponent(fileId)}`);
+    const res = await get(`./app/api/generatesharelink.php?id=${encodeURIComponent(fileId)}`);
     if (res.success && res.data) {
       const data = res.data as { max_downloads?: number; expires_days?: number };
       const maxInput = $('#shareMaxDownloads') as HTMLInputElement;
@@ -546,6 +564,26 @@ async function handleCopyShareUrl(): Promise<void> {
     shareUrlInput.select();
     document.execCommand('copy');
     showSuccess('共有内容をクリップボードにコピーしました。');
+  }
+}
+
+/**
+ * 共有設定の現在値を動的に更新
+ */
+function updateCurrentShareSettings(): void {
+  const shareMaxDownloadsInput = $('#shareMaxDownloads') as HTMLInputElement;
+  const shareExpiresDaysInput = $('#shareExpiresDays') as HTMLInputElement;
+  const currentMaxDownloads = $('#currentMaxDownloads');
+  const currentExpiresDays = $('#currentExpiresDays');
+  
+  if (currentMaxDownloads && shareMaxDownloadsInput) {
+    const maxDownloadsText = shareMaxDownloadsInput.value.trim() || '無制限';
+    currentMaxDownloads.innerHTML = `<strong>最大ダウンロード数:</strong> ${maxDownloadsText}`;
+  }
+  
+  if (currentExpiresDays && shareExpiresDaysInput) {
+    const expiresDaysText = shareExpiresDaysInput.value.trim() || '無期限';
+    currentExpiresDays.innerHTML = `<strong>有効期限:</strong> ${expiresDaysText} ${expiresDaysText !== '無期限' ? '日' : ''}`;
   }
 }
 

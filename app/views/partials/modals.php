@@ -89,7 +89,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="saveCommentBtn" style="display: none;">コメント保存</button>
+        <button type="button" class="btn btn-primary" id="saveCommentBtn" style="display: inline-block;">コメント保存</button>
         <button type="button" class="btn btn-warning" id="replaceFileBtn" style="display: none;">ファイル差し替え</button>
       </div>
     </div>
