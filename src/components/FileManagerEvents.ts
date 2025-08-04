@@ -5,8 +5,9 @@
 
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
-import { ShareApi, FileApi, AuthApi } from '../api/client';
+import { ShareApi, AuthApi } from '../api/client';
 import { showAlert, showConfirm, showPrompt, showPasswordPrompt } from '../utils/modal';
+// import { openShareModal } from '../file-edit'; // 使用しない
 
 export class FileManagerEvents {
   private core: FileManagerCore;
@@ -220,7 +221,7 @@ export class FileManagerEvents {
     // 処理中フラグを設定
     button.dataset.processing = 'true';
     
-    const file = this.core.getFiles().find(f => f.id === fileId);
+    const file = this.core.getFiles().find(f => f.id.toString() === fileId);
     if (!file) {
       button.dataset.processing = 'false';
       return;
@@ -232,7 +233,10 @@ export class FileManagerEvents {
           this.downloadFile(file.id.toString());
           break;
         case 'share':
-          this.shareFile(file.id.toString());
+          // グローバル関数を呼び出してシェアモーダルを開く
+          if (window.openShareModal) {
+            window.openShareModal(fileId!, file.name!, file.comment || '');
+          }
           break;
         case 'delete':
           this.deleteFile(file.id.toString());
@@ -418,7 +422,7 @@ export class FileManagerEvents {
    * ファイルダウンロード
    */
   private async downloadFile(fileId: string): Promise<void> {
-    const file = this.core.getFiles().find(f => f.id === fileId);
+    const file = this.core.getFiles().find(f => f.id.toString() === fileId);
     if (!file) return;
 
     let key = '';
@@ -479,7 +483,7 @@ export class FileManagerEvents {
   /**
    * ファイル共有
    */
-  private async shareFile(fileId: string): Promise<void> {
+  private async _shareFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
     
@@ -587,7 +591,7 @@ export class FileManagerEvents {
     
     try {
       let key = '';
-      let deleteUrls: string[] = [];
+      const deleteUrls: string[] = [];
       
       // 全ファイルの削除キー検証を事前に行い、削除URLを収集
       for (const file of selectedFiles) {

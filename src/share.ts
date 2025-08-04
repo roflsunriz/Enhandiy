@@ -27,6 +27,12 @@ ready(() => {
  * 共有関連のイベント初期化
  */
 function initializeShareEvents(): void {
+  // share.ts専用ページでなければ処理しない
+  const maxDownloadsInput = $('#shareMaxDownloads');
+  const expiresInput = $('#shareExpiresDays');
+  if (!maxDownloadsInput || !expiresInput) {
+    return;
+  }
   // 共有リンク生成ボタン
   const generateBtn = $('#generateShareLinkBtn');
   if (generateBtn) {
@@ -56,8 +62,8 @@ async function handleGenerateShareLink(): Promise<void> {
     return;
   }
   
-  const maxDownloadsInput = $('#maxDownloadsInput') as HTMLInputElement;
-  const expiresInput = $('#expiresInput') as HTMLInputElement;
+  const maxDownloadsInput = $('#shareMaxDownloads') as HTMLInputElement;
+  const expiresInput = $('#shareExpiresDays') as HTMLInputElement;
   
   const maxDownloads = maxDownloadsInput?.value || '';
   const expires = expiresInput?.value || '';
@@ -70,10 +76,10 @@ async function handleGenerateShareLink(): Promise<void> {
   }
   
   try {
-    const response = await post('/api/generatesharelink.php', {
-      fileId: fileId,
-      maxDownloads: maxDownloads,
-      expires: expires
+    const response = await post('./app/api/generatesharelink.php', {
+      id: fileId,
+      max_downloads: maxDownloads,
+      expires_days: expires
     });
     
     if (response.success && response.data) {

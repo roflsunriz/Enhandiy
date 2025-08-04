@@ -4,13 +4,15 @@
  */
 
 import { ready, $, attr, text, addClass, removeClass } from './utils/dom';
-import { post } from './utils/http';
+import { get, post } from './utils/http';
 import { showSuccess, showError } from './utils/messages';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { showModal, hideModal } from './utils/bootstrap';
 
 // 型定義のインポート
 import './types/global';
+// モーダル切り替え用に最後の共有データを保持
+let lastShareData: { share_key: string; share_url?: string; share_url_with_comment?: string; max_downloads?: number; expires_days?: number } | null = null;
 
 // ファイル編集機能初期化
 ready(() => {
@@ -50,12 +52,21 @@ function initializeFileEditEvents(): void {
   if (generateShareBtn) {
     generateShareBtn.addEventListener('click', handleGenerateShareLink);
   }
-  
+  // 設定保存ボタン
+  const saveSettingsBtn = $('#saveShareSettingsBtn') as HTMLButtonElement;
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener('click', handleSaveShareSettings);
+  }
   // 共有フォーマット切り替え
   const formatRadios = document.querySelectorAll('input[name="shareFormat"]');
   formatRadios.forEach(radio => {
     radio.addEventListener('change', handleShareFormatChange);
   });
+  // コピーボタン
+  const copyBtn = $('#copyShareUrlBtn') as HTMLButtonElement;
+  if (copyBtn) {
+    copyBtn.addEventListener('click', handleCopyShareUrl);
+  }
 }
 
 /**
@@ -143,26 +154,22 @@ export function replaceFile(fileId: string, currentFilename: string = ''): void 
 /**
  * 共有リンクモーダルを開く
  */
-export function openShareModal(filename: string, comment: string = ''): void {
+export function openShareModal(fileId: string, filename: string, comment: string = ''): void {
   // フォームに値を設定
   const shareFileNameInput = $('#shareFileName') as HTMLInputElement;
   const shareFileCommentInput = $('#shareFileComment') as HTMLInputElement;
-  
-  if (shareFileNameInput) shareFileNameInput.value = filename;
+  if (shareFileNameInput) {
+    shareFileNameInput.value = filename;
+    shareFileNameInput.setAttribute('data-file-id', fileId);
+  }
   if (shareFileCommentInput) shareFileCommentInput.value = comment;
-  
-  // フォームをリセット
-  const shareMaxDownloadsInput = $('#shareMaxDownloads') as HTMLInputElement;
-  const shareExpiresDaysInput = $('#shareExpiresDays') as HTMLInputElement;
-  
-  if (shareMaxDownloadsInput) shareMaxDownloadsInput.value = '';
-  if (shareExpiresDaysInput) shareExpiresDaysInput.value = '';
+  // 現在の設定を取得して入力に反映
+  fetchShareSettings(fileId);
   
   // 結果パネルを隠す
   const shareResultPanel = $('#shareResultPanel') as HTMLElement;
   const regenerateBtn = $('#regenerateShareLinkBtn') as HTMLElement;
   const generateBtn = $('#generateShareLinkBtn') as HTMLElement;
-  
   if (shareResultPanel) shareResultPanel.style.display = 'none';
   if (regenerateBtn) regenerateBtn.style.display = 'none';
   if (generateBtn) generateBtn.style.display = 'inline-block';
@@ -311,16 +318,18 @@ async function handleGenerateShareLink(): Promise<void> {
   }
   
   try {
-    const response = await post('/api/generatesharelink.php', {
-      fileId: fileId,
-      maxDownloads: maxDownloads,
-      expiresDays: expiresDays
+    const response = await post('./app/api/generatesharelink.php', {
+      id: fileId,
+      max_downloads: maxDownloads,
+      expires_days: expiresDays
     });
     
     if (response.success && response.data) {
-      if (response.data && typeof response.data === 'object' && 'share_key' in response.data) {
-        displayShareLink(response.data as Parameters<typeof displayShareLink>[0]);
-      }
+      // 生成結果を保持
+      lastShareData = response.data as typeof lastShareData;
+      displayShareLink(response.data as Parameters<typeof displayShareLink>[0]);
+      // 自動コピー
+      await handleCopyShareUrl();
       showSuccess('共有リンクを生成しました。');
     } else {
       throw new Error(response.error || '共有リンクの生成に失敗しました。');
@@ -349,6 +358,15 @@ function displayShareLink(shareData: {
   max_downloads?: number;
   expires_days?: number;
 }): void {
+  // 設定フィールドに反映
+  const shareMaxDownloadsInput = $('#shareMaxDownloads') as HTMLInputElement;
+  if (shareMaxDownloadsInput) {
+    shareMaxDownloadsInput.value = shareData.max_downloads?.toString() || '';
+  }
+  const shareExpiresDaysInput = $('#shareExpiresDays') as HTMLInputElement;
+  if (shareExpiresDaysInput) {
+    shareExpiresDaysInput.value = shareData.expires_days?.toString() || '';
+  }
   // 現在の設定を表示
   const currentMaxDownloads = $('#currentMaxDownloads');
   const currentExpiresDays = $('#currentExpiresDays');
@@ -388,8 +406,9 @@ function displayShareLink(shareData: {
  * 共有フォーマット変更処理
  */
 function handleShareFormatChange(): void {
-  // 現在のデータを取得して再表示
-  // この実装は簡略化されており、実際のデータは前回の生成結果から取得する必要がある
+  if (lastShareData) {
+    updateShareUrl(lastShareData);
+  }
 }
 
 /**
@@ -467,5 +486,70 @@ if (typeof window !== 'undefined') {
   globalWindow.replaceFile = replaceFile;
   globalWindow.openShareModal = openShareModal;
 }
+
+// 共有設定取得
+async function fetchShareSettings(fileId: string): Promise<void> {
+  try {
+    const res = await get(`/app/api/generatesharelink.php?id=${encodeURIComponent(fileId)}`);
+    if (res.success && res.data) {
+      const data = res.data as { max_downloads?: number; expires_days?: number };
+      const maxInput = $('#shareMaxDownloads') as HTMLInputElement;
+      const expInput = $('#shareExpiresDays') as HTMLInputElement;
+      if (maxInput) maxInput.value = data.max_downloads?.toString() || '';
+      if (expInput) expInput.value = data.expires_days?.toString() || '';
+      // lastShareDataに反映
+      lastShareData = { ...lastShareData, max_downloads: data.max_downloads, expires_days: data.expires_days } as typeof lastShareData;
+    }
+  } catch (e) {
+    console.error('設定取得エラー:', e);
+  }
+}
+// 設定保存処理
+async function handleSaveShareSettings(): Promise<void> {
+  const shareFileNameInput = $('#shareFileName') as HTMLInputElement;
+  const maxInput = $('#shareMaxDownloads') as HTMLInputElement;
+  const expInput = $('#shareExpiresDays') as HTMLInputElement;
+  if (!shareFileNameInput) { showError('ファイル情報が見つかりません。'); return; }
+  const fileId = shareFileNameInput.getAttribute('data-file-id') || '';
+  const maxVal = maxInput?.value || null;
+  const expVal = expInput?.value || null;
+  const saveBtn = $('#saveShareSettingsBtn') as HTMLButtonElement;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = '保存中...'; }
+  try {
+    const res = await post('./app/api/generatesharelink.php', { action: 'updateSettings', id: fileId, max_downloads: maxVal, expires_days: expVal });
+    if (res.success) {
+      showSuccess('設定を保存しました。');
+      lastShareData = { ...lastShareData, max_downloads: maxVal ? parseInt(maxVal) : undefined, expires_days: expVal ? parseInt(expVal) : undefined } as typeof lastShareData;
+    } else {
+      throw new Error(res.error || '設定保存に失敗しました。');
+    }
+  } catch (e) {
+    console.error('設定保存エラー:', e);
+    showError('設定の保存に失敗しました。');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = '設定を保存'; }
+  }
+}
+
+// 共有内容をクリップボードにコピー
+async function handleCopyShareUrl(): Promise<void> {
+  const shareUrlInput = $('#shareUrl') as HTMLInputElement;
+  if (!shareUrlInput || !shareUrlInput.value) {
+    showError('コピーする共有内容がありません。');
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(shareUrlInput.value);
+    showSuccess('共有内容をクリップボードにコピーしました。');
+  } catch {
+    // フォールバック
+    shareUrlInput.select();
+    document.execCommand('copy');
+    showSuccess('共有内容をクリップボードにコピーしました。');
+  }
+}
+
+// グローバル公開: シェアモーダルを開く関数
+(window as any).openShareModal = openShareModal;
 
 export {};

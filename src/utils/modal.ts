@@ -121,25 +121,8 @@ export function openEditModal(fileId: string, fileName: string, comment: string 
   showModal('editModal');
 }
 
-/**
- * 共有リンクモーダルを開く
- */
-export function openShareLinkModal(_fileId: string, fileName: string, comment: string = ''): void {
-  const modal = document.getElementById('shareLinkModal');
-  if (!modal) return;
-  
-  // ファイル情報を設定
-  const fileNameInput = modal.querySelector('#shareFileName') as HTMLInputElement;
-  const commentInput = modal.querySelector('#shareFileComment') as HTMLInputElement;
-  
-  if (fileNameInput) fileNameInput.value = fileName;
-  if (commentInput) commentInput.value = comment;
-  
-  // 共有設定をリセット
-  resetShareSettings();
-  
-  showModal('shareLinkModal');
-}
+// openShareLinkModal関数は削除しました
+// 代わりにsrc/file-edit.tsのopenShareModal関数を使用してください
 
 /**
  * タブを有効化

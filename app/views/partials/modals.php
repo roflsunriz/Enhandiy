@@ -283,7 +283,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+        <button type="button" class="btn btn-primary" id="saveShareSettingsBtn">設定を保存</button>
+        <button type="button" class="btn btn-default" data-bs-dismiss="modal">閉じる</button>
       </div>
     </div>
   </div>

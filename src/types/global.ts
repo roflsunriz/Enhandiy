@@ -65,6 +65,7 @@ export type EventHandler<T = Event> = (_event: T) => void;
 // グローバルオブジェクトの拡張
 declare global {
   interface Window {
+    openShareModal?: (fileId: string, fileName: string, comment?: string) => void;
     fileData: FileData[];
     folderData: FolderData[];
     config: AppConfig;
