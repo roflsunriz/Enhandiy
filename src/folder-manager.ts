@@ -89,7 +89,25 @@ class SimpleFolderManager {
   private async loadFolderOptions(): Promise<void> {
     try {
       const response = await FolderApi.getFolders();
+      
+      // APIレスポンスの詳細チェック
+      if (!response) {
+        console.error('フォルダAPI応答が null または undefined です');
+        return;
+      }
+      
+      if (!response.success) {
+        console.error('フォルダAPI応答でエラー:', response.error || 'Unknown error');
+        return;
+      }
+      
       const folders = response.data?.folders || [];
+      
+      if (!Array.isArray(folders)) {
+        console.error('フォルダデータが配列ではありません:', typeof folders);
+        return;
+      }
+      
       this.updateFolderSelect(folders);
     } catch (error) {
       console.error('フォルダ読み込みエラー:', error);
@@ -278,7 +296,16 @@ class SimpleFolderManager {
   // フォルダ選択プルダウンを更新
   private updateFolderSelect(folders: FolderData[]): void {
     const folderSelect = document.getElementById('folder-select') as HTMLSelectElement;
-    if (!folderSelect) return;
+    if (!folderSelect) {
+      // 少し遅延してリトライ
+      setTimeout(() => {
+        const retrySelect = document.getElementById('folder-select') as HTMLSelectElement;
+        if (retrySelect) {
+          this.updateFolderSelect(folders);
+        }
+      }, 500);
+      return;
+    }
     
     // 現在選択されている値を保持
     const currentValue = folderSelect.value;
@@ -287,15 +314,25 @@ class SimpleFolderManager {
     folderSelect.innerHTML = '<option value="">ルートフォルダ</option>';
     
     const addOptions = (folders: FolderData[], level = 0): void => {
+      if (!Array.isArray(folders)) {
+        console.error('addOptions: folders が配列ではありません:', folders);
+        return;
+      }
+      
       folders.forEach(folder => {
+        if (!folder || typeof folder.id === 'undefined' || typeof folder.name === 'undefined') {
+          console.error('無効なフォルダデータ:', folder);
+          return;
+        }
+        
         const option = document.createElement('option');
-        option.value = folder.id;
+        option.value = String(folder.id); // 確実に文字列に変換
         option.textContent = '　'.repeat(level) + folder.name;
         folderSelect.appendChild(option);
         
         // 子フォルダがある場合は再帰的に追加
         const folderWithChildren = folder as FolderData & { children?: FolderData[] };
-        if ('children' in folder && folderWithChildren.children && folderWithChildren.children.length > 0) {
+        if ('children' in folder && folderWithChildren.children && Array.isArray(folderWithChildren.children) && folderWithChildren.children.length > 0) {
           addOptions(folderWithChildren.children, level + 1);
         }
       });
@@ -334,7 +371,7 @@ class SimpleFolderManager {
       // 少し遅延してからも更新（サーバー側の処理を確実に反映）
       setTimeout(async () => {
         await this.refreshAll();
-      }, 500);
+      }, 1000);
       
     } catch (error) {
       console.error('フォルダ作成エラー:', error);
