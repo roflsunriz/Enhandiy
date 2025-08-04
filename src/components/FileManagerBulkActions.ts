@@ -7,7 +7,8 @@ import { FileData } from '../types/global';
 import { FileManagerCore } from './FileManagerCore';
 import { post, del } from '../utils/http';
 import { showSuccess, showError } from '../utils/messages';
-import { showConfirm } from '../utils/modal';
+import { showConfirm, showPasswordPrompt } from '../utils/modal';
+import { AuthApi } from '../api/client';
 
 export class FileManagerBulkActions {
   private core: FileManagerCore;
@@ -58,21 +59,62 @@ export class FileManagerBulkActions {
     if (!confirmed) return;
 
     try {
-      // 削除APIを並列実行
-      const deletePromises = selectedFiles.map(file => this.deleteFile(file.id.toString()));
-      const results = await Promise.allSettled(deletePromises);
+      let key = '';
+      let successful = 0;
+      let failed = 0;
       
-      // 結果を集計
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+      // 各ファイルを順次削除（削除キー検証のため）
+      for (const file of selectedFiles) {
+        try {
+          await this.deleteFile(file.id.toString(), key);
+          this.core.removeFile(file.id.toString());
+          successful++;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          
+          if (errorMessage === 'DELETE_KEY_REQUIRED') {
+            // 削除キーが必要な場合
+            if (key === '') {
+              key = await showPasswordPrompt('削除キーを入力してください（選択した全ファイルに適用されます）:') ?? '';
+              if (!key) {
+                showError('削除処理がキャンセルされました。');
+                return;
+              }
+              // 同じファイルを削除キー付きで再試行
+              try {
+                await this.deleteFile(file.id.toString(), key);
+                this.core.removeFile(file.id.toString());
+                successful++;
+              } catch (retryError) {
+                console.error('削除再試行エラー:', file.name, retryError);
+                failed++;
+              }
+            }
+          } else if (errorMessage === 'INVALID_DELETE_KEY') {
+            // 削除キーが間違っている場合
+            key = await showPasswordPrompt('削除キーが正しくありません。再入力してください:') ?? '';
+            if (!key) {
+              showError('削除処理がキャンセルされました。');
+              return;
+            }
+            // 同じファイルを新しいキーで再試行
+            try {
+              await this.deleteFile(file.id.toString(), key);
+              this.core.removeFile(file.id.toString());
+              successful++;
+            } catch (retryError) {
+              console.error('削除再試行エラー:', file.name, retryError);
+              failed++;
+            }
+          } else {
+            console.error('ファイル削除エラー:', file.name, error);
+            failed++;
+          }
+        }
+      }
       
       if (successful > 0) {
         showSuccess(`${successful}件のファイルを削除しました。`);
-        
-        // 成功したファイルをUIから削除
-        selectedFiles.forEach(file => {
-          this.core.removeFile(file.id.toString());
-        });
       }
       
       if (failed > 0) {
@@ -308,13 +350,31 @@ export class FileManagerBulkActions {
   }
 
   /**
-   * ファイル削除API
+   * ファイル削除API（削除キー検証を含む）
    */
-  private async deleteFile(fileId: string): Promise<void> {
-    const response = await del(`/api/files/${fileId}`);
+  private async deleteFile(fileId: string, key: string = ''): Promise<void> {
+    // AuthApi.verifyDeleteを使用して削除キー検証を行う
+    const res = await AuthApi.verifyDelete(fileId, key);
     
-    if (!response.success) {
-      throw new Error(response.error || 'ファイルの削除に失敗しました');
+    if (!res.success) {
+      const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
+      if (errCode === 'AUTH_REQUIRED') {
+        throw new Error('DELETE_KEY_REQUIRED');
+      } else if (errCode === 'INVALID_KEY') {
+        throw new Error('INVALID_DELETE_KEY');
+      } else {
+        throw new Error(res.message || 'ファイルの削除に失敗しました');
+      }
+    }
+    
+    if (!res.data?.token) {
+      throw new Error('削除トークンの取得に失敗しました');
+    }
+    
+    // delete.phpを呼び出して実際の削除を実行
+    const deleteResponse = await fetch(`./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(res.data.token)}`);
+    if (!deleteResponse.ok) {
+      throw new Error('ファイルの削除に失敗しました');
     }
   }
 

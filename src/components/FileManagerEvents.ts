@@ -570,31 +570,75 @@ export class FileManagerEvents {
     }
     
     try {
-      let successCount = 0;
-      let errorCount = 0;
+      let key = '';
+      let deleteUrls: string[] = [];
       
-      // 各ファイルを順次削除
+      // 全ファイルの削除キー検証を事前に行い、削除URLを収集
       for (const file of selectedFiles) {
-        try {
-          const result = await FileApi.deleteFile(file.id.toString());
-          
-          if (result.success) {
-            this.core.removeFile(file.id.toString());
-            successCount++;
-          } else {
-            console.error('ファイル削除失敗:', file.name, result.error);
-            errorCount++;
+        while (true) {
+          try {
+            const res = await AuthApi.verifyDelete(file.id.toString(), key);
+            if (res.success && res.data?.token) {
+              // 削除URLをリストに追加
+              deleteUrls.push(`./delete.php?id=${encodeURIComponent(file.id.toString())}&key=${encodeURIComponent(res.data.token)}`);
+              break;
+            }
+
+            const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
+            if (errCode === 'AUTH_REQUIRED') {
+              // 削除キーが必要な場合
+              if (key === '') {
+                key = await showPasswordPrompt('削除キーを入力してください（選択した全ファイルに適用されます）:') ?? '';
+                if (!key) {
+                  await showAlert('削除処理がキャンセルされました。');
+                  return;
+                }
+              }
+              continue; // 再トライ
+            }
+            
+            if (errCode === 'INVALID_KEY') {
+              key = await showPasswordPrompt('削除キーが正しくありません。再入力してください:') ?? '';
+              if (!key) {
+                await showAlert('削除処理がキャンセルされました。');
+                return;
+              }
+              continue;
+            }
+
+            // その他のエラー
+            await showAlert(res.message || '削除検証エラー');
+            return;
+          } catch (e) {
+            console.error('削除検証エラー:', file.name, e);
+            await showAlert('削除処理でエラーが発生しました。');
+            return;
           }
-        } catch (error) {
-          console.error('ファイル削除エラー:', file.name, error);
-          errorCount++;
         }
       }
       
-      if (successCount > 0) {
-        await showAlert(`${successCount}件のファイルを削除しました。${errorCount > 0 ? `\n${errorCount}件の削除に失敗しました。` : ''}`);
-      } else {
-        await showAlert('ファイルの削除に失敗しました。');
+      // 全ファイルの削除URLが準備できたら、一括削除を実行
+      if (deleteUrls.length > 0) {
+        // 各削除URLに順次アクセス（最後のもの以外は iframe で処理）
+        for (let i = 0; i < deleteUrls.length; i++) {
+          if (i === deleteUrls.length - 1) {
+            // 最後のファイルは現在のページでリダイレクト
+            window.location.href = deleteUrls[i];
+          } else {
+            // 他のファイルは非表示の iframe で処理
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = deleteUrls[i];
+            document.body.appendChild(iframe);
+            
+            // iframe を少し遅れて削除
+            setTimeout(() => {
+              if (iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+              }
+            }, 2000);
+          }
+        }
       }
     } catch (error) {
       console.error('一括削除エラー:', error);
