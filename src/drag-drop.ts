@@ -5,29 +5,8 @@
 
 import { ready, $, addClass, removeClass } from './utils/dom';
 import { initializeErrorHandling } from './utils/errorHandling';
-import { ApiResponse } from './types/global';
 import { showAlert } from './utils/modal';
-
-// 型定義
-interface UploadedFile extends File {
-  uploadId?: string;
-}
-
-interface UploadOptions {
-  comment?: string;
-  dlkey?: string;
-  delkey?: string;
-  replacekey?: string;
-  maxDownloads?: number;
-  expiresDays?: number;
-  folderId?: string;
-}
-
-interface UploadApiResponse extends ApiResponse {
-  status: 'ok' | 'filesize_over' | 'extension_error' | 'comment_error' | 'dlkey_required' | 'delkey_required' | 'sqlwrite_error' | 'network_error';
-  ext?: string;
-  message?: string;
-}
+import { UploadedFile, UploadOptions, UploadApiResponse } from './types/upload';
 
 // グローバル変数
 let selectedFiles: UploadedFile[] = [];

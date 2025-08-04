@@ -7,60 +7,21 @@
 import { ready, $, addClass, removeClass } from './utils/dom';
 import { showError } from './utils/messages';
 import { initializeErrorHandling } from './utils/errorHandling';
-import { ApiResponse } from './types/global';
 import { showAlert } from './utils/modal';
+import { 
+  UploadInfo, 
+  UploadOptions, 
+  UploadApiResponse,
+  TusWindowGlobals,
+  UploadWindowGlobals
+} from './types/upload';
 
 // 外部ライブラリの型定義
 declare global {
-  interface Window {
-    tus?: {
-      Upload: new (file: File, options: TusUploadOptions) => TusUpload;
-    };
-  }
+  interface Window extends TusWindowGlobals {}
 }
 
-interface TusUploadOptions {
-  endpoint: string;
-  retryDelays: number[];
-  metadata: Record<string, string>;
-  chunkSize: number;
-  removeFingerprintOnSuccess: boolean;
-  resume: boolean;
-  onError: (error: Error) => void;
-  onProgress: (bytesUploaded: number, bytesTotal: number) => void;
-  onSuccess: () => void;
-}
 
-interface TusUpload {
-  start(): void;
-  abort(): void;
-}
-
-interface UploadInfo {
-  upload?: TusUpload;
-  file: File;
-  options: UploadOptions;
-  progress: number;
-  lastTime?: number;
-  lastBytes?: number;
-  completed?: boolean;
-}
-
-interface UploadOptions {
-  comment?: string;
-  dlkey?: string;
-  delkey?: string;
-  replacekey?: string;
-  maxDownloads?: number;
-  expiresDays?: number;
-  folderId?: string;
-}
-
-interface UploadApiResponse extends ApiResponse {
-  status: 'ok' | 'success' | 'filesize_over' | 'extension_error' | 'comment_error' | 'dlkey_required' | 'delkey_required' | 'sqlwrite_error' | 'network_error';
-  ext?: string;
-  message?: string;
-}
 
 // グローバル変数
 const resumableUploads: Record<string, UploadInfo> = {};
@@ -870,18 +831,11 @@ function handleUploadError(data: UploadApiResponse, filename: string): void {
 }
 
 // グローバル関数として公開（既存のJavaScriptとの互換性のため）
-interface WindowWithGlobals {
-  enhancedFileUpload: () => void;
-  pauseUpload: (filename: string) => boolean;
-  resumeUpload: (filename: string) => boolean;
-  cancelUpload: (filename: string) => boolean;
-  uploadFileResumable: (file: File, options?: UploadOptions) => Promise<void>;
-}
 
-(window as unknown as WindowWithGlobals).enhancedFileUpload = enhancedFileUpload;
-(window as unknown as WindowWithGlobals).pauseUpload = pauseUpload;
-(window as unknown as WindowWithGlobals).resumeUpload = resumeUpload;
-(window as unknown as WindowWithGlobals).cancelUpload = cancelUpload;
-(window as unknown as WindowWithGlobals).uploadFileResumable = uploadFileResumable;
+(window as unknown as UploadWindowGlobals).enhancedFileUpload = enhancedFileUpload;
+(window as unknown as UploadWindowGlobals).pauseUpload = pauseUpload;
+(window as unknown as UploadWindowGlobals).resumeUpload = resumeUpload;
+(window as unknown as UploadWindowGlobals).cancelUpload = cancelUpload;
+(window as unknown as UploadWindowGlobals).uploadFileResumable = uploadFileResumable;
 
 export {};

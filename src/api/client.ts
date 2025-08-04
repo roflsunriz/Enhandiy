@@ -5,14 +5,7 @@
 
 import { post, get, del, put } from '../utils/http';
 import { ApiResponse, FileData, FolderData } from '../types/global';
-
-// 内部レスポンス型の定義
-interface RawApiResponse {
-  status: string;
-  data?: unknown;
-  message?: string;
-  error_code?: string;
-}
+import { RawApiResponse } from '../types/api';
 
 /**
  * ファイル操作API

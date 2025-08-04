@@ -3,63 +3,7 @@
  * jQueryに依存しないBootstrapコンポーネントの操作
  */
 
-// Bootstrap 5 コンポーネントのインスタンス
-interface BootstrapModal {
-  show(): void;
-  hide(): void;
-  dispose(): void;
-}
-
-interface BootstrapToast {
-  show(): void;
-  hide(): void;
-  dispose(): void;
-}
-
-interface BootstrapTooltip {
-  show(): void;
-  hide(): void;
-  dispose(): void;
-}
-
-interface BootstrapPopover {
-  show(): void;
-  hide(): void;
-  dispose(): void;
-}
-
-interface BootstrapOffcanvas {
-  show(): void;
-  hide(): void;
-  dispose(): void;
-}
-
-declare global {
-  interface Window {
-    bootstrap: {
-      Modal: {
-        new (_element: Element, _options?: Record<string, unknown>): BootstrapModal;
-        getInstance(_element: Element): BootstrapModal | null;
-      };
-      Toast: {
-        new (_element: Element, _options?: Record<string, unknown>): BootstrapToast;
-        getInstance(_element: Element): BootstrapToast | null;
-      };
-      Tooltip: {
-        new (_element: Element, _options?: Record<string, unknown>): BootstrapTooltip;
-        getInstance(_element: Element): BootstrapTooltip | null;
-      };
-      Popover: {
-        new (_element: Element, _options?: Record<string, unknown>): BootstrapPopover;
-        getInstance(_element: Element): BootstrapPopover | null;
-      };
-      Offcanvas: {
-        new (_element: Element, _options?: Record<string, unknown>): BootstrapOffcanvas;
-        getInstance(_element: Element): BootstrapOffcanvas | null;
-      };
-    };
-  }
-}
+import { AlertType } from '../types/ui';
 
 /**
  * モーダルの表示
@@ -119,7 +63,7 @@ export function initializePopovers(): void {
 /**
  * アラートの作成と表示
  */
-export function createAlert(message: string, type: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' = 'info', dismissible: boolean = true): HTMLElement {
+export function createAlert(message: string, type: AlertType = 'info', dismissible: boolean = true): HTMLElement {
   const alertDiv = document.createElement('div');
   alertDiv.className = `alert alert-${type}${dismissible ? ' alert-dismissible fade show' : ''}`;
   alertDiv.setAttribute('role', 'alert');
