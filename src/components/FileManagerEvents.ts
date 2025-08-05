@@ -5,7 +5,7 @@
 
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
-import { AuthApi } from '../api/client';
+import { FileApi, AuthApi } from '../api/client';
 import { showAlert, showConfirm, showPasswordPrompt } from '../utils/modal';
 // import { openShareModal } from '../file-edit'; // 使用しない
 
@@ -570,100 +570,77 @@ export class FileManagerEvents {
   }
 
   /**
-   * ファイル削除（Ajax方式で動的UI更新）
+   * ファイル削除（マスターキー認証）
    */
   private async deleteFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
 
-    // 削除キーが設定されている場合はキー入力を促す
-    let key = '';
-    if (file.del_key_hash) {
-      key = await showPasswordPrompt('削除キーを入力してください:') ?? '';
-      if (!key) return; // キャンセルされた場合は中止
-    }
     // 確認ダイアログ
     if (!(await showConfirm(`「${file.name}」を削除しますか？この操作は取り消せません。`))) {
       return;
     }
 
-    // 削除トークン取得ループ
-    while (true) {
-      try {
-        const res = await AuthApi.verifyDelete(fileId, key);
-        if (res.success && res.data?.token) {
-          // Ajax方式でファイル削除を実行
-          await this.executeFileDelete(fileId, res.data.token);
-          return;
-        }
-
-        const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
-        if (errCode === 'AUTH_REQUIRED') {
-          // 削除キーが必要な場合
-          if (key === '') {
-            key = await showPasswordPrompt('削除キーを入力してください（選択した全ファイルに適用されます）:') ?? '';
-            if (!key) {
-              await showAlert('削除処理がキャンセルされました。');
-              return;
-            }
-          }
-          continue; // 再トライ
-        }
-        
-        if (errCode === 'INVALID_KEY') {
-          key = await showPasswordPrompt('削除キーが正しくありません。再入力してください:') ?? '';
-          if (!key) {
-            await showAlert('削除処理がキャンセルされました。');
-            return;
-          }
-          continue;
-        }
-
-        // その他のエラー
-        await showAlert(res.message || '削除検証エラー');
-        return;
-      } catch (e) {
-        console.error('削除検証エラー:', file.name, e);
-        await showAlert('削除処理でエラーが発生しました。');
-        return;
-      }
+    // マスターキー入力
+    const masterKey = await showPasswordPrompt('管理者マスターキーを入力してください:');
+    if (!masterKey) {
+      await showAlert('削除処理がキャンセルされました。');
+      return;
     }
-  }
 
-  /**
-   * ファイル削除の実行（Ajax方式）
-   */
-  private async executeFileDelete(fileId: string, token: string): Promise<void> {
     try {
-      // delete.phpをAjax方式で呼び出し
-      const response = await fetch(`./delete.php?id=${encodeURIComponent(fileId)}&key=${encodeURIComponent(token)}`, {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest' // Ajax リクエストであることを示す
-        }
-      });
+      // 進捗表示
+      const progressMessage = this.showProgressMessage('削除中...');
 
-      if (response.ok) {
-        // 削除成功時にUIを動的更新
-        this.core.removeFile(fileId);
-        
-        // FolderManagerがある場合も更新
-        if (window.folderManager) {
-          await window.folderManager.refreshAll();
+      // 一括削除APIを使用（単一ファイルでも統一）
+      const response = await FileApi.bulkDeleteFiles([fileId], masterKey);
+
+      // 進捗メッセージを削除
+      this.hideProgressMessage(progressMessage);
+
+      if (response.success && response.data) {
+        const { summary, details } = response.data;
+
+        if (summary.deleted_count > 0) {
+          await showAlert('ファイルを削除しました。');
+          
+          // ファイル一覧を更新
+          this.core.refresh();
+        } else if (summary.failed_count > 0) {
+          const failedFile = details.failed_files[0];
+          await showAlert(`削除に失敗しました: ${failedFile.reason}`);
+        } else if (summary.not_found_count > 0) {
+          await showAlert('ファイルが見つかりませんでした。');
         }
         
-        await showAlert('ファイルを削除しました。');
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // エラー処理
+        const errorCode = typeof response.error === 'object' && response.error ? 
+          (response.error as { code?: string }).code : response.error as string | undefined;
+          
+        let errorMessage = 'ファイルの削除に失敗しました。';
+        
+        if (errorCode === 'MASTER_KEY_REQUIRED') {
+          errorMessage = 'マスターキーの入力が必要です。';
+        } else if (errorCode === 'INVALID_MASTER_KEY') {
+          errorMessage = 'マスターキーが正しくありません。';
+        } else if (response.message) {
+          errorMessage = response.message;
+        }
+        
+        await showAlert(errorMessage);
       }
+      
     } catch (error) {
-      console.error('ファイル削除実行エラー:', error);
-      await showAlert('ファイルの削除に失敗しました。');
+      console.error('削除エラー:', error);
+      await showAlert('削除処理でシステムエラーが発生しました。');
     }
   }
 
+
+
   /**
-   * 選択ファイルの削除
+   * 選択ファイルの削除（マスターキー認証）
    */
   private async deleteSelectedFiles(): Promise<void> {
     const selectedFiles = this.core.getSelectedFiles();
@@ -673,84 +650,122 @@ export class FileManagerEvents {
       return;
     }
     
+    // 確認ダイアログ
     if (!(await showConfirm(`選択した${selectedFiles.length}件のファイルを削除しますか？この操作は取り消せません。`))) {
       return;
     }
     
+    // マスターキー入力
+    const masterKey = await showPasswordPrompt('管理者マスターキーを入力してください:');
+    if (!masterKey) {
+      await showAlert('削除処理がキャンセルされました。');
+      return;
+    }
+    
     try {
-      let key = '';
-      const deleteUrls: string[] = [];
+      // 進捗表示
+      const progressMessage = this.showProgressMessage(`削除中... (0/${selectedFiles.length})`);
       
-      // 全ファイルの削除キー検証を事前に行い、削除URLを収集
-      for (const file of selectedFiles) {
-        while (true) {
-          try {
-            const res = await AuthApi.verifyDelete(file.id.toString(), key);
-            if (res.success && res.data?.token) {
-              // 削除URLをリストに追加
-              deleteUrls.push(`./delete.php?id=${encodeURIComponent(file.id.toString())}&key=${encodeURIComponent(res.data.token)}`);
-              break;
-            }
-
-            const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
-            if (errCode === 'AUTH_REQUIRED') {
-              // 削除キーが必要な場合
-              if (key === '') {
-                key = await showPasswordPrompt('削除キーを入力してください（選択した全ファイルに適用されます）:') ?? '';
-                if (!key) {
-                  await showAlert('削除処理がキャンセルされました。');
-                  return;
-                }
-              }
-              continue; // 再トライ
-            }
-            
-            if (errCode === 'INVALID_KEY') {
-              key = await showPasswordPrompt('削除キーが正しくありません。再入力してください:') ?? '';
-              if (!key) {
-                await showAlert('削除処理がキャンセルされました。');
-                return;
-              }
-              continue;
-            }
-
-            // その他のエラー
-            await showAlert(res.message || '削除検証エラー');
-            return;
-          } catch (e) {
-            console.error('削除検証エラー:', file.name, e);
-            await showAlert('削除処理でエラーが発生しました。');
-            return;
+      // ファイルIDを抽出
+      const fileIds = selectedFiles.map(file => file.id.toString());
+      
+      // 一括削除API呼び出し
+      const response = await FileApi.bulkDeleteFiles(fileIds, masterKey);
+      
+      // 進捗メッセージを削除
+      this.hideProgressMessage(progressMessage);
+      
+      if (response.success && response.data) {
+        const { summary, details } = response.data;
+        
+        // 成功メッセージ
+        let message = `削除処理が完了しました。\n`;
+        message += `成功: ${summary.deleted_count}件\n`;
+        
+        if (summary.failed_count > 0) {
+          message += `失敗: ${summary.failed_count}件\n`;
+        }
+        
+        if (summary.not_found_count > 0) {
+          message += `見つからない: ${summary.not_found_count}件\n`;
+        }
+        
+        // 失敗詳細があれば表示
+        if (details.failed_files.length > 0) {
+          message += `\n失敗したファイル:\n`;
+          details.failed_files.slice(0, 5).forEach(file => {
+            message += `- ${file.name}: ${file.reason}\n`;
+          });
+          if (details.failed_files.length > 5) {
+            message += `... 他${details.failed_files.length - 5}件\n`;
           }
         }
+        
+        await showAlert(message);
+        
+        // ファイル一覧を更新
+        this.core.refresh();
+        
+        // 選択状態をクリア
+        this.core.clearSelection();
+        
+      } else {
+        // エラー処理
+        const errorCode = typeof response.error === 'object' && response.error ? 
+          (response.error as { code?: string }).code : response.error as string | undefined;
+          
+        let errorMessage = 'ファイルの削除に失敗しました。';
+        
+        if (errorCode === 'MASTER_KEY_REQUIRED') {
+          errorMessage = 'マスターキーの入力が必要です。';
+        } else if (errorCode === 'INVALID_MASTER_KEY') {
+          errorMessage = 'マスターキーが正しくありません。';
+        } else if (errorCode === 'BULK_DELETE_DISABLED') {
+          errorMessage = '一括削除機能が無効になっています。';
+        } else if (response.message) {
+          errorMessage = response.message;
+        }
+        
+        await showAlert(errorMessage);
       }
       
-      // 全ファイルの削除URLが準備できたら、一括削除を実行
-      if (deleteUrls.length > 0) {
-        // 各削除URLに順次アクセス（最後のもの以外は iframe で処理）
-        for (let i = 0; i < deleteUrls.length; i++) {
-          if (i === deleteUrls.length - 1) {
-            // 最後のファイルは現在のページでリダイレクト
-            window.location.href = deleteUrls[i];
-          } else {
-            // 他のファイルは非表示の iframe で処理
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = deleteUrls[i];
-            document.body.appendChild(iframe);
-            
-            // iframe を少し遅れて削除
-            setTimeout(() => {
-              if (iframe.parentNode) {
-                iframe.parentNode.removeChild(iframe);
-              }
-            }, 2000);
-          }
-        }
-      }
     } catch (error) {
       console.error('一括削除エラー:', error);
-      await showAlert('ファイル削除でエラーが発生しました。');
+      await showAlert('削除処理でシステムエラーが発生しました。');
+    }
+  }
+
+  /**
+   * 進捗メッセージを表示
+   */
+  private showProgressMessage(message: string): HTMLElement {
+    const progressDiv = document.createElement('div');
+    progressDiv.id = 'bulk-delete-progress';
+    progressDiv.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      padding: 20px 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 9999;
+      font-size: 16px;
+      color: #333;
+    `;
+    progressDiv.textContent = message;
+    document.body.appendChild(progressDiv);
+    return progressDiv;
+  }
+
+  /**
+   * 進捗メッセージを非表示
+   */
+  private hideProgressMessage(element: HTMLElement): void {
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
     }
   }
 

@@ -40,7 +40,14 @@ class config {
             
             // DLキー・DELキーの必須設定
             'dlkey_required' => false,  // true: 必須, false: 任意
-            'delkey_required' => false,  // true: 必須, false: 任意
+            // 削除セキュリティポリシー（Ver 2.1+）
+            'deletion_security' => [
+                'auth_mode' => 'master_only',     // 'master_only': マスターキーのみで削除可能
+                'bulk_delete_enabled' => true,    // 一括削除機能の有効/無効
+                'max_bulk_delete_files' => 100,   // 一括削除の最大ファイル数
+                'require_confirmation' => true,   // 削除確認ダイアログ必須
+                'legacy_del_key_support' => false // 旧個別削除キーサポート（非推奨）
+            ],
             
             // アップロード方式設定
             'upload_method_priority' => 'resumable', // 'resumable': 再開優先, 'normal': 通常優先
@@ -71,11 +78,11 @@ class config {
                 'log_ip_address' => true,
                 'max_login_attempts' => 5,
                 'lockout_duration' => 900, // 15分
-                
+
                 // HTTPS設定
                 'enforce_https' => true,    // HTTPSを強制（サーバーがHTTPS対応時のみ）
                 'auto_detect_https' => true, // HTTPS対応の自動検出
-                
+
                 // ファイルアップロード制限
                 'max_uploads_per_hour' => 50,      // 1時間あたりの最大アップロード数
                 'max_concurrent_uploads' => 5,     // 同時並行アップロード数
@@ -143,7 +150,8 @@ class config {
     /**
      * セキュリティ設定の検証を行う
      */
-    public function validateSecurityConfig(): bool {
+    public function validateSecurityConfig(): bool
+    {
         $config = $this->index();
 
         // 基本的なセキュリティ設定をチェック
@@ -160,28 +168,37 @@ class config {
         }
 
         return true;
-    }    /**
+    }    
+    
+    /**
      * 設定の検証を行う
      */
-    public function validate(): array {
+    public function validate(): array
+    {
         $errors = [];
         $config = $this->index();
 
         // 必須設定の確認
-        if ($config['master'] === 'CHANGE_THIS_MASTER_KEY' || 
-            $config['master'] === 'CHANGE_THIS_MASTER_KEY_Ver2' ||
-            strpos($config['master'], 'CHANGE_THIS') !== false) {
+        if (
+            $config['master'] === 'CHANGE_THIS_MASTER_KEY'
+            || $config['master'] === 'CHANGE_THIS_MASTER_KEY_Ver2'
+            || strpos($config['master'], 'CHANGE_THIS') !== false
+        ) {
             $errors[] = '⚠️ マスターキーを変更してください（セキュリティリスク）';
         }
 
-        if ($config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY' || 
-            $config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY_Ver2' ||
-            strpos($config['key'], 'CHANGE_THIS') !== false) {
+        if (
+            $config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY'
+            || $config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY_Ver2'
+            || strpos($config['key'], 'CHANGE_THIS') !== false
+        ) {
             $errors[] = '⚠️ 暗号化キーを変更してください（セキュリティリスク）';
         }
 
-        if ($config['session_salt'] === 'CHANGE_THIS_SESSION_SALT' ||
-            strpos($config['session_salt'], 'CHANGE_THIS') !== false) {
+        if (
+            $config['session_salt'] === 'CHANGE_THIS_SESSION_SALT'
+            || strpos($config['session_salt'], 'CHANGE_THIS') !== false
+        ) {
             $errors[] = '⚠️ セッションソルトを変更してください（セキュリティリスク）';
         }
 
@@ -222,7 +239,8 @@ class config {
     /**
      * composer.jsonからバージョン情報を取得
      */
-    private function getVersion(): string {
+    private function getVersion(): string
+    {
         $composerPath = __DIR__ . '/../composer.json';
 
         if (file_exists($composerPath)) {
@@ -238,7 +256,8 @@ class config {
     /**
      * アプリケーションルートディレクトリを取得
      */
-    private function getAppRoot(): string {
+    private function getAppRoot(): string
+    {
         // config.phpの位置からアプリケーションルートを算出
         return dirname(__DIR__);
     }

@@ -646,9 +646,6 @@ export async function enhancedFileUpload(): Promise<void> {
   
   // デバッグ情報を出力
   const fileInput = document.getElementById('multipleFileInput') as HTMLInputElement;
-  const fileInputExists = !!fileInput;
-  const fileInputHasFiles = fileInput?.files?.length || 0;
-  const selectedFilesLength = (window as unknown as { selectedFiles?: File[] }).selectedFiles?.length || 0;
   
           // ファイル選択状況確認
   

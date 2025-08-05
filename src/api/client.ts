@@ -39,6 +39,30 @@ export class FileApi {
   }
 
   /**
+   * 複数ファイルを一括削除（マスターキー認証）
+   */
+  static async bulkDeleteFiles(fileIds: string[], masterKey: string): Promise<ApiResponse<{
+    summary: {
+      total_requested: number;
+      deleted_count: number;
+      failed_count: number;
+      not_found_count: number;
+    };
+    details: {
+      deleted_files: Array<{ id: number; name: string; physical_deleted: boolean }>;
+      failed_files: Array<{ id: number; name: string; reason: string }>;
+      not_found_files: Array<{ id: number; reason: string }>;
+    };
+  }>> {
+    const fd = new FormData();
+    fileIds.forEach(id => fd.append('file_ids[]', id));
+    fd.append('master_key', masterKey);
+    fd.append('csrf_token', getCsrfToken());
+    
+    return post('./app/api/bulk-delete.php', fd);
+  }
+
+  /**
    * ファイルのコメントを更新
    */
   static async updateComment(fileId: string, comment: string): Promise<ApiResponse> {
