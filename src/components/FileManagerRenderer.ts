@@ -63,8 +63,11 @@ export class FileManagerRenderer {
       
       <div class="file-manager__bulk-actions" style="display: none;">
         <div class="bulk-actions__controls">
-          <button class="bulk-action-btn bulk-action-btn--download" data-action="download">
-            ダウンロード
+          <button class="bulk-action-btn bulk-action-btn--select-all" data-action="select-all">
+            全選択
+          </button>
+          <button class="bulk-action-btn bulk-action-btn--select-none" data-action="select-none">
+            全解除
           </button>
           <button class="bulk-action-btn bulk-action-btn--delete" data-action="delete">
             削除

@@ -358,8 +358,11 @@ export class FileManagerEvents {
     const action = button.dataset.action;
     
     switch (action) {
-      case 'download':
-        this.downloadSelectedFiles();
+      case 'select-all':
+        this.selectAllFiles();
+        break;
+      case 'select-none':
+        this.core.clearSelection();
         break;
       case 'delete':
         this.deleteSelectedFiles();
@@ -491,8 +494,8 @@ export class FileManagerEvents {
         this.deleteSelectedFiles();
         break;
       case 'Enter':
+        // 複数ファイルダウンロード機能は削除されました
         keyEvent.preventDefault();
-        this.downloadSelectedFiles();
         break;
       case 'Escape':
         keyEvent.preventDefault();
@@ -550,23 +553,14 @@ export class FileManagerEvents {
   }
 
   /**
-   * 選択ファイルのダウンロード
+   * 全ファイルを選択
    */
-  private async downloadSelectedFiles(): Promise<void> {
-    const selectedFiles = this.core.getSelectedFiles();
-    
-    if (selectedFiles.length === 0) {
-      await showAlert('ダウンロードするファイルを選択してください。');
-      return;
-    }
-    
-    if (selectedFiles.length === 1) {
-      await this.downloadFile(selectedFiles[0].id.toString());
-    } else {
-      // 複数ファイルの場合はZIP化など
-      
-      await showAlert('複数ファイルのダウンロード機能は実装中です。');
-    }
+  private selectAllFiles(): void {
+    const allFiles = this.core.getFiles();
+    allFiles.forEach(file => {
+      this.core.getState().selectedFiles.add(file.id.toString());
+    });
+    this.core.refresh();
   }
 
   /**

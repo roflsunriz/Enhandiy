@@ -103,14 +103,7 @@ export class FileApi {
     });
   }
 
-  /**
-   * ファイルをZIP化してダウンロード
-   */
-  static async downloadAsZip(fileIds: string[]): Promise<ApiResponse<{ download_url: string }>> {
-    return post('/api/files/zip', {
-      file_ids: fileIds
-    });
-  }
+
 }
 
 /**
