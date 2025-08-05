@@ -20,6 +20,12 @@ ready(() => {
   // ファイルマネージャーの初期化
   const container = document.getElementById('fileManagerContainer');
   
+  // 既にFileManagerインスタンスが存在する場合は重複作成を防ぐ
+  if (window.fileManagerInstance) {
+    console.log('FileManager already exists, skipping duplicate initialization');
+    return;
+  }
+  
   if (window.fileData && container) {
     console.log('Initializing FileManager v2.0');
     
