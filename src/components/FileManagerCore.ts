@@ -26,7 +26,8 @@ export class FileManagerCore {
       sortBy: options.defaultSort || 'date_desc',
       viewMode: this.loadViewMode() || options.defaultView || 'grid',
       selectedFiles: new Set<string>(),
-      isLoading: false
+      isLoading: false,
+      isRefreshing: false
     };
   }
 
@@ -100,10 +101,17 @@ export class FileManagerCore {
       normalized.name = normalized.origin_file_name;
     }
     
-    // upload_date が存在しない場合は input_date から変換
-    if (!normalized.upload_date && normalized.input_date) {
-      // Unix timestamp を ISO 文字列に変換
-      normalized.upload_date = new Date(normalized.input_date * 1000).toISOString();
+    // upload_date の検証と正規化
+    if (normalized.upload_date) {
+      // 既にupload_dateがある場合でも、Unix timestampかどうかチェック
+      if (typeof normalized.upload_date === 'number' || /^\d+$/.test(normalized.upload_date)) {
+        const timestamp = typeof normalized.upload_date === 'number' ? normalized.upload_date : parseInt(normalized.upload_date);
+        normalized.upload_date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp).toISOString();
+      }
+    } else if (normalized.input_date) {
+      // upload_date が存在しない場合は input_date から変換
+      const timestamp = typeof normalized.input_date === 'number' ? normalized.input_date : parseInt(normalized.input_date);
+      normalized.upload_date = new Date(timestamp * 1000).toISOString();
     }
     
     // id を string に変換
@@ -319,7 +327,21 @@ export class FileManagerCore {
    * サーバーからファイルリストを再取得して更新
    */
   public async refreshFromServer(): Promise<void> {
+    // 既に処理中の場合は新しいリクエストを開始しない
+    if (this.state.isRefreshing) {
+      console.log('refreshFromServer: 既に処理中のため、リクエストをスキップ');
+      return;
+    }
+
     try {
+      // 処理中フラグを設定
+      this.state.isRefreshing = true;
+      console.log('refreshFromServer: 処理開始 - アクションボタン一時無効化');
+      
+      // ローディング状態をUIに反映
+      this.state.isLoading = true;
+      this.updateLoadingState();
+
       // 現在のフォルダIDを取得
       const urlParams = new URLSearchParams(window.location.search);
       const folderId = urlParams.get('folder') || '';
@@ -330,15 +352,81 @@ export class FileManagerCore {
       const data = await response.json();
       
       if (data.success && Array.isArray(data.files)) {
+        console.log('refreshFromServer: データ受信成功:', data.files.length, '件のファイル');
+        
         this.state.files = data.files.map((file: FileData) => this.normalizeFileData(file));
         this.applyFiltersAndSort();
+        
+        console.log('refreshFromServer: レンダリング前のファイル数:', this.state.filteredFiles.length);
+        
+        // 新しいファイルがアップロードされた可能性がある場合、最新ファイルのページに移動
+        this.goToLatestFilePage();
+        
         this.render();
+        
+        // レンダリング完了を確実に待つ（Promiseベース）
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              console.log('refreshFromServer: イベント再初期化開始');
+              if (this.events) {
+                this.events.reinitializeEvents();
+              }
+              
+              // レンダリング後のDOM要素チェック
+              const renderedItems = this.container.querySelectorAll('.file-grid-item, .file-list-item');
+              console.log('refreshFromServer: レンダリング後のアイテム数:', renderedItems.length);
+              
+              resolve();
+            }, 100); // 少し長めの待機時間で確実性を向上
+          });
+        });
+        
+        console.log('refreshFromServer: 処理完了 - アクションボタン有効化');
       } else {
         console.error('ファイルリスト更新エラー:', data.error || 'データが無効です');
       }
     } catch (error) {
       console.error('ファイルリストの更新に失敗:', error);
+    } finally {
+      // 処理完了フラグを設定
+      this.state.isRefreshing = false;
+      this.state.isLoading = false;
+      this.updateLoadingState();
     }
+  }
+
+  /**
+   * ローディング状態をUIに反映
+   */
+  private updateLoadingState(): void {
+    // ローディング状態に応じてUIを更新
+    if (this.state.isLoading || this.state.isRefreshing) {
+      this.container.classList.add('file-manager--loading');
+      
+      // アクションボタンを無効化
+      const actionButtons = this.container.querySelectorAll('.file-action-btn');
+      actionButtons.forEach(button => {
+        (button as HTMLButtonElement).disabled = true;
+        button.classList.add('disabled');
+      });
+    } else {
+      this.container.classList.remove('file-manager--loading');
+      
+      // アクションボタンを有効化
+      const actionButtons = this.container.querySelectorAll('.file-action-btn');
+      actionButtons.forEach(button => {
+        (button as HTMLButtonElement).disabled = false;
+        button.classList.remove('disabled');
+      });
+    }
+  }
+
+  /**
+   * 処理中状態を取得
+   */
+  public isRefreshing(): boolean {
+    return this.state.isRefreshing;
   }
 
   /**
@@ -397,6 +485,39 @@ export class FileManagerCore {
    */
   public getState(): FileManagerState {
     return { ...this.state };
+  }
+
+  /**
+   * 指定されたファイルIDを含むページに移動
+   */
+  public goToPageContainingFile(fileId: string): boolean {
+    const fileIndex = this.state.filteredFiles.findIndex(f => f.id.toString() === fileId);
+    if (fileIndex === -1) {
+      console.warn('FileManagerCore: 指定されたファイルが見つかりません:', fileId);
+      return false;
+    }
+    
+    const targetPage = Math.floor(fileIndex / this.state.itemsPerPage) + 1;
+    
+    if (targetPage !== this.state.currentPage) {
+      console.log(`FileManagerCore: ファイル${fileId}を含むページ${targetPage}に移動`);
+      this.setCurrentPage(targetPage);
+      this.render();
+      return true;
+    }
+    
+    return false; // 既に正しいページにいる
+  }
+
+  /**
+   * 最新のファイルを含むページに移動（通常は1ページ目）
+   */
+  public goToLatestFilePage(): void {
+    if (this.state.filteredFiles.length > 0) {
+      // ソートが新しい順の場合、最新ファイルは先頭にある
+      const latestFile = this.state.filteredFiles[0];
+      this.goToPageContainingFile(latestFile.id.toString());
+    }
   }
 
   /**

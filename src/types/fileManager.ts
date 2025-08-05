@@ -24,6 +24,7 @@ export interface FileManagerState {
   viewMode: ViewMode;
   selectedFiles: Set<string>;
   isLoading: boolean;
+  isRefreshing: boolean;
 }
 
 // ファイルマネージャーのイベント

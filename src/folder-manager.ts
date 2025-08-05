@@ -119,16 +119,26 @@ class SimpleFolderManager {
    */
   public async refreshAll(): Promise<void> {
     try {
+      console.log('FolderManager.refreshAll: 開始');
+      
       // フォルダ選択プルダウンを更新
       await this.loadFolderOptions();
+      console.log('FolderManager.refreshAll: フォルダオプション更新完了');
       
       // FileManagerがある場合は更新
       if (window.fileManagerInstance) {
+        console.log('FolderManager.refreshAll: FileManager更新開始');
         await window.fileManagerInstance.refreshFromServer();
+        console.log('FolderManager.refreshAll: FileManager更新完了');
+      } else {
+        console.warn('FolderManager.refreshAll: FileManagerが見つかりません');
       }
       
       // フォルダナビゲーション部分も更新
       await this.refreshFolderNavigation();
+      console.log('FolderManager.refreshAll: フォルダナビゲーション更新完了');
+      
+      console.log('FolderManager.refreshAll: 全更新完了');
     } catch (error) {
       console.error('フォルダとファイル表示の更新に失敗:', error);
     }

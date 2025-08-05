@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:disable PSR1.Files.SideEffects
+
 /**
  * Tus.io プロトコル対応アップロードAPI
  * phpUploader - Tus.io Server Implementation
@@ -148,10 +150,10 @@ function handleCreate()
         $ret['security']['max_uploads_per_hour'] ?? 50,
         $ret['security']['max_concurrent_uploads'] ?? 5
     );
-    
+
     if (!$rateLimitResult['allowed']) {
         error_log("TUS upload rate limit exceeded for IP: {$clientIP}, reason: {$rateLimitResult['reason']}");
-        
+
         http_response_code(429);
         header('Retry-After: ' . $rateLimitResult['retry_after']);
         echo json_encode([
@@ -160,7 +162,7 @@ function handleCreate()
         ]);
         exit;
     }
-    
+
     $uploadToken = $rateLimitResult['upload_token'];
 
     // メタデータの解析
@@ -168,13 +170,13 @@ function handleCreate()
 
     // CSRFトークンの検証（メタデータから取得）
     $csrfToken = $metadata['csrf_token'] ?? null;
-    
+
     // デバッグ情報をログ出力
     error_log("TUS CSRF Debug - Session ID: " . session_id());
     error_log("TUS CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
     error_log("TUS CSRF Debug - Received csrf_token: " . ($csrfToken ?? 'NULL'));
     error_log("TUS CSRF Debug - Session status: " . session_status());
-    
+
     if (!SecurityUtils::validateCSRFToken($csrfToken)) {
         error_log("TUS upload CSRF validation failed for IP: {$clientIP}");
 
@@ -252,7 +254,7 @@ function handleCreate()
         if (!$result) {
             throw new Exception('Database write failed');
         }
-            } catch (Exception $e) {
+    } catch (Exception $e) {
         // データベース書き込み失敗時にもトークンを解放
         if (isset($uploadToken)) {
             SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
@@ -533,7 +535,7 @@ function completeUpload($uploadId, $upload)
         $tusUploadInfo = $db->prepare("SELECT upload_token, client_ip FROM tus_uploads WHERE id = ?");
         $tusUploadInfo->execute([$uploadId]);
         $tusInfo = $tusUploadInfo->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($tusInfo && !empty($tusInfo['upload_token']) && !empty($tusInfo['client_ip'])) {
             SecurityUtils::releaseUploadToken($tusInfo['client_ip'], $tusInfo['upload_token']);
             error_log("DEBUG completeUpload - Released upload token: " . $tusInfo['upload_token']);

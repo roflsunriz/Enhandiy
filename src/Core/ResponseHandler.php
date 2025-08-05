@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:disable PSR1.Files.SideEffects
+
 declare(strict_types=1);
 
 // Logger.phpが必要な場合のため

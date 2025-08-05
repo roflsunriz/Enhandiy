@@ -149,7 +149,7 @@ class SecurityUtils
             'gz' => ['application/gzip', 'application/x-gzip'],
             'bz2' => ['application/x-bzip2'],
             'xz' => ['application/x-xz'],
-            
+
             // ドキュメント
             'pdf' => ['application/pdf'],
             'doc' => ['application/msword'],
@@ -164,7 +164,7 @@ class SecurityUtils
             'rtf' => ['application/rtf', 'text/rtf'],
             'txt' => ['text/plain'],
             'csv' => ['text/csv', 'application/csv'],
-            
+
             // 画像
             'jpg' => ['image/jpeg'],
             'jpeg' => ['image/jpeg'],
@@ -176,7 +176,7 @@ class SecurityUtils
             'tiff' => ['image/tiff'],
             'tif' => ['image/tiff'],
             'ico' => ['image/x-icon', 'image/vnd.microsoft.icon'],
-            
+
             // 音声
             'mp3' => ['audio/mpeg', 'audio/mp3'],
             'wav' => ['audio/wav', 'audio/x-wav'],
@@ -185,7 +185,7 @@ class SecurityUtils
             'flac' => ['audio/flac'],
             'm4a' => ['audio/mp4', 'audio/x-m4a'],
             'wma' => ['audio/x-ms-wma'],
-            
+
             // 動画
             'mp4' => ['video/mp4'],
             'avi' => ['video/x-msvideo'],
@@ -197,7 +197,7 @@ class SecurityUtils
             'm4v' => ['video/x-m4v'],
             'mpg' => ['video/mpeg'],
             'mpeg' => ['video/mpeg'],
-            
+
             // 開発・設定ファイル
             'json' => ['application/json'],
             'xml' => ['application/xml', 'text/xml'],
@@ -212,7 +212,7 @@ class SecurityUtils
             'htm' => ['text/html'],
             'css' => ['text/css'],
             'js' => ['application/javascript', 'text/javascript'],
-            
+
             // プログラミング言語
             'php' => ['application/x-httpd-php', 'text/plain'],
             'py' => ['text/x-python', 'text/plain'],
@@ -292,7 +292,7 @@ class SecurityUtils
             }
             $fullPath = $uploadDir . DIRECTORY_SEPARATOR . $newFilename;
             $counter++;
-            
+
             // 無限ループ防止
             if ($counter > 10000) {
                 throw new Exception('ファイル名の生成に失敗しました');
@@ -330,7 +330,7 @@ class SecurityUtils
         foreach ($headers as $header) {
             if (!empty($_SERVER[$header])) {
                 $headerValue = $_SERVER[$header];
-                
+
                 // 複数のIPアドレスが含まれる場合の処理
                 if (strpos($headerValue, ',') !== false) {
                     $ips = explode(',', $headerValue);
@@ -418,7 +418,7 @@ class SecurityUtils
         }
 
         $clientIP = self::getClientIP();
-        
+
         foreach ($allowedIPs as $allowedIP) {
             // CIDR記法のサポート
             if (strpos($allowedIP, '/') !== false) {
@@ -442,9 +442,11 @@ class SecurityUtils
     private static function ipInRange(string $ip, string $cidr): bool
     {
         list($subnet, $mask) = explode('/', $cidr);
-        
-        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || 
-            !filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+
+        if (
+            !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+            || !filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+        ) {
             return false;
         }
 
@@ -458,8 +460,11 @@ class SecurityUtils
     /**
      * ファイルアップロードのレート制限チェック
      */
-    public static function checkUploadRateLimit(string $ip, int $maxUploadsPerHour = 50, int $maxConcurrentUploads = 5): array
-    {
+    public static function checkUploadRateLimit(
+        string $ip,
+        int $maxUploadsPerHour = 50,
+        int $maxConcurrentUploads = 5
+    ): array {
         $rateLimitDir = dirname(__DIR__, 2) . '/data/rate_limits';
         if (!is_dir($rateLimitDir)) {
             mkdir($rateLimitDir, 0755, true);
@@ -468,16 +473,16 @@ class SecurityUtils
         $ipHash = hash('sha256', $ip);
         $rateLimitFile = $rateLimitDir . '/upload_' . $ipHash . '.json';
         $concurrentFile = $rateLimitDir . '/concurrent_' . $ipHash . '.json';
-        
+
         $currentHour = date('Y-m-d-H');
         $currentTime = time();
-        
+
         // 1時間あたりのアップロード制限チェック
         $hourlyData = [];
         if (file_exists($rateLimitFile)) {
             $hourlyData = json_decode(file_get_contents($rateLimitFile), true) ?: [];
         }
-        
+
         // 古いデータをクリーンアップ（2時間以上前のデータを削除）
         $hourlyData = array_filter(
             $hourlyData,
@@ -486,7 +491,7 @@ class SecurityUtils
             },
             ARRAY_FILTER_USE_KEY
         );
-        
+
         $currentHourlyUploads = $hourlyData[$currentHour] ?? 0;
         if ($currentHourlyUploads >= $maxUploadsPerHour) {
             return [
@@ -496,13 +501,13 @@ class SecurityUtils
                 'retry_after' => 3600 - (time() % 3600) // 次の時間まで
             ];
         }
-        
+
         // 同時並行アップロード制限チェック
         $concurrentData = [];
         if (file_exists($concurrentFile)) {
             $concurrentData = json_decode(file_get_contents($concurrentFile), true) ?: [];
         }
-        
+
         // 5分以上前の同時並行データをクリーンアップ
         $concurrentData = array_filter(
             $concurrentData,
@@ -510,7 +515,7 @@ class SecurityUtils
                 return ($currentTime - $timestamp) < 300; // 5分
             }
         );
-        
+
         $currentConcurrent = count($concurrentData);
         if ($currentConcurrent >= $maxConcurrentUploads) {
             return [
@@ -520,16 +525,16 @@ class SecurityUtils
                 'retry_after' => 60 // 1分後に再試行
             ];
         }
-        
+
         // 制限をクリアした場合、カウンターを更新
         $hourlyData[$currentHour] = $currentHourlyUploads + 1;
         file_put_contents($rateLimitFile, json_encode($hourlyData), LOCK_EX);
-        
+
         // 同時並行アップロードトークンを追加
         $uploadToken = uniqid('upload_', true);
         $concurrentData[$uploadToken] = $currentTime;
         file_put_contents($concurrentFile, json_encode($concurrentData), LOCK_EX);
-        
+
         return [
             'allowed' => true,
             'upload_token' => $uploadToken,
@@ -546,10 +551,10 @@ class SecurityUtils
         $rateLimitDir = dirname(__DIR__, 2) . '/data/rate_limits';
         $ipHash = hash('sha256', $ip);
         $concurrentFile = $rateLimitDir . '/concurrent_' . $ipHash . '.json';
-        
+
         if (file_exists($concurrentFile)) {
             $concurrentData = json_decode(file_get_contents($concurrentFile), true) ?: [];
-            
+
             if (isset($concurrentData[$uploadToken])) {
                 unset($concurrentData[$uploadToken]);
                 file_put_contents($concurrentFile, json_encode($concurrentData), LOCK_EX);
@@ -570,7 +575,7 @@ class SecurityUtils
         $cleanedFiles = 0;
         $files = glob($rateLimitDir . '/*.json');
         $currentTime = time();
-        
+
         foreach ($files as $file) {
             if (strpos(basename($file), 'upload_') === 0) {
                 // アップロード制限ファイル（24時間以上古いデータを削除）
@@ -582,7 +587,7 @@ class SecurityUtils
                     },
                     ARRAY_FILTER_USE_KEY
                 );
-                
+
                 if (empty($filteredData)) {
                     unlink($file);
                     $cleanedFiles++;
@@ -598,7 +603,7 @@ class SecurityUtils
                         return ($currentTime - $timestamp) < 600; // 10分
                     }
                 );
-                
+
                 if (empty($filteredData)) {
                     unlink($file);
                     $cleanedFiles++;
@@ -607,7 +612,7 @@ class SecurityUtils
                 }
             }
         }
-        
+
         return $cleanedFiles;
     }
 
@@ -670,15 +675,15 @@ class SecurityUtils
             $chunkFiles = glob($chunksDir . '/*.chunk');
             foreach ($chunkFiles as $chunkFile) {
                 $fileAge = $currentTime - filemtime($chunkFile);
-                
+
                 // 24時間以上古いファイルをチェック
                 if ($fileAge > 86400) { // 24時間 = 86400秒
                     $uploadId = basename($chunkFile, '.chunk');
-                    
+
                     // データベースに対応するレコードがあるかチェック
                     $recordQuery = $pdo->prepare("SELECT id FROM tus_uploads WHERE id = ?");
                     $recordQuery->execute([$uploadId]);
-                    
+
                     if (!$recordQuery->fetch()) {
                         // 孤立したファイル
                         $fileSize = filesize($chunkFile);
@@ -712,7 +717,6 @@ class SecurityUtils
                 $updateQuery = $pdo->prepare("UPDATE tus_uploads SET chunk_path = NULL WHERE id = ?");
                 $updateQuery->execute([$upload['id']]);
             }
-
         } catch (Exception $e) {
             error_log('TUS cleanup error: ' . $e->getMessage());
         }
@@ -751,7 +755,7 @@ class SecurityUtils
     public static function performMaintenanceCleanup(array $config = []): array
     {
         $dataDirectory = $config['data_directory'] ?? dirname(__DIR__, 2) . '/data';
-        
+
         $results = [
             'rate_limits' => self::cleanupRateLimitData(),
             'tus_chunks' => self::cleanupTusChunkFiles($dataDirectory),
@@ -761,7 +765,10 @@ class SecurityUtils
 
         // クリーンアップログを記録
         $logMessage = sprintf(
-            "Maintenance cleanup completed - Rate limits: %d files, TUS chunks: %d expired + %d orphaned (%.2f MB freed), Tokens: %d expired",
+            "Maintenance cleanup completed - " .
+            "Rate limits: %d files, " .
+            "TUS chunks: %d expired + %d orphaned (%.2f MB freed), " .
+            "Tokens: %d expired",
             $results['rate_limits'],
             $results['tus_chunks']['expired_chunks'],
             $results['tus_chunks']['orphaned_chunks'],
@@ -855,13 +862,13 @@ class SecurityUtils
     {
         $iv = random_bytes(12); // GCMでは12バイトのIVが推奨
         $tag = '';
-        
+
         $encrypted = openssl_encrypt($data, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
-        
+
         if ($encrypted === false) {
             throw new Exception('暗号化に失敗しました');
         }
-        
+
         // IV + TAG + 暗号化データを結合してbase64エンコード
         return base64_encode($iv . $tag . $encrypted);
     }
@@ -872,21 +879,21 @@ class SecurityUtils
     public static function decryptSecure(string $encryptedData, string $key): string
     {
         $data = base64_decode($encryptedData);
-        
+
         if ($data === false || strlen($data) < 28) { // IV(12) + TAG(16) の最小サイズ
             throw new Exception('不正な暗号化データです');
         }
-        
+
         $iv = substr($data, 0, 12);
         $tag = substr($data, 12, 16);
         $encrypted = substr($data, 28);
-        
+
         $decrypted = openssl_decrypt($encrypted, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
-        
+
         if ($decrypted === false) {
             throw new Exception('復号化に失敗しました');
         }
-        
+
         return $decrypted;
     }
 
@@ -897,11 +904,11 @@ class SecurityUtils
     public static function decryptLegacyECB(string $encryptedData, string $key): string
     {
         $decrypted = openssl_decrypt($encryptedData, 'aes-256-ecb', $key);
-        
+
         if ($decrypted === false) {
             throw new Exception('レガシー復号化に失敗しました');
         }
-        
+
         return $decrypted;
     }
 
@@ -922,18 +929,18 @@ class SecurityUtils
         ini_set('session.use_strict_mode', '1');      // セッション固定攻撃対策
         ini_set('session.use_only_cookies', '1');     // URLセッションID無効化
         ini_set('session.entropy_length', '32');      // セッションIDのエントロピー強化
-        
+
         // セッションクッキーの有効期限を設定
         ini_set('session.cookie_lifetime', '0');      // ブラウザ終了時に削除
         ini_set('session.gc_maxlifetime', '1800');    // 30分でガベージコレクション
-        
+
         // セッション名をプロジェクト固定（ファイル間で一貫性を保つ）
         // 絶対パスでプロジェクトルートを特定
         $currentFile = __FILE__; // /project/src/Core/Security.php
         $projectRoot = dirname(dirname(dirname($currentFile))); // /project
         $sessionName = 'SECURE_SID_' . substr(hash('sha256', $projectRoot), 0, 8);
         session_name($sessionName);
-        
+
         // デバッグ用ログ
         error_log("Security Debug - Project root: " . $projectRoot);
         error_log("Security Debug - Session name: " . $sessionName);
@@ -945,17 +952,19 @@ class SecurityUtils
     public static function startSecureSession(): void
     {
         self::configureSecureSession();
-        
+
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
-            
+
             // セッション固定攻撃対策：定期的にセッションIDを再生成
-            if (!isset($_SESSION['last_regeneration']) || 
-                (time() - $_SESSION['last_regeneration']) > 300) { // 5分ごと
+            if (
+                !isset($_SESSION['last_regeneration'])
+                || (time() - $_SESSION['last_regeneration']) > 300
+            ) { // 5分ごと
                 session_regenerate_id(true);
                 $_SESSION['last_regeneration'] = time();
             }
-            
+
             // セッションハイジャック対策：IPアドレスとユーザーエージェントのチェック
             $sessionFingerprint = self::generateSessionFingerprint();
             if (isset($_SESSION['fingerprint']) && $_SESSION['fingerprint'] !== $sessionFingerprint) {
@@ -977,7 +986,7 @@ class SecurityUtils
             $_SERVER['HTTP_USER_AGENT'] ?? '',
             $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''
         ];
-        
+
         return hash('sha256', implode('|', $data));
     }
 
@@ -1036,10 +1045,11 @@ class SecurityUtils
     {
         $errorId = uniqid('ERR_');
         $sanitizedMessage = self::sanitizeErrorMessage($e->getMessage(), $isDebugMode);
-        
+
         // 詳細なエラー情報をログに記録
-        error_log("Security Error [{$errorId}]: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
-        
+        error_log("Security Error [{$errorId}]: " . $e->getMessage()
+            . " in " . $e->getFile() . " on line " . $e->getLine());
+
         // ユーザーには安全なメッセージのみ表示
         if ($isDebugMode) {
             echo "Error [{$errorId}]: " . $sanitizedMessage;

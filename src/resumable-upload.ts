@@ -489,18 +489,30 @@ function onUploadComplete(filename: string, _method: string): void {
         }, 300);
       }
       
-      // FileManagerの動的更新
-      if (window.fileManagerInstance) {
-        await window.fileManagerInstance.refreshFromServer();
-      }
+      // アップロード完了後の確実な更新処理
+      console.log('resumable-upload: アップロード完了後の更新処理開始');
       
-      // FolderManagerがある場合も更新
-      if (window.folderManager) {
-        await window.folderManager.refreshAll();
-      }
-      
-      // フォールバック: 動的更新が失敗した場合のリロード
-      if (!window.fileManagerInstance && !window.folderManager) {
+      try {
+        // FolderManagerがある場合は、それが内部的にFileManagerも更新する
+        if (window.folderManager) {
+          console.log('resumable-upload: FolderManager.refreshAll()を実行');
+          await window.folderManager.refreshAll();
+        } 
+        // FolderManagerがない場合は、FileManagerを直接更新
+        else if (window.fileManagerInstance) {
+          console.log('resumable-upload: FileManager.refreshFromServer()を実行');
+          await window.fileManagerInstance.refreshFromServer();
+        }
+        // 両方ともない場合はページをリロード
+        else {
+          console.log('resumable-upload: FileManagerが見つからないため、ページをリロード');
+          window.location.reload();
+        }
+        
+        console.log('resumable-upload: 更新処理完了');
+      } catch (error) {
+        console.error('resumable-upload: 更新処理エラー:', error);
+        // エラーが発生した場合はページをリロード
         window.location.reload();
       }
 

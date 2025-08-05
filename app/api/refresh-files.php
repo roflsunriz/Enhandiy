@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+// phpcs:disable PSR1.Files.SideEffects
 // エラー表示設定
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
@@ -67,16 +68,17 @@ try {
             'original_name' => $fileData['origin_file_name'],
             'filename' => $fileData['origin_file_name'],
             'comment' => $fileData['comment'] ?? '',
-            'password_dl' => $fileData['dl_key'],
-            'password_del' => $fileData['del_key'],
-            'dl_key_hash' => !empty($fileData['dl_key']),
-            'del_key_hash' => !empty($fileData['del_key']),
+            'password_dl' => $fileData['dl_key_hash'] ?? null,
+            'password_del' => $fileData['del_key_hash'] ?? null,
+            'dl_key_hash' => !empty($fileData['dl_key_hash']),
+            'del_key_hash' => !empty($fileData['del_key_hash']),
             'replace_key_required' => true, // 差し替えキー要件（全ファイル必須）
             'file_size' => (int)$fileData['size'],
             'size' => (int)$fileData['size'],
             'mime_type' => 'application/octet-stream',
             'type' => 'application/octet-stream',
-            'upload_date' => $fileData['input_date'],
+            'upload_date' => date('Y-m-d H:i:s', (int)$fileData['input_date']),
+            'input_date' => (int)$fileData['input_date'],
             'count' => (int)$fileData['count'],
             'folder_id' => $fileData['folder_id'] ? (int)$fileData['folder_id'] : null,
             'max_downloads' => $fileData['max_downloads'] ? (int)$fileData['max_downloads'] : null,
@@ -113,18 +115,45 @@ try {
         }
     }
 
-    // ファイル一覧取得
+    // データベース全体のファイル数をチェック
+    $countSql = "SELECT COUNT(*) as total FROM uploaded";
+    $countStmt = $db->prepare($countSql);
+    $countStmt->execute();
+    $totalFiles = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    error_log("refresh-files.php: データベース内総ファイル数: $totalFiles");
+
+    // ルートフォルダのファイル数をチェック
+    $rootCountSql = "SELECT COUNT(*) as root_total FROM uploaded WHERE folder_id IS NULL";
+    $rootCountStmt = $db->prepare($rootCountSql);
+    $rootCountStmt->execute();
+    $rootTotalFiles = $rootCountStmt->fetch(PDO::FETCH_ASSOC)['root_total'];
+    error_log("refresh-files.php: ルートフォルダのファイル数: $rootTotalFiles");
+
+    // ファイル一覧取得（全ファイル表示版）
     if ($folderId) {
         $sql = "SELECT * FROM uploaded WHERE folder_id = ? ORDER BY input_date DESC";
         $stmt = $db->prepare($sql);
         $stmt->execute([$folderId]);
+        error_log("refresh-files.php: フォルダ指定でのファイル取得 - folder_id: $folderId");
     } else {
-        $sql = "SELECT * FROM uploaded WHERE folder_id IS NULL ORDER BY input_date DESC";
+        // ルートフォルダ表示時は全てのファイルを表示（初期表示と一致させる）
+        $sql = "SELECT * FROM uploaded ORDER BY input_date DESC";
         $stmt = $db->prepare($sql);
         $stmt->execute();
+        error_log("refresh-files.php: ルートフォルダでの全ファイル取得 - SQL: $sql");
     }
 
     $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("refresh-files.php: 実際に取得したファイル数: " . count($files));
+
+    // 各ファイルのIDをログ出力
+    $fileIds = array_map(
+        function ($file) {
+            return $file['id'];
+        },
+        $files
+    );
+    error_log("refresh-files.php: 取得したファイルID: " . implode(', ', $fileIds));
 
     // ファイルデータの正規化
     $normalizedFiles = [];
@@ -135,16 +164,17 @@ try {
             'original_name' => $file['origin_file_name'],
             'filename' => $file['origin_file_name'],
             'comment' => $file['comment'] ?? '',
-            'password_dl' => $file['dl_key'],
-            'password_del' => $file['del_key'],
-            'dl_key_hash' => !empty($file['dl_key']),
-            'del_key_hash' => !empty($file['del_key']),
+            'password_dl' => $file['dl_key_hash'] ?? null,
+            'password_del' => $file['del_key_hash'] ?? null,
+            'dl_key_hash' => !empty($file['dl_key_hash']),
+            'del_key_hash' => !empty($file['del_key_hash']),
             'replace_key_required' => true, // 差し替えキー要件（全ファイル必須）
             'file_size' => (int)$file['size'],
             'size' => (int)$file['size'],
             'mime_type' => 'application/octet-stream', // 簡略化
             'type' => 'application/octet-stream',
-            'upload_date' => $file['input_date'],
+            'upload_date' => date('Y-m-d H:i:s', (int)$file['input_date']),
+            'input_date' => (int)$file['input_date'],
             'count' => (int)$file['count'],
             'folder_id' => $file['folder_id'] ? (int)$file['folder_id'] : null,
             'max_downloads' => $file['max_downloads'] ? (int)$file['max_downloads'] : null,

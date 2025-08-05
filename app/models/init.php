@@ -9,6 +9,7 @@ declare(strict_types=1);
  * セキュリティチェックを行います。
  */
 
+ // phpcs:disable PSR1.Files.SideEffects
 class AppInitializer
 {
     private array $config;

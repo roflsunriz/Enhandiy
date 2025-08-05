@@ -954,3 +954,64 @@
 .dataTables_wrapper {
   display: none;
 }
+
+/* ===== ローディング状態 ===== */
+.file-manager--loading {
+  position: relative;
+}
+
+.file-manager--loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.file-manager--loading::after {
+  content: '更新中...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #007bff;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  z-index: 1001;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+/* ローディング中のアクションボタン無効化 */
+.file-manager--loading .file-action-btn.disabled,
+.file-manager--loading .file-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.file-manager--loading .file-action-btn.disabled:hover,
+.file-manager--loading .file-action-btn:disabled:hover {
+  background: inherit !important;
+  color: inherit !important;
+  border-color: inherit !important;
+}

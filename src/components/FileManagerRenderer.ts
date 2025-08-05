@@ -511,8 +511,12 @@ export class FileManagerRenderer {
     
     let date: Date;
     
-    // 様々な日付形式に対応
-    if (typeof dateString === 'string') {
+    // 数値の場合はUnix timestampとして扱う
+    if (typeof dateString === 'number' || /^\d+$/.test(dateString)) {
+      const timestamp = typeof dateString === 'number' ? dateString : parseInt(dateString);
+      // Unix timestampが秒単位かミリ秒単位かを判定
+      date = new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp);
+    } else if (typeof dateString === 'string') {
       // MySQLのDATETIME形式（YYYY-MM-DD HH:MM:SS）を処理
       if (dateString.includes(' ')) {
         const parts = dateString.split(' ');

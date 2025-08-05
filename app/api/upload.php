@@ -57,14 +57,16 @@ try {
 
     // CSRFトークンの検証
     $receivedToken = $_POST['csrf_token'] ?? null;
-    
+
     // デバッグ情報をログ出力
     error_log("Upload CSRF Debug - Session ID: " . session_id());
     error_log("Upload CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
     error_log("Upload CSRF Debug - Received csrf_token: " . ($receivedToken ?? 'NULL'));
     error_log("Upload CSRF Debug - Session status: " . session_status());
-    error_log("Upload CSRF Debug - Token validation result: " . (SecurityUtils::validateCSRFToken($receivedToken) ? 'TRUE' : 'FALSE'));
-    
+    $tokenValid = SecurityUtils::validateCSRFToken($receivedToken);
+    error_log("Upload CSRF Debug - Token validation result: "
+        . ($tokenValid ? 'TRUE' : 'FALSE'));
+
     if (!SecurityUtils::validateCSRFToken($receivedToken)) {
         $logger->warning('CSRF token validation failed', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
         $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
@@ -77,18 +79,18 @@ try {
         $config['security']['max_uploads_per_hour'] ?? 50,
         $config['security']['max_concurrent_uploads'] ?? 5
     );
-    
+
     if (!$rateLimitResult['allowed']) {
         $logger->warning('Upload rate limit exceeded', [
             'ip' => $clientIP,
             'reason' => $rateLimitResult['reason']
         ]);
-        
+
         // レート制限のHTTPヘッダーを設定
         header('Retry-After: ' . $rateLimitResult['retry_after']);
         $responseHandler->error($rateLimitResult['message'], [], 429);
     }
-    
+
     // アップロードトークンを保存（後でリリースするため）
     $uploadToken = $rateLimitResult['upload_token'];
 

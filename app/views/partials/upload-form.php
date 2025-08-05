@@ -15,7 +15,7 @@
     <form id="upload" class="upload-form">
       <input type="hidden" id="csrfToken" name="csrf_token" 
              value="<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>">
-      
+
       <!-- ドラッグ&ドロップエリア -->
       <div id="dragDropArea" class="drag-drop-area">
         <div class="drag-drop-content">
@@ -35,11 +35,11 @@
           </div>
         </div>
       </div>
-      
+
       <!-- ファイル入力要素 -->
       <input id="multipleFileInput" type="file" multiple style="display:none">
       <input id="folderInput" type="file" webkitdirectory multiple style="display:none">
-      
+
       <!-- 選択ファイル表示 -->
       <div id="selectedFilesContainer" class="selected-files-container" style="display: none;">
         <h5>選択されたファイル:</h5>
@@ -106,10 +106,13 @@
         </div>
       </div>
 
-      <?php 
+      <?php
       // デバッグ情報をログ出力
-      error_log("Upload Form Debug - allow_file_replace: " . (isset($allow_file_replace) ? ($allow_file_replace ? 'true' : 'false') : 'NOT_SET'));
-      ?>
+            $replaceStatus = isset($allow_file_replace)
+                ? ($allow_file_replace ? 'true' : 'false')
+                : 'NOT_SET';
+            error_log("Upload Form Debug - allow_file_replace: {$replaceStatus}");
+        ?>
       <?php if (isset($allow_file_replace) && $allow_file_replace) : ?>
       <!-- 差し替えキー -->
       <div class="form-section">
@@ -148,7 +151,7 @@
         <button type="button" class="btn btn-default btn-lg" id="cancelBtn" style="display: none;">キャンセル</button>
       </div>
     </form>
-    
+
     <!-- 右下固定のアップロードボタン -->
     <div class="upload-button-fixed">
       <input type="submit" form="upload" class="btn btn-success btn-lg btn-upload" value="📁 ファイルをアップロード" id="uploadBtn">
