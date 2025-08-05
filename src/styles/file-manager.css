@@ -655,7 +655,7 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1050;
+  z-index: 1060;
   max-width: 400px;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1013,4 +1013,19 @@
   background: inherit !important;
   color: inherit !important;
   border-color: inherit !important;
+}
+
+/* ===== 確認モーダル・プロンプトモーダルの最前面表示 ===== */
+#confirmModal,
+#alertModal, 
+#promptModal,
+#passwordModal {
+  z-index: 1070 !important;
+}
+
+#confirmModal .modal-backdrop,
+#alertModal .modal-backdrop,
+#promptModal .modal-backdrop,
+#passwordModal .modal-backdrop {
+  z-index: 1065 !important;
 }
