@@ -370,7 +370,7 @@ export class FileManagerCore {
             setTimeout(() => {
               
               if (this.events) {
-                this.events.init();
+                this.events.reinitializeEvents();
               }              
               resolve();
             }, 100); // 少し長めの待機時間で確実性を向上

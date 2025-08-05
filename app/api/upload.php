@@ -139,6 +139,7 @@ try {
 
     // 認証キーの処理（空のキーは認証不要として扱うため、NULLとして保存）
     $dlKey = $_POST['dlkey'] ?? '';
+    // 削除キー（新しいセキュリティポリシーでは無視されるが、既存互換性のため保存）
     $delKey = $_POST['delkey'] ?? '';
 
     // バリデーション
@@ -174,7 +175,10 @@ try {
         $validationErrors[] = "ダウンロードキーは{$config['security']['min_key_length']}文字以上で設定してください。";
     }
 
-    if (!empty($delKey) && mb_strlen($delKey) < $config['security']['min_key_length']) {
+    // 削除キーのバリデーション（新しいセキュリティポリシーでは無効化）
+    if (isset($config['deletion_security']['legacy_del_key_support']) && 
+        $config['deletion_security']['legacy_del_key_support'] && 
+        !empty($delKey) && mb_strlen($delKey) < $config['security']['min_key_length']) {
         $validationErrors[] = "削除キーは{$config['security']['min_key_length']}文字以上で設定してください。";
     }
 
@@ -227,6 +231,7 @@ try {
 
     // 認証キーのハッシュ化（空の場合はnull）
     $dlKeyHash = (!empty($dlKey) && trim($dlKey) !== '') ? SecurityUtils::hashPassword($dlKey) : null;
+    // 削除キーハッシュ（新しいセキュリティポリシーでは使用されないが、既存互換性のため保存）
     $delKeyHash = (!empty($delKey) && trim($delKey) !== '') ? SecurityUtils::hashPassword($delKey) : null;
 
     // 差し替えキーの暗号化（セキュアなGCMモード使用）

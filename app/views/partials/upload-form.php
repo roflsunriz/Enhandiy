@@ -76,34 +76,23 @@
       <?php endif; ?>
 
       <div class="form-section">
-        <div class="row">
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label for="dlkeyInput">
-                DLキー
-                <?php if (isset($dlkey_required) && $dlkey_required) : ?>
-                  <span class="text-danger">*必須</span>
-                <?php else : ?>
-                  <small class="text-muted">(任意)</small>
-                <?php endif; ?>
-              </label>
-              <input type="text" class="form-control" id="dleyInput" name="dlkey"
-                     placeholder="<?php echo (isset($dlkey_required) && $dlkey_required) ?
-                                    'DLキーを入力してください' :
-                                    'DLキーを入力... (空白時は認証不要)'; ?>"
-                     <?php echo (isset($dlkey_required) && $dlkey_required) ? 'required' : ''; ?>>
-              <p class="help-block">ファイルダウンロード時に必要なキーです</p>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label for="delkeyInput">削除キー <small class="text-muted">(任意)</small></label>
-              <input type="text" class="form-control" id="delkeyInput" name="delkey" 
-                     placeholder="削除キーを入力... (空白時は削除不可)">
-              <p class="help-block">ファイル削除時に必要なキーです</p>
-            </div>
-          </div>
+        <div class="form-group">
+          <label for="dlkeyInput">
+            DLキー
+            <?php if (isset($dlkey_required) && $dlkey_required) : ?>
+              <span class="text-danger">*必須</span>
+            <?php else : ?>
+              <small class="text-muted">(任意)</small>
+            <?php endif; ?>
+          </label>
+          <input type="text" class="form-control" id="dleyInput" name="dlkey"
+                 placeholder="<?php echo (isset($dlkey_required) && $dlkey_required) ?
+                                'DLキーを入力してください' :
+                                'DLキーを入力... (空白時は認証不要)'; ?>"
+                 <?php echo (isset($dlkey_required) && $dlkey_required) ? 'required' : ''; ?>>
+          <p class="help-block">ファイルダウンロード時に必要なキーです</p>
         </div>
+        <!-- 削除キーフィールドは新しいセキュリティポリシー（マスターキーのみ認証）により廃止 -->
       </div>
 
       <?php

@@ -231,7 +231,7 @@ function handleCreate()
             $expiresAt,
             $metadata['comment'] ?? null,
             $metadata['dlkey'] ?? null,
-            $metadata['delkey'] ?? null,
+            $metadata['delkey'] ?? null, // 新しいセキュリティポリシーでは無視されるが互換性のため保存
             $metadata['replacekey'],
             isset($metadata['max_downloads']) ? intval($metadata['max_downloads']) : null,
             isset($metadata['expires_days']) ? $currentTime + (intval($metadata['expires_days']) * 24 * 60 * 60) : null,

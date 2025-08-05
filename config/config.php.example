@@ -40,7 +40,7 @@ class config {
             
             // DLキー・DELキーの必須設定
             'dlkey_required' => false,  // true: 必須, false: 任意
-            // 削除セキュリティポリシー（Ver 2.1+）
+            // 削除セキュリティポリシー（Ver 3.0+）
             'deletion_security' => [
                 'auth_mode' => 'master_only',     // 'master_only': マスターキーのみで削除可能
                 'bulk_delete_enabled' => true,    // 一括削除機能の有効/無効
