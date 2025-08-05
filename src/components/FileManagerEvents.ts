@@ -28,13 +28,11 @@ export class FileManagerEvents {
    * イベントハンドラーの再初期化（動的更新後に呼び出し）
    */
   public reinitializeEvents(): void {
-    console.log('FileManagerEvents: イベントハンドラー再初期化開始');
+    
     
     // 委譲型イベントが正常に動作しているかテスト
     const testButton = this.core.container.querySelector('.file-action-btn');
-    if (testButton) {
-      console.log('FileManagerEvents: アクションボタンが存在します:', testButton);
-    } else {
+    if (!testButton) {
       console.warn('FileManagerEvents: アクションボタンが見つかりません');
     }
     
@@ -42,7 +40,7 @@ export class FileManagerEvents {
     this.destroy();
     this.init(); // 重複コードを削除して init() を再利用
     
-    console.log('FileManagerEvents: イベントハンドラー再初期化完了');
+    
   }
 
   /**
@@ -87,57 +85,57 @@ export class FileManagerEvents {
    */
   private handleDelegatedClick(event: Event): void {
     const target = event.target as HTMLElement;
-    console.log('FileManagerEvents: handleDelegatedClick 呼び出し', target);
+    
     
     // ビュー切り替えボタン
     if (target.classList.contains('file-manager__view-btn') || target.closest('.file-manager__view-btn')) {
-      console.log('FileManagerEvents: ビュー切り替えボタンクリック');
+      
       this.handleViewToggle(event);
       return;
     }
     
     // ファイルアクションボタン
     if (target.classList.contains('file-action-btn') || target.closest('.file-action-btn')) {
-      console.log('FileManagerEvents: ファイルアクションボタンクリック');
+      
       this.handleFileAction(event);
       return;
     }
     
     // 一括操作ボタン
     if (target.classList.contains('bulk-action-btn') || target.closest('.bulk-action-btn')) {
-      console.log('FileManagerEvents: 一括操作ボタンクリック');
+      
       this.handleBulkAction(event);
       return;
     }
     
     // ページネーションボタン
     if (target.classList.contains('pagination-btn') || target.closest('.pagination-btn')) {
-      console.log('FileManagerEvents: ページネーションボタンクリック');
+      
       this.handlePagination(event);
       return;
     }
     
     // ソートヘッダー
     if (target.classList.contains('sortable') || target.closest('.sortable')) {
-      console.log('FileManagerEvents: ソートヘッダークリック');
+      
       this.handleSort(event);
       return;
     }
     
     // ファイルアイテムクリック
     if (target.classList.contains('file-grid-item') || target.closest('.file-grid-item')) {
-      console.log('FileManagerEvents: ファイルグリッドアイテムクリック');
+      
       this.handleItemClick(event);
       return;
     }
     
     if (target.classList.contains('file-list-item') || target.closest('.file-list-item')) {
-      console.log('FileManagerEvents: ファイルリストアイテムクリック');
+      
       this.handleItemClick(event);
       return;
     }
     
-    console.log('FileManagerEvents: 該当するイベントハンドラーなし', target.className);
+    
   }
 
   /**
@@ -234,7 +232,7 @@ export class FileManagerEvents {
    * ファイルアクション処理
    */
   private handleFileAction(event: Event): void {
-    console.log('FileManagerEvents: handleFileAction 呼び出し', event);
+    
     
     event.preventDefault();
     event.stopPropagation();
@@ -244,7 +242,7 @@ export class FileManagerEvents {
     const action = button.dataset.action;
     const fileId = button.dataset.fileId;
     
-    console.log('FileManagerEvents: ボタンアクション', { action, fileId, button });
+    
     
     if (!action || !fileId) {
       console.warn('FileManagerEvents: action または fileId が見つかりません', { action, fileId });
@@ -253,37 +251,28 @@ export class FileManagerEvents {
     
     // FileManagerが処理中の場合は操作を無効化
     if (this.core.isRefreshing()) {
-      console.log('FileManagerEvents: FileManager処理中のため操作を無効化');
+      
       return;
     }
     
     // ボタンが無効化されている場合は処理しない
     if ((button as HTMLButtonElement).disabled || button.classList.contains('disabled')) {
-      console.log('FileManagerEvents: ボタンが無効化されているため処理をスキップ');
+      
       return;
     }
     
     // 重複実行を防ぐためのフラグチェック
     if (button.dataset.processing === 'true') {
-      console.log('FileManagerEvents: 処理中のため実行をスキップ');
+      
       return;
     }
     
     // 処理中フラグを設定
     button.dataset.processing = 'true';
     
-    // デバッグ用の詳細ログ（現在ページのファイルのみを対象とする）
+    // ファイル検索処理
     const currentPageFiles = this.core.getCurrentPageFiles();
-    const allFiles = this.core.getFiles(); // デバッグ用
-    
-    console.log('FileManagerEvents: ファイル検索デバッグ', {
-      searchFileId: fileId,
-      searchFileIdType: typeof fileId,
-      currentPageFiles: currentPageFiles.length,
-      totalFiles: allFiles.length,
-      currentPageFileIds: currentPageFiles.map(f => ({ id: f.id, type: typeof f.id, name: f.name })),
-      allFileIds: allFiles.map(f => ({ id: f.id, type: typeof f.id, name: f.name }))
-    });
+    const allFiles = this.core.getFiles();
     
     // 現在ページのファイルから検索（DOM上に存在するファイルのみ）
     let file = currentPageFiles.find(f => f.id.toString() === fileId);
@@ -293,11 +282,6 @@ export class FileManagerEvents {
       const fileInOtherPage = allFiles.find(f => f.id.toString() === fileId);
       
       if (fileInOtherPage) {
-        console.log('FileManagerEvents: ファイルが他のページに存在するため移動します', {
-          fileId,
-          fileName: fileInOtherPage.name
-        });
-        
         // 該当ファイルを含むページに移動
         const moved = this.core.goToPageContainingFile(fileId);
         
@@ -330,7 +314,7 @@ export class FileManagerEvents {
       }
     }
     
-    console.log('FileManagerEvents: ファイルアクション実行開始', { action, fileId, fileName: file.name });
+    
 
     try {
       switch (action) {
@@ -543,7 +527,7 @@ export class FileManagerEvents {
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          console.log('ダウンロード:', file.name);
+          
           return;
         }
 
@@ -580,7 +564,7 @@ export class FileManagerEvents {
       await this.downloadFile(selectedFiles[0].id.toString());
     } else {
       // 複数ファイルの場合はZIP化など
-      console.log('複数ファイルダウンロード:', selectedFiles.length, '件');
+      
       await showAlert('複数ファイルのダウンロード機能は実装中です。');
     }
   }

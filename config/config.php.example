@@ -72,6 +72,10 @@ class config {
                 'max_login_attempts' => 5,
                 'lockout_duration' => 900, // 15分
                 
+                // HTTPS設定
+                'enforce_https' => true,    // HTTPSを強制（サーバーがHTTPS対応時のみ）
+                'auto_detect_https' => true, // HTTPS対応の自動検出
+                
                 // ファイルアップロード制限
                 'max_uploads_per_hour' => 50,      // 1時間あたりの最大アップロード数
                 'max_concurrent_uploads' => 5,     // 同時並行アップロード数

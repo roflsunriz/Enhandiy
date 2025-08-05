@@ -42,30 +42,19 @@ require_once $utilsPath;
 SecurityUtils::startSecureSession();
 
 try {
-    // CSRFトークン検証（デバッグ出力付き）
+    // CSRFトークン検証
     $csrfToken = $_POST['csrf_token'] ?? '';
-    error_log("Edit Comment CSRF Debug - Session ID: " . session_id());
-    error_log("Edit Comment CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
-    error_log("Edit Comment CSRF Debug - Received csrf_token: " . ($csrfToken ?: 'EMPTY'));
-    error_log("Edit Comment CSRF Debug - POST data keys: " . implode(', ', array_keys($_POST)));
 
     if (!SecurityUtils::validateCSRFToken($csrfToken)) {
-        error_log("Edit Comment CSRF Debug - Token validation FAILED");
         http_response_code(403);
         echo json_encode([
             'success' => false,
             'message' => 'セキュリティトークンが無効です',
             'error_code' => 'CSRF_TOKEN_INVALID',
-            'debug' => [
-                'session_id' => session_id(),
-                'received_token' => $csrfToken ? substr($csrfToken, 0, 8) . '...' : 'EMPTY',
-                'session_has_token' => isset($_SESSION['csrf_token'])
-            ],
             'timestamp' => date('c')
         ]);
         exit;
     }
-    error_log("Edit Comment CSRF Debug - Token validation SUCCESS");
 
     // パラメータ取得
     $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;

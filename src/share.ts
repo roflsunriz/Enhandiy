@@ -14,7 +14,7 @@ import './types/global';
 
 // 共有機能初期化
 ready(() => {
-  console.log('Share functionality initialized (TypeScript)');
+  
   
   // エラーハンドリングの初期化
   initializeErrorHandling();

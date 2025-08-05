@@ -9,7 +9,7 @@
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// CORS設定
+// セキュリティヘッダーとCORSの設定
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
@@ -74,6 +74,10 @@ try {
     require_once 'auth.php';
     require_once 'response.php';
     require_once __DIR__ . '/../../src/Core/Utils.php';
+
+    // APIセキュリティヘッダーの設定
+    SecurityUtils::setApiSecurityHeaders();
+
     require_once 'handlers/FileApiHandler.php';
     require_once 'handlers/FolderApiHandler.php';
     require_once 'handlers/SystemApiHandler.php';

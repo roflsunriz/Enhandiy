@@ -24,39 +24,25 @@ const defaultHeaders: Record<string, string> = {
 
 // CSRFトークンを取得（複数の方法を試行）
 export function getCsrfToken(): string {
-  console.log('CSRF Debug - Starting token search...');
-  
   // 方法1: windowオブジェクトから取得
   const windowConfig = (window as unknown as { config?: { csrf_token?: string } }).config;
-  console.log('CSRF Debug - window.config exists:', !!windowConfig);  
   const windowToken = windowConfig?.csrf_token;
   if (windowToken) {
-    console.log('CSRF Debug - Token from window.config:', windowToken.substring(0, 8) + '...', 'length:', windowToken.length);
     return windowToken;
   }
   
   // 方法2: HTML要素から取得
   const csrfElement = document.getElementById('csrfToken') as HTMLInputElement;
-  console.log('CSRF Debug - csrfElement exists:', !!csrfElement);
   if (csrfElement && csrfElement.value) {
-    console.log('CSRF Debug - Token from HTML element:', csrfElement.value.substring(0, 8) + '...', 'length:', csrfElement.value.length);
     return csrfElement.value;
   }
   
   // 方法3: メタタグから取得（フォールバック）
   const metaElement = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-  console.log('CSRF Debug - metaElement exists:', !!metaElement);
   if (metaElement && metaElement.content) {
-    console.log('CSRF Debug - Token from meta tag:', metaElement.content.substring(0, 8) + '...', 'length:', metaElement.content.length);
     return metaElement.content;
   }
   
-  console.error('CSRF Debug - No token found in any location!');
-  console.error('CSRF Debug - Available elements:', {
-    csrfInput: !!document.getElementById('csrfToken'),
-    metaTag: !!document.querySelector('meta[name="csrf-token"]'),
-    windowConfig: !!windowConfig
-  });
   return '';
 }
 

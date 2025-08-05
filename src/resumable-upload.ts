@@ -30,7 +30,6 @@ let isResumableAvailable = false;
 
 // Tus.ioの利用可能性をチェック
 ready(() => {
-  console.log('Resumable Upload functionality initialized (TypeScript)');
   
   // エラーハンドリングの初期化
   initializeErrorHandling();
@@ -50,7 +49,7 @@ ready(() => {
     `);
   }
   
-  console.log('Resumable upload module loaded');
+  // Resumable upload module loaded
 });
 
 /**
@@ -73,7 +72,7 @@ async function checkTusAvailability(): Promise<void> {
     const tusResumable = response.headers.get('Tus-Resumable');
     if (tusResumable) {
       isResumableAvailable = true;
-      console.log('Resumable upload available (Tus ' + tusResumable + ')');
+      
     } else {
       console.warn('Tus.io server response invalid, falling back to traditional upload');
       isResumableAvailable = false;
@@ -105,12 +104,12 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
     
     // 通常アップロード優先の場合
     if (uploadPriority === 'normal') {
-      console.log('Using normal upload priority for:', file.name);
+      // 通常アップロードを優先使用
       fallbackUpload(file, options)
         .then(resolve)
         .catch((error) => {
           if (fallbackEnabled && isResumableAvailable) {
-            console.log('Fallback to resumable upload after normal failed:', file.name);
+            // 通常アップロード失敗時は再開可能アップロードにフォールバック
             proceedWithResumableUpload();
           } else {
             reject(error);
@@ -123,7 +122,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
     // Tus.ioが利用できない場合はフォールバック
     if (!isResumableAvailable) {
       if (fallbackEnabled) {
-        console.log('Tus.io unavailable, using fallback for:', file.name);
+        // Tus.io利用不可のためフォールバックアップロードを使用
         fallbackUpload(file, options).then(resolve).catch(reject);
       } else {
         reject(new Error('Resumable upload not available and fallback disabled'));
@@ -149,7 +148,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
       const csrfToken = getCsrfToken();
       if (csrfToken) {
         metadata.csrf_token = csrfToken;
-        console.log('CSRF Debug - Added to metadata:', metadata.csrf_token.substring(0, 8) + '...');
+        // CSRFトークンをメタデータに追加
       } else {
         console.error('CSRF Debug - Token not found or empty!');
       }
@@ -180,7 +179,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
           
           // Tus.ioが失敗した場合はフォールバック（設定で有効な場合）
           if (fallbackEnabled) {
-            console.log('Falling back to traditional upload for:', file.name);
+            // フォールバック処理実行
             fallbackUpload(file, options).then(resolve).catch(reject);
           } else {
             reject(error);
@@ -212,7 +211,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
         },
         
         onSuccess: () => {
-          console.log('Resumable upload completed:', file.name);
+          // アップロード完了
           onUploadComplete(file.name, 'resumable');
           resolve();
         }
@@ -236,7 +235,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
  * 従来方式へのフォールバック
  */
 async function fallbackUpload(file: File, options: UploadOptions): Promise<void> {
-  console.log('Using fallback upload for:', file.name);
+  // フォールバックアップロード実行
   
   const formData = new FormData();
   formData.append('file', file);
@@ -246,7 +245,7 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
   const csrfToken = getCsrfToken();
   if (csrfToken) {
     formData.append('csrf_token', csrfToken);
-    console.log('Fallback CSRF Debug - Added to formData');
+    // CSRFトークンをフォームデータに追加
   } else {
     console.error('Fallback CSRF Debug - Token not found or empty!');
   }
@@ -297,10 +296,10 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
     xhr.addEventListener('load', () => {
       try {
         const data = JSON.parse(xhr.responseText) as UploadApiResponse;
-        console.log('Fallback upload response:', data);
+        // フォールバックアップロード応答処理
         
         if (data.status === 'ok' || data.status === 'success') {
-          console.log('Fallback upload completed:', file.name);
+          // フォールバックアップロード完了
           onUploadComplete(file.name, 'fallback');
           resolve();
         } else {
@@ -490,26 +489,26 @@ function onUploadComplete(filename: string, _method: string): void {
       }
       
       // アップロード完了後の確実な更新処理
-      console.log('resumable-upload: アップロード完了後の更新処理開始');
+      
       
       try {
         // FolderManagerがある場合は、それが内部的にFileManagerも更新する
         if (window.folderManager) {
-          console.log('resumable-upload: FolderManager.refreshAll()を実行');
+          
           await window.folderManager.refreshAll();
         } 
         // FolderManagerがない場合は、FileManagerを直接更新
         else if (window.fileManagerInstance) {
-          console.log('resumable-upload: FileManager.refreshFromServer()を実行');
+          
           await window.fileManagerInstance.refreshFromServer();
         }
         // 両方ともない場合はページをリロード
         else {
-          console.log('resumable-upload: FileManagerが見つからないため、ページをリロード');
+          
           window.location.reload();
         }
         
-        console.log('resumable-upload: 更新処理完了');
+        
       } catch (error) {
         console.error('resumable-upload: 更新処理エラー:', error);
         // エラーが発生した場合はページをリロード
@@ -527,7 +526,7 @@ export function pauseUpload(filename: string): boolean {
   const resumableUpload = resumableUploads[filename];
   if (resumableUpload?.upload) {
     resumableUpload.upload.abort();
-    console.log('Upload paused:', filename);
+    
     
     // UIを更新
     const progressContainers = document.querySelectorAll('.file-item');
@@ -560,7 +559,7 @@ export function resumeUpload(filename: string): boolean {
   const resumableUpload = resumableUploads[filename];
   if (resumableUpload?.upload) {
     resumableUpload.upload.start();
-    console.log('Upload resumed:', filename);
+    
     
     // UIを更新
     const progressContainers = document.querySelectorAll('.file-item');
@@ -593,7 +592,7 @@ export function cancelUpload(filename: string): boolean {
   const resumableUpload = resumableUploads[filename];
   if (resumableUpload?.upload) {
     resumableUpload.upload.abort();
-    console.log('Upload cancelled:', filename);
+    
     
     // UIを更新
     const progressContainers = document.querySelectorAll('.file-item');
@@ -630,7 +629,7 @@ export function cancelUpload(filename: string): boolean {
  * 既存のアップロード関数を拡張
  */
 export async function enhancedFileUpload(): Promise<void> {
-  console.log('Enhanced file upload called');
+  
   
   // 差し替えキー必須チェック
   const replaceKeyInput = document.getElementById('replaceKeyInput') as HTMLInputElement;
@@ -651,12 +650,12 @@ export async function enhancedFileUpload(): Promise<void> {
   const fileInputHasFiles = fileInput?.files?.length || 0;
   const selectedFilesLength = (window as unknown as { selectedFiles?: File[] }).selectedFiles?.length || 0;
   
-  console.log('Debug info - fileInputExists:', fileInputExists, 'fileInputHasFiles:', fileInputHasFiles, 'selectedFilesLength:', selectedFilesLength);
+          // ファイル選択状況確認
   
   // 単一ファイルの場合（multipleFileInputから最初のファイルを取得）
   if (fileInput?.files && fileInput.files.length > 0) {
     const singleFile = fileInput.files[0];
-    console.log('Single file upload:', singleFile.name);
+    // 単一ファイルアップロード
     const options = getUploadOptions();
     uploadFileResumable(singleFile, options);
     return;
@@ -665,7 +664,7 @@ export async function enhancedFileUpload(): Promise<void> {
   // 複数ファイルの場合（既存のselectedFiles配列を使用）
   const selectedFiles = (window as unknown as { selectedFiles?: File[] }).selectedFiles;
   if (selectedFiles && selectedFiles.length > 0) {
-    console.log('Multiple files upload:', selectedFiles.length, 'files');
+    // 複数ファイルアップロード
     enhancedMultipleUpload(selectedFiles);
     return;
   }

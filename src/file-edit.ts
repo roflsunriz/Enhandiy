@@ -16,7 +16,7 @@ let lastShareData: { share_key: string; share_url?: string; share_url_with_comme
 
 // ファイル編集機能初期化
 ready(() => {
-  console.log('File Edit functionality initialized (TypeScript)');
+  
   
   // エラーハンドリングの初期化
   initializeErrorHandling();

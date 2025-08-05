@@ -107,11 +107,6 @@
       </div>
 
       <?php
-      // デバッグ情報をログ出力
-            $replaceStatus = isset($allow_file_replace)
-                ? ($allow_file_replace ? 'true' : 'false')
-                : 'NOT_SET';
-            error_log("Upload Form Debug - allow_file_replace: {$replaceStatus}");
         ?>
       <?php if (isset($allow_file_replace) && $allow_file_replace) : ?>
       <!-- 差し替えキー -->

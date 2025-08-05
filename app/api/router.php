@@ -108,7 +108,7 @@ class ApiRouter
                 }
             }
 
-            error_log("API Router Debug - Method: $method, Original URI: $requestUri, Parsed Path: $path");
+            // ルートマッチング処理
 
             foreach ($this->routes as $route) {
                 if ($route['method'] !== $method) {

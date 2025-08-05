@@ -1,7 +1,7 @@
 <?php
 
 // データベースマイグレーション（共有リンク制限機能用）
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 
 // configをインクルード
 include_once('../../config/config.php');

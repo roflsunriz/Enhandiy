@@ -27,28 +27,17 @@ SecurityUtils::startSecureSession();
 $configObj = new config();
 $config = $configObj->index();
 
-// CSRFチェック（デバッグ出力付き）
+// CSRFトークン検証
 $csrfToken = $_POST['csrf_token'] ?? '';
-error_log("Replace File CSRF Debug - Session ID: " . session_id());
-error_log("Replace File CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
-error_log("Replace File CSRF Debug - Received csrf_token: " . ($csrfToken ?: 'EMPTY'));
-error_log("Replace File CSRF Debug - POST data keys: " . implode(', ', array_keys($_POST)));
 
 if (!SecurityUtils::validateCSRFToken($csrfToken)) {
-    error_log("Replace File CSRF Debug - Token validation FAILED");
     http_response_code(403);
     echo json_encode([
         'success' => false,
-        'message' => 'CSRFトークンが無効です',
-        'debug' => [
-            'session_id' => session_id(),
-            'received_token' => $csrfToken ? substr($csrfToken, 0, 8) . '...' : 'EMPTY',
-            'session_has_token' => isset($_SESSION['csrf_token'])
-        ]
+        'message' => 'CSRFトークンが無効です'
     ]);
     exit;
 }
-error_log("Replace File CSRF Debug - Token validation SUCCESS");
 
 // 機能チェック
 if (!($config['allow_file_replace'] ?? false)) {

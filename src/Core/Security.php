@@ -941,9 +941,7 @@ class SecurityUtils
         $sessionName = 'SECURE_SID_' . substr(hash('sha256', $projectRoot), 0, 8);
         session_name($sessionName);
 
-        // デバッグ用ログ
-        error_log("Security Debug - Project root: " . $projectRoot);
-        error_log("Security Debug - Session name: " . $sessionName);
+        // セッション名を設定
     }
 
     /**
@@ -1056,5 +1054,135 @@ class SecurityUtils
         } else {
             echo "システムエラーが発生しました。エラーID: {$errorId}";
         }
+    }
+
+    /**
+     * 包括的なセキュリティヘッダーを設定
+     */
+    public static function setSecurityHeaders(bool $includeCSP = true, bool $isApiEndpoint = false): void
+    {
+        // 基本的なセキュリティヘッダー
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('X-XSS-Protection: 1; mode=block');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+
+        // HTTPS接続時のみHSTSヘッダーを追加
+        if (self::isHttps()) {
+            header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
+        }
+
+        // Permissions Policy (旧Feature Policy)
+        header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
+
+        // Content Security Policy (CSP)
+        if ($includeCSP) {
+            if ($isApiEndpoint) {
+                // APIエンドポイント用のCSP（JSON応答のみ）
+                header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
+            } else {
+                // 通常のWebページ用のCSP
+                $csp = "default-src 'self'; " .
+                       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " .
+                       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " .
+                       "img-src 'self' data: blob:; " .
+                       "font-src 'self' https://cdn.jsdelivr.net; " .
+                       "connect-src 'self'; " .
+                       "frame-ancestors 'none'; " .
+                       "form-action 'self'; " .
+                       "base-uri 'self'";
+                header("Content-Security-Policy: " . $csp);
+            }
+        }
+    }
+
+    /**
+     * API専用セキュリティヘッダーを設定
+     */
+    public static function setApiSecurityHeaders(): void
+    {
+        self::setSecurityHeaders(true, true);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    /**
+     * HTTPS強制リダイレクトを実行（条件付き）
+     */
+    public static function enforceHttpsIfSupported(bool $forceHttps = true): void
+    {
+        // 既にHTTPS接続の場合は何もしない
+        if (self::isHttps()) {
+            return;
+        }
+
+        // HTTPS強制が無効の場合は何もしない
+        if (!$forceHttps) {
+            return;
+        }
+
+        // サーバーのHTTPS対応を検証
+        if (self::isHttpsSupported()) {
+            // HTTPSにリダイレクト
+            $httpsUrl = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+            header('HTTP/1.1 301 Moved Permanently');
+            header('Location: ' . $httpsUrl);
+            exit;
+        }
+    }
+
+    /**
+     * サーバーのHTTPS対応を検証
+     */
+    private static function isHttpsSupported(): bool
+    {
+        // 環境変数やサーバー設定からHTTPS対応を検出
+
+        // 1. サーバーポート443が利用可能かチェック
+        if ($_SERVER['SERVER_PORT'] == 443) {
+            return true;
+        }
+
+        // 2. X-Forwarded-Protoヘッダーの存在をチェック（プロキシ環境）
+        if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+            return true;
+        }
+
+        // 3. HTTPSサーバー変数の存在をチェック
+        if (!empty($_SERVER['HTTPS'])) {
+            return true;
+        }
+
+        // 4. 一般的なクラウドプロバイダー（Cloudflare等）のヘッダーをチェック
+        if (!empty($_SERVER['HTTP_CF_VISITOR'])) {
+            return true;
+        }
+
+        // 5. Load Balancer環境のHTTPS検出
+        if (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on') {
+            return true;
+        }
+
+        // 6. その他の一般的なHTTPS検出方法
+        if (!empty($_SERVER['HTTP_X_FORWARDED_SCHEME']) && $_SERVER['HTTP_X_FORWARDED_SCHEME'] === 'https') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * HTTPS設定の自動検出結果を取得（デバッグ用）
+     */
+    public static function getHttpsDetectionInfo(): array
+    {
+        return [
+            'is_https' => self::isHttps(),
+            'is_https_supported' => self::isHttpsSupported(),
+            'server_port' => $_SERVER['SERVER_PORT'] ?? 'unknown',
+            'https_var' => $_SERVER['HTTPS'] ?? 'not_set',
+            'x_forwarded_proto' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? 'not_set',
+            'x_forwarded_ssl' => $_SERVER['HTTP_X_FORWARDED_SSL'] ?? 'not_set',
+            'cf_visitor' => $_SERVER['HTTP_CF_VISITOR'] ?? 'not_set',
+        ];
     }
 }

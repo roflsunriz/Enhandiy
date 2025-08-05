@@ -49,6 +49,13 @@ try {
     $configInstance = new config();
     $config = $configInstance->index();
 
+    // HTTPS強制リダイレクト（サーバーが対応している場合のみ）
+    $enforceHttps = $config['security']['enforce_https'] ?? false;
+    SecurityUtils::enforceHttpsIfSupported($enforceHttps);
+
+    // セキュリティヘッダーの設定
+    SecurityUtils::setSecurityHeaders();
+
     // 設定の検証
     $configValidation = $configInstance->validate();
     if (!empty($configValidation)) {
@@ -99,11 +106,8 @@ try {
         }
     }
 
-    // CSRFトークンの生成とセッション情報のデバッグ
+    // CSRFトークンの生成
     $csrf_token = SecurityUtils::generateCSRFToken();
-    error_log("Main CSRF Debug - Session ID: " . session_id());
-    error_log("Main CSRF Debug - Generated CSRF token: " . $csrf_token);
-    error_log("Main CSRF Debug - Session status: " . session_status());
 
     // ビューの描画
     $viewData = array_merge($config, $modelData, [

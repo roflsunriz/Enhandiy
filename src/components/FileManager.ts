@@ -45,7 +45,7 @@ export class FileManager {
     if (!this.isInitialized) {
       this.core.init();
       this.isInitialized = true;
-      console.log('FileManager: 初期化完了');
+      
     }
   }
 

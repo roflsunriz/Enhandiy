@@ -7,16 +7,12 @@
  * phpUploader - Tus.io Server Implementation
  */
 
-// エラー表示とタイムアウト設定
-ini_set('display_errors', 1);
+// タイムアウト設定（本番環境用）
+ini_set('display_errors', 0);
 ini_set('max_execution_time', 0);
 set_time_limit(0);
 
-// Docker環境用のデバッグログ
-error_log("Tus.io Request - Method: " . $_SERVER['REQUEST_METHOD'] .
-          ", URI: " . $_SERVER['REQUEST_URI'] .
-          ", PATH_INFO: " . ($_SERVER['PATH_INFO'] ?? 'not set') .
-          ", QUERY_STRING: " . ($_SERVER['QUERY_STRING'] ?? 'not set'));
+// Tus.ioリクエスト処理開始
 
 // CORS対応
 header('Access-Control-Allow-Origin: *');
@@ -171,11 +167,7 @@ function handleCreate()
     // CSRFトークンの検証（メタデータから取得）
     $csrfToken = $metadata['csrf_token'] ?? null;
 
-    // デバッグ情報をログ出力
-    error_log("TUS CSRF Debug - Session ID: " . session_id());
-    error_log("TUS CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
-    error_log("TUS CSRF Debug - Received csrf_token: " . ($csrfToken ?? 'NULL'));
-    error_log("TUS CSRF Debug - Session status: " . session_status());
+    // CSRFトークン検証
 
     if (!SecurityUtils::validateCSRFToken($csrfToken)) {
         error_log("TUS upload CSRF validation failed for IP: {$clientIP}");
@@ -209,12 +201,9 @@ function handleCreate()
     try {
         // 差し替えキーの検証（システムレベルで必須）
         if (empty($metadata['replacekey'])) {
-            error_log("TUS Upload Debug - Missing replacekey. Available metadata: " . json_encode($metadata));
-
             // 差し替えキー不足でエラーの場合もトークンを解放
             if (isset($uploadToken)) {
                 SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
-                error_log("TUS missing replacekey - released upload token: {$uploadToken}");
             }
 
             http_response_code(400);
@@ -451,28 +440,27 @@ function completeUpload($uploadId, $upload)
     global $db, $data_directory, $key, $encrypt_filename, $extension;
 
     // デバッグログ開始
-    error_log("DEBUG completeUpload START - Upload ID: $uploadId");
+
 
     $metadata = json_decode($upload['metadata'], true);
     $originalFileName = $metadata['filename'] ?? 'unknown';
 
             // セキュリティ：メタデータのログ出力を削除（機密情報が含まれる可能性）
-    error_log("DEBUG completeUpload - originalFileName: $originalFileName");
+
 
     // 拡張子チェック
     $ext = pathinfo($originalFileName, PATHINFO_EXTENSION);
-            error_log("DEBUG completeUpload - validating extension: $ext");
+
     if (!in_array(strtolower($ext), $extension)) {
         // 不正な拡張子の場合は削除
-        error_log("DEBUG completeUpload - REJECTED: Invalid extension $ext");
+
         unlink($upload['chunk_path']);
         $db->prepare("DELETE FROM tus_uploads WHERE id = ?")->execute([$uploadId]);
         return false;
     }
-    error_log("DEBUG completeUpload - Extension check passed");
+
 
     try {
-        error_log("DEBUG completeUpload - Starting database insert");
         // uploadedテーブルに移動
         $sql = $db->prepare("
             INSERT INTO uploaded (
@@ -494,15 +482,13 @@ function completeUpload($uploadId, $upload)
             $upload['folder_id']
         ];
 
-        error_log("DEBUG completeUpload - Preparing database insert");
+
         $result = $sql->execute($insertData);
 
         if (!$result) {
-            $errorInfo = $sql->errorInfo();
-            error_log("DEBUG completeUpload - Database insert failed: " . $errorInfo[0]);
             throw new Exception('Failed to insert into uploaded table');
         }
-        error_log("DEBUG completeUpload - Database insert successful");
+
 
         $fileId = $db->lastInsertId();
 
@@ -538,14 +524,11 @@ function completeUpload($uploadId, $upload)
 
         if ($tusInfo && !empty($tusInfo['upload_token']) && !empty($tusInfo['client_ip'])) {
             SecurityUtils::releaseUploadToken($tusInfo['client_ip'], $tusInfo['upload_token']);
-            error_log("DEBUG completeUpload - Released upload token: " . $tusInfo['upload_token']);
         }
 
         return true;
     } catch (Exception $e) {
         // エラー時はチャンクファイルを削除
-        error_log("DEBUG completeUpload - ERROR: " . $e->getMessage());
-        error_log("DEBUG completeUpload - ERROR trace: " . $e->getTraceAsString());
         if (file_exists($upload['chunk_path'])) {
             unlink($upload['chunk_path']);
         }

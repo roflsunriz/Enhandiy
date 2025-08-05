@@ -14,7 +14,7 @@ let isUploading = false;
 
 // DOM読み込み完了後の初期化
 ready(() => {
-  console.log('Drag & Drop functionality initialized (TypeScript)');
+  
   
   // エラーハンドリングの初期化
   initializeErrorHandling();
@@ -101,14 +101,14 @@ function initializeDragDrop(): void {
       e.preventDefault();
       e.stopPropagation();
       
-      console.log('Upload button clicked, selectedFiles:', selectedFiles.length);
+      
       
       // 再開可能アップロード機能が利用可能かチェック
       if (typeof (window as unknown as { enhancedFileUpload?: () => void }).enhancedFileUpload === 'function') {
-        console.log('Using enhanced file upload');
+        
         (window as unknown as { enhancedFileUpload: () => void }).enhancedFileUpload();
       } else {
-        console.log('Using traditional upload');
+        
         // フォールバック: 従来の方式
         if (selectedFiles.length > 0) {
           uploadMultipleFiles();

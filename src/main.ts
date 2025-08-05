@@ -19,7 +19,6 @@ import './api/client';
 
 // グローバル初期化
 ready(() => {
-  console.log('PHPUploader v2.0 - Modern TypeScript Edition');
   
   // エラーハンドリングの初期化
   initializeErrorHandling();
@@ -44,7 +43,7 @@ function initializeFileManager(): void {
   const container = document.getElementById('fileManagerContainer');
   
   if (window.fileData && container) {
-    console.log('Initializing new FileManager v2.0');
+    
     
     // FileManagerインスタンス作成（初期化は setFiles() 内で実行される）
     const fileManager = new FileManager(container, {
@@ -58,7 +57,7 @@ function initializeFileManager(): void {
     // グローバルに公開（デバッグ・外部操作用）
     window.fileManagerInstance = fileManager;
     
-    console.log('FileManager initialized successfully');
+    
   } else {
     // FileManager初期化失敗
     handleFileManagerInitializationFailure();

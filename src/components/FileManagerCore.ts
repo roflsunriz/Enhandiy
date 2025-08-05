@@ -329,14 +329,14 @@ export class FileManagerCore {
   public async refreshFromServer(): Promise<void> {
     // 既に処理中の場合は新しいリクエストを開始しない
     if (this.state.isRefreshing) {
-      console.log('refreshFromServer: 既に処理中のため、リクエストをスキップ');
+      
       return;
     }
 
     try {
       // 処理中フラグを設定
       this.state.isRefreshing = true;
-      console.log('refreshFromServer: 処理開始 - アクションボタン一時無効化');
+      
       
       // ローディング状態をUIに反映
       this.state.isLoading = true;
@@ -352,12 +352,12 @@ export class FileManagerCore {
       const data = await response.json();
       
       if (data.success && Array.isArray(data.files)) {
-        console.log('refreshFromServer: データ受信成功:', data.files.length, '件のファイル');
+        
         
         this.state.files = data.files.map((file: FileData) => this.normalizeFileData(file));
         this.applyFiltersAndSort();
         
-        console.log('refreshFromServer: レンダリング前のファイル数:', this.state.filteredFiles.length);
+        
         
         // 新しいファイルがアップロードされた可能性がある場合、最新ファイルのページに移動
         this.goToLatestFilePage();
@@ -368,21 +368,16 @@ export class FileManagerCore {
         await new Promise<void>((resolve) => {
           window.requestAnimationFrame(() => {
             setTimeout(() => {
-              console.log('refreshFromServer: イベント再初期化開始');
+              
               if (this.events) {
                 this.events.init();
-              }
-              
-              // レンダリング後のDOM要素チェック
-              const renderedItems = this.container.querySelectorAll('.file-grid-item, .file-list-item');
-              console.log('refreshFromServer: レンダリング後のアイテム数:', renderedItems.length);
-              
+              }              
               resolve();
             }, 100); // 少し長めの待機時間で確実性を向上
           });
         });
         
-        console.log('refreshFromServer: 処理完了 - アクションボタン有効化');
+        
       } else {
         console.error('ファイルリスト更新エラー:', data.error || 'データが無効です');
       }
@@ -500,7 +495,6 @@ export class FileManagerCore {
     const targetPage = Math.floor(fileIndex / this.state.itemsPerPage) + 1;
     
     if (targetPage !== this.state.currentPage) {
-      console.log(`FileManagerCore: ファイル${fileId}を含むページ${targetPage}に移動`);
       this.setPage(targetPage);
       return true;
     }
