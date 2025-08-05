@@ -148,6 +148,15 @@ $origin_dlkey = $fileData['dl_key_hash'];
 $current_max_downloads = $fileData['max_downloads'];
 $current_expires_at = $fileData['expires_at'];
 
+// DLキーが設定されていない場合の処理
+if (is_null($origin_dlkey) || trim($origin_dlkey) === '') {
+    // DLキーがnullの場合は、ファイルIDを文字列として使用
+    $share_key_source = 'no_key_file_' . $id;
+} else {
+    // DLキーが設定されている場合は、ハッシュを使用
+    $share_key_source = $origin_dlkey;
+}
+
 // 制限情報を更新（変更があった場合のみ）
 $should_update = false;
 if (isset($_POST['max_downloads']) && $max_downloads !== $current_max_downloads) {
@@ -173,7 +182,7 @@ if ($should_update) {
 
 // 共有用のトークンを生成（セキュアなGCMモード使用）
 try {
-    $share_key = bin2hex(SecurityUtils::encryptSecure($origin_dlkey, $key));
+    $share_key = bin2hex(SecurityUtils::encryptSecure($share_key_source, $key));
 } catch (Exception $e) {
     error_log('Share link generation failed: ' . $e->getMessage());
     header('Location: ./');

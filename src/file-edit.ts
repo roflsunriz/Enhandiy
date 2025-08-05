@@ -375,12 +375,16 @@ async function handleGenerateShareLink(): Promise<void> {
       await handleCopyShareUrl();
       showSuccess('共有リンクを生成しました。');
     } else {
-      throw new Error(response.error || '共有リンクの生成に失敗しました。');
+      // エラーメッセージがある場合はそれを使用、なければデフォルトメッセージ
+      const errorMessage = (response as any).message || response.error || '共有リンクの生成に失敗しました。';
+      throw new Error(errorMessage);
     }
     
   } catch (error) {
     console.error('共有リンク生成エラー:', error);
-    showError('共有リンクの生成に失敗しました。');
+    // エラーオブジェクトからメッセージを取得
+    const errorMessage = error instanceof Error ? error.message : '共有リンクの生成に失敗しました。';
+    showError(errorMessage);
   } finally {
     // ボタンを元に戻す
     if (generateBtn) {

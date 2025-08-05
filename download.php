@@ -189,51 +189,55 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger)
     $max_downloads = $fileData['max_downloads'];
     $expires_at = $fileData['expires_at'];
 
-    // DLキーがNULL（空）の場合は認証不要、そうでない場合は認証チェック
+    // 共有リンクトークンの検証（DLキーの有無に関わらず実行）
+    $share_key_source = '';
     if ($origin_dlkey !== null) {
-        // 共有リンクトークンの検証（新形式のGCMと旧形式のECBの両方をサポート）
-        $expectedToken = '';
-        $validToken = false;
+        $share_key_source = $origin_dlkey;
+    } else {
+        // DLキーがnullの場合は、生成時と同じ値を使用
+        $share_key_source = 'no_key_file_' . $id;
+    }
 
+    $validToken = false;
+
+    // 新しいGCM形式で検証
+    try {
+        $expectedToken = bin2hex(SecurityUtils::encryptSecure($share_key_source, $config['key']));
+        if ($dlkey === $expectedToken) {
+            $validToken = true;
+        }
+    } catch (Exception $e) {
+        $logger->warning('GCM token generation failed', ['error' => $e->getMessage()]);
+    }
+
+    // 新形式で一致しない場合は、レガシーのECB形式も試行（DLキーが設定されている場合のみ）
+    if (!$validToken && $origin_dlkey !== null) {
+        // レガシーのECB形式で検証（DLキーが設定されている場合のみ）
         try {
-            // まず新しいGCM形式で生成
-            $expectedToken = bin2hex(SecurityUtils::encryptSecure($origin_dlkey, $config['key']));
+            if (PHP_MAJOR_VERSION == '5' and PHP_MINOR_VERSION == '3') {
+                $expectedToken = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $config['key'], true));
+            } else {
+                $expectedToken = bin2hex(openssl_encrypt(
+                    $origin_dlkey,
+                    'aes-256-ecb',
+                    $config['key'],
+                    OPENSSL_RAW_DATA
+                ));
+            }
+
             if ($dlkey === $expectedToken) {
                 $validToken = true;
+                $logger->info('Legacy ECB token used', ['file_id' => $id]);
             }
         } catch (Exception $e) {
-            // GCM形式の生成に失敗した場合はログ記録
-            $logger->warning('GCM token generation failed', ['error' => $e->getMessage()]);
+            $logger->warning('Legacy token verification failed', ['error' => $e->getMessage()]);
         }
+    }
 
-        // 新形式で一致しない場合は、レガシーのECB形式も試行
-        if (!$validToken) {
-            try {
-                if (PHP_MAJOR_VERSION == '5' and PHP_MINOR_VERSION == '3') {
-                    $expectedToken = bin2hex(openssl_encrypt($origin_dlkey, 'aes-256-ecb', $config['key'], true));
-                } else {
-                    $expectedToken = bin2hex(openssl_encrypt(
-                        $origin_dlkey,
-                        'aes-256-ecb',
-                        $config['key'],
-                        OPENSSL_RAW_DATA
-                    ));
-                }
-
-                if ($dlkey === $expectedToken) {
-                    $validToken = true;
-                    $logger->info('Legacy ECB token used', ['file_id' => $id]);
-                }
-            } catch (Exception $e) {
-                $logger->warning('Legacy token verification failed', ['error' => $e->getMessage()]);
-            }
-        }
-
-        if (!$validToken) {
-            $logger->warning('Invalid share link token', ['file_id' => $id]);
-            header('Location: ./');
-            exit;
-        }
+    if (!$validToken) {
+        $logger->warning('Invalid share link token', ['file_id' => $id]);
+        header('Location: ./');
+        exit;
     }
 
     // 制限チェック
