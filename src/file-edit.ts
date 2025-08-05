@@ -376,7 +376,8 @@ async function handleGenerateShareLink(): Promise<void> {
       showSuccess('共有リンクを生成しました。');
     } else {
       // エラーメッセージがある場合はそれを使用、なければデフォルトメッセージ
-      const errorMessage = (response as any).message || response.error || '共有リンクの生成に失敗しました。';
+      const errorResponse = response as { message?: string; error?: string };
+      const errorMessage = errorResponse.message || errorResponse.error || '共有リンクの生成に失敗しました。';
       throw new Error(errorMessage);
     }
     

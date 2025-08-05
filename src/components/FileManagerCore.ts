@@ -366,11 +366,11 @@ export class FileManagerCore {
         
         // レンダリング完了を確実に待つ（Promiseベース）
         await new Promise<void>((resolve) => {
-          requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
             setTimeout(() => {
               console.log('refreshFromServer: イベント再初期化開始');
               if (this.events) {
-                this.events.reinitializeEvents();
+                this.events.init();
               }
               
               // レンダリング後のDOM要素チェック
@@ -501,8 +501,7 @@ export class FileManagerCore {
     
     if (targetPage !== this.state.currentPage) {
       console.log(`FileManagerCore: ファイル${fileId}を含むページ${targetPage}に移動`);
-      this.setCurrentPage(targetPage);
-      this.render();
+      this.setPage(targetPage);
       return true;
     }
     
