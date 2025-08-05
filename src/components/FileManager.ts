@@ -8,7 +8,7 @@ import { FileManagerState, ViewMode, SortField, SortDirection } from '../types/f
 import { FileManagerCore } from './FileManagerCore';
 import { FileManagerRenderer } from './FileManagerRenderer';
 import { FileManagerEvents } from './FileManagerEvents';
-import { FileManagerBulkActions } from './FileManagerBulkActions';
+
 
 export class FileManager {
   private core: FileManagerCore;
@@ -19,6 +19,8 @@ export class FileManager {
   // 既存APIとの互換性のためのプロパティエイリアス
   public readonly container: HTMLElement;
 
+  private isInitialized = false;
+
   constructor(container: HTMLElement, options: FileManagerOptions = {}) {
     // コアインスタンスを作成
     this.core = new FileManagerCore(container, options);
@@ -26,8 +28,6 @@ export class FileManager {
     // 各コンポーネントを初期化
     this.renderer = new FileManagerRenderer(this.core);
     this.events = new FileManagerEvents(this.core);
-    // Bulk actionsは必要に応じて初期化
-    new FileManagerBulkActions(this.core);
     
     // コアに依存コンポーネントを設定
     this.core.setDependencies(this.renderer, this.events);
@@ -35,20 +35,26 @@ export class FileManager {
     // プロパティエイリアス
     this.container = this.core.container;
 
-    this.init();
+    // 初期化はsetFiles()で実行するため、ここでは基本セットアップのみ
   }
 
   /**
-   * 初期化処理
+   * 初期化処理（内部用）
    */
   private init(): void {
-    this.core.init();
+    if (!this.isInitialized) {
+      this.core.init();
+      this.isInitialized = true;
+      console.log('FileManager: 初期化完了');
+    }
   }
 
   /**
    * ファイルデータを設定
    */
   public setFiles(files: FileData[]): void {
+    // データ設定前に初期化を実行
+    this.init();
     this.core.setFiles(files);
   }
 

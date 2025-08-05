@@ -76,9 +76,4 @@ export interface IFileManagerEvents {
   init(): void;
 }
 
-export interface IFileManagerBulkActions {
-  bindEvents(): void;
-  updateSelectedCount(): void;
-}
-
 export {};

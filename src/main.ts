@@ -46,11 +46,13 @@ function initializeFileManager(): void {
   if (window.fileData && container) {
     console.log('Initializing new FileManager v2.0');
     
+    // FileManagerインスタンス作成（初期化は setFiles() 内で実行される）
     const fileManager = new FileManager(container, {
       itemsPerPage: 12,
       defaultSort: 'date_desc'
     });
     
+    // ファイルデータ設定と同時に初期化が実行される
     fileManager.setFiles(window.fileData);
     
     // グローバルに公開（デバッグ・外部操作用）

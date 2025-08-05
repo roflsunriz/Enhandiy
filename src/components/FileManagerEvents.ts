@@ -38,9 +38,9 @@ export class FileManagerEvents {
       console.warn('FileManagerEvents: アクションボタンが見つかりません');
     }
     
-    // 強制的にイベントリスナーを再設定（安全策）
-    this.destroy();  // 既存のリスナーを削除
-    this.bindEvents();  // 新しいリスナーを設定
+    // 既存のリスナーを削除してから初期化を再実行
+    this.destroy();
+    this.init(); // 重複コードを削除して init() を再利用
     
     console.log('FileManagerEvents: イベントハンドラー再初期化完了');
   }

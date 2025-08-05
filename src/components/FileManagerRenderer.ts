@@ -18,7 +18,7 @@ export class FileManagerRenderer {
    */
   public init(): void {
     this.setupContainer();
-    this.render();
+    // render() は setFiles() が呼ばれた後に実行されるため、ここでは呼ばない
   }
 
   /**
