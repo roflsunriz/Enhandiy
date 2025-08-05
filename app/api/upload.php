@@ -25,16 +25,14 @@ error_log("Upload request - Method: " . $_SERVER['REQUEST_METHOD'] . ", API Mode
 // ヘッダー設定
 header('Content-Type: application/json; charset=utf-8');
 
-// セッション開始
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 try {
     // 設定とユーティリティの読み込み（絶対パスで修正）
     $baseDir = dirname(dirname(__DIR__)); // アプリケーションルートディレクトリ
     require_once $baseDir . '/config/config.php';
     require_once $baseDir . '/src/Core/Utils.php';
+
+    // セキュアセッション開始（index.php と同設定を共有）
+    SecurityUtils::startSecureSession();
 
     $configInstance = new config();
     $config = $configInstance->index();
@@ -58,7 +56,16 @@ try {
     }
 
     // CSRFトークンの検証
-    if (!SecurityUtils::validateCSRFToken($_POST['csrf_token'] ?? null)) {
+    $receivedToken = $_POST['csrf_token'] ?? null;
+    
+    // デバッグ情報をログ出力
+    error_log("Upload CSRF Debug - Session ID: " . session_id());
+    error_log("Upload CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
+    error_log("Upload CSRF Debug - Received csrf_token: " . ($receivedToken ?? 'NULL'));
+    error_log("Upload CSRF Debug - Session status: " . session_status());
+    error_log("Upload CSRF Debug - Token validation result: " . (SecurityUtils::validateCSRFToken($receivedToken) ? 'TRUE' : 'FALSE'));
+    
+    if (!SecurityUtils::validateCSRFToken($receivedToken)) {
         $logger->warning('CSRF token validation failed', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
         $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
     }

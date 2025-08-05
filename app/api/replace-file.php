@@ -18,21 +18,37 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-session_start();
-
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../src/Core/Utils.php';
+
+// セキュアセッション開始
+SecurityUtils::startSecureSession();
 
 $configObj = new config();
 $config = $configObj->index();
 
-// CSRFチェック
+// CSRFチェック（デバッグ出力付き）
 $csrfToken = $_POST['csrf_token'] ?? '';
+error_log("Replace File CSRF Debug - Session ID: " . session_id());
+error_log("Replace File CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
+error_log("Replace File CSRF Debug - Received csrf_token: " . ($csrfToken ?: 'EMPTY'));
+error_log("Replace File CSRF Debug - POST data keys: " . implode(', ', array_keys($_POST)));
+
 if (!SecurityUtils::validateCSRFToken($csrfToken)) {
+    error_log("Replace File CSRF Debug - Token validation FAILED");
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'CSRFトークンが無効です']);
+    echo json_encode([
+        'success' => false,
+        'message' => 'CSRFトークンが無効です',
+        'debug' => [
+            'session_id' => session_id(),
+            'received_token' => $csrfToken ? substr($csrfToken, 0, 8) . '...' : 'EMPTY',
+            'session_has_token' => isset($_SESSION['csrf_token'])
+        ]
+    ]);
     exit;
 }
+error_log("Replace File CSRF Debug - Token validation SUCCESS");
 
 // 機能チェック
 if (!($config['allow_file_replace'] ?? false)) {
@@ -83,10 +99,40 @@ try {
     }
 
     // キー検証
-    $storedKey = openssl_decrypt($existing['replace_key'], 'aes-256-ecb', $config['key']);
+
+    // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
+    try {
+        // まず新しいGCM形式で試行
+        $storedKey = SecurityUtils::decryptSecure($existing['replace_key'], $config['key']);
+    } catch (Exception $e) {
+        try {
+            // レガシーのECB形式で試行（既存データとの互換性のため）
+            $storedKey = SecurityUtils::decryptLegacyECB($existing['replace_key'], $config['key']);
+        } catch (Exception $e2) {
+            $errorMsg = "Replace key decryption failed for file ID: " . $fileId;
+            $errorMsg .= " - GCM: " . $e->getMessage() . " - ECB: " . $e2->getMessage();
+            error_log($errorMsg);
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => '差し替えキーの復号化に失敗しました',
+                'error_code' => 'DECRYPTION_FAILED'
+            ]);
+            exit;
+        }
+    }
+
     if ($replaceKeyInput !== $storedKey) {
         http_response_code(403);
-        echo json_encode(['success' => false, 'message' => '差し替えキーが正しくありません']);
+        echo json_encode([
+            'success' => false,
+            'message' => '差し替えキーが正しくありません',
+            'debug' => [
+                'input_length' => mb_strlen($replaceKeyInput),
+                'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen($storedKey),
+                'decryption_success' => $storedKey !== false
+            ]
+        ]);
         exit;
     }
 

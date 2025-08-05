@@ -518,13 +518,13 @@ async function uploadSingleFile(file: File, options?: UploadOptions, progressBar
 }
 
 function getUploadOptions(): UploadOptions {
-  const commentInput = $('#commentInput') as HTMLInputElement;
-  const dleyInput = $('#dleyInput') as HTMLInputElement;
-  const delkeyInput = $('#delkeyInput') as HTMLInputElement;
-  const replaceKeyInput = $('#replaceKeyInput') as HTMLInputElement;
-  const maxDownloadsInput = $('#maxDownloadsUploadInput') as HTMLInputElement;
-  const expiresDaysInput = $('#expiresDaysUploadInput') as HTMLInputElement;
-  const folderSelect = $('#folder-select') as HTMLSelectElement;
+  const commentInput = document.getElementById('commentInput') as HTMLInputElement;
+  const dleyInput = document.getElementById('dleyInput') as HTMLInputElement;
+  const delkeyInput = document.getElementById('delkeyInput') as HTMLInputElement;
+  const replaceKeyInput = document.getElementById('replaceKeyInput') as HTMLInputElement;
+  const maxDownloadsInput = document.getElementById('maxDownloadsUploadInput') as HTMLInputElement;
+  const expiresDaysInput = document.getElementById('expiresDaysUploadInput') as HTMLInputElement;
+  const folderSelect = document.getElementById('folder-select') as HTMLSelectElement;
   
   return {
     comment: commentInput?.value || '',

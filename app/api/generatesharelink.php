@@ -106,6 +106,7 @@ if ($expires_days && $expires_days > 0) {
 
 // configをインクルード
 include_once('../../config/config.php');
+require_once('../../src/Core/Security.php');
 $config = new config();
 $ret = $config->index();
 // 配列キーが設定されている配列なら展開

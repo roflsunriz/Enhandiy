@@ -6,6 +6,7 @@
 
 import { ready, $, addClass, removeClass } from './utils/dom';
 import { showError } from './utils/messages';
+import { getCsrfToken } from './utils/http';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { showAlert } from './utils/modal';
 import { 
@@ -144,6 +145,15 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
         filetype: file.type || 'application/octet-stream'
       };
       
+      // CSRFトークンを追加
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        metadata.csrf_token = csrfToken;
+        console.log('CSRF Debug - Added to metadata:', metadata.csrf_token.substring(0, 8) + '...');
+      } else {
+        console.error('CSRF Debug - Token not found or empty!');
+      }
+      
       if (comment) metadata.comment = comment;
       if (dlkey) metadata.dlkey = dlkey;
       if (delkey) metadata.delkey = delkey;
@@ -233,9 +243,12 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
   formData.append('comment', options.comment || '');
   
   // CSRFトークンを追加
-  const csrfTokenElement = $('#csrfToken') as HTMLInputElement;
-  if (csrfTokenElement?.value) {
-    formData.append('csrf_token', csrfTokenElement.value);
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    formData.append('csrf_token', csrfToken);
+    console.log('Fallback CSRF Debug - Added to formData');
+  } else {
+    console.error('Fallback CSRF Debug - Token not found or empty!');
   }
   
   formData.append('dlkey', options.dlkey || '');
@@ -608,7 +621,7 @@ export async function enhancedFileUpload(): Promise<void> {
   console.log('Enhanced file upload called');
   
   // 差し替えキー必須チェック
-  const replaceKeyInput = $('#replaceKeyInput') as HTMLInputElement;
+  const replaceKeyInput = document.getElementById('replaceKeyInput') as HTMLInputElement;
   if (!replaceKeyInput) {
     await showAlert('差し替えキー入力フィールドが見つかりません。');
     return;
@@ -621,7 +634,7 @@ export async function enhancedFileUpload(): Promise<void> {
   }
   
   // デバッグ情報を出力
-  const fileInput = $('#multipleFileInput') as HTMLInputElement;
+  const fileInput = document.getElementById('multipleFileInput') as HTMLInputElement;
   const fileInputExists = !!fileInput;
   const fileInputHasFiles = fileInput?.files?.length || 0;
   const selectedFilesLength = (window as unknown as { selectedFiles?: File[] }).selectedFiles?.length || 0;
@@ -697,13 +710,13 @@ function enhancedMultipleUpload(selectedFiles: File[]): void {
  * アップロードオプションを取得
  */
 function getUploadOptions(): UploadOptions {
-  const commentInput = $('#commentInput') as HTMLInputElement;
-  const dleyInput = $('#dleyInput') as HTMLInputElement;
-  const delkeyInput = $('#delkeyInput') as HTMLInputElement;
-  const replaceKeyInput = $('#replaceKeyInput') as HTMLInputElement;
-  const maxDownloadsInput = $('#maxDownloadsUploadInput') as HTMLInputElement;
-  const expiresDaysInput = $('#expiresDaysUploadInput') as HTMLInputElement;
-  const folderSelect = $('#folder-select') as HTMLSelectElement;
+  const commentInput = document.getElementById('commentInput') as HTMLInputElement;
+  const dleyInput = document.getElementById('dleyInput') as HTMLInputElement;
+  const delkeyInput = document.getElementById('delkeyInput') as HTMLInputElement;
+  const replaceKeyInput = document.getElementById('replaceKeyInput') as HTMLInputElement;
+  const maxDownloadsInput = document.getElementById('maxDownloadsUploadInput') as HTMLInputElement;
+  const expiresDaysInput = document.getElementById('expiresDaysUploadInput') as HTMLInputElement;
+  const folderSelect = document.getElementById('folder-select') as HTMLSelectElement;
   
   return {
     comment: commentInput?.value || '',

@@ -106,8 +106,22 @@
         </div>
       </div>
 
+      <?php 
+      // デバッグ情報をログ出力
+      error_log("Upload Form Debug - allow_file_replace: " . (isset($allow_file_replace) ? ($allow_file_replace ? 'true' : 'false') : 'NOT_SET'));
+      ?>
       <?php if (isset($allow_file_replace) && $allow_file_replace) : ?>
       <!-- 差し替えキー -->
+      <div class="form-section">
+        <div class="form-group">
+          <label for="replacekeyInput">差し替えキー <span class="text-danger">*必須</span></label>
+          <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
+                 placeholder="差し替えキーを入力してください" required>
+          <p class="help-block">ファイル差し替え時に必要なキーです（必須項目）</p>
+        </div>
+      </div>
+      <?php else : ?>
+      <!-- デバッグ用: 差し替えキーが無効の場合の代替表示 -->
       <div class="form-section">
         <div class="form-group">
           <label for="replacekeyInput">差し替えキー <span class="text-danger">*必須</span></label>

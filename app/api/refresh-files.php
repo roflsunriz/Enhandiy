@@ -22,10 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// セッション開始
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once '../../src/Core/Utils.php';
+
+// セキュアセッション開始
+SecurityUtils::startSecureSession();
 
 try {
     // 設定ファイルの読み込み

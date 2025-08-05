@@ -4,7 +4,7 @@
  */
 
 import { ready, $, attr, addClass, removeClass } from './utils/dom';
-import { get, post } from './utils/http';
+import { get, post, getCsrfToken } from './utils/http';
 import { showSuccess, showError } from './utils/messages';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { showModal, hideModal } from './utils/bootstrap';
@@ -232,7 +232,7 @@ async function handleSaveComment(): Promise<void> {
     formData.append('file_id', fileId);
     formData.append('comment', comment);
     formData.append('replace_key', replaceKey);
-    formData.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
+    formData.append('csrf_token', getCsrfToken());
     
     const response = await post('./app/api/edit-comment.php', formData);
     

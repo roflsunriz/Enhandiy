@@ -3,7 +3,7 @@
  * PHPUploaderのAPI操作を型安全に行うためのクライアント
  */
 
-import { post, get, del, put } from '../utils/http';
+import { post, get, del, put, getCsrfToken } from '../utils/http';
 import { ApiResponse, FileData, FolderData } from '../types/global';
 import { RawApiResponse } from '../types/api';
 
@@ -442,7 +442,7 @@ export class AuthApi {
     const fd = new FormData();
     fd.append('id', id);
     if (key) fd.append('key', key);
-    fd.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
+    fd.append('csrf_token', getCsrfToken());
     const raw = await post('./app/api/verifydownload.php', fd) as unknown as RawApiResponse;
     if (raw.status === 'success') {
       return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
@@ -457,7 +457,7 @@ export class AuthApi {
     const fd = new FormData();
     fd.append('id', id);
     if (key) fd.append('key', key);
-    fd.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
+    fd.append('csrf_token', getCsrfToken());
     const raw = await post('./app/api/verifydelete.php', fd) as unknown as RawApiResponse;
     if (raw.status === 'success') {
       return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };

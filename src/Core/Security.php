@@ -927,8 +927,16 @@ class SecurityUtils
         ini_set('session.cookie_lifetime', '0');      // ブラウザ終了時に削除
         ini_set('session.gc_maxlifetime', '1800');    // 30分でガベージコレクション
         
-        // セッション名をランダム化（デフォルトのPHPSESSIDを使わない）
-        session_name('SECURE_SID_' . substr(hash('sha256', __FILE__), 0, 8));
+        // セッション名をプロジェクト固定（ファイル間で一貫性を保つ）
+        // 絶対パスでプロジェクトルートを特定
+        $currentFile = __FILE__; // /project/src/Core/Security.php
+        $projectRoot = dirname(dirname(dirname($currentFile))); // /project
+        $sessionName = 'SECURE_SID_' . substr(hash('sha256', $projectRoot), 0, 8);
+        session_name($sessionName);
+        
+        // デバッグ用ログ
+        error_log("Security Debug - Project root: " . $projectRoot);
+        error_log("Security Debug - Session name: " . $sessionName);
     }
 
     /**

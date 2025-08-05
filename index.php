@@ -99,12 +99,18 @@ try {
         }
     }
 
+    // CSRFトークンの生成とセッション情報のデバッグ
+    $csrf_token = SecurityUtils::generateCSRFToken();
+    error_log("Main CSRF Debug - Session ID: " . session_id());
+    error_log("Main CSRF Debug - Generated CSRF token: " . $csrf_token);
+    error_log("Main CSRF Debug - Session status: " . session_status());
+
     // ビューの描画
     $viewData = array_merge($config, $modelData, [
         'logger' => $logger,
         'responseHandler' => $responseHandler,
         'db' => $db,
-        'csrf_token' => SecurityUtils::generateCSRFToken(),
+        'csrf_token' => $csrf_token,
         'deleted_status' => $_GET['deleted'] ?? null,
         'uploaded_status' => $_GET['uploaded'] ?? null,
         'error_message' => $error_message

@@ -21,11 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// セッション開始
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // 必要なクラスを読み込み
 $utilsPath = '../../src/Core/Utils.php';
 if (!file_exists($utilsPath)) {
@@ -43,19 +38,34 @@ if (!file_exists($utilsPath)) {
 
 require_once $utilsPath;
 
+// セキュアセッション開始
+SecurityUtils::startSecureSession();
+
 try {
-    // CSRFトークン検証
+    // CSRFトークン検証（デバッグ出力付き）
     $csrfToken = $_POST['csrf_token'] ?? '';
+    error_log("Edit Comment CSRF Debug - Session ID: " . session_id());
+    error_log("Edit Comment CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
+    error_log("Edit Comment CSRF Debug - Received csrf_token: " . ($csrfToken ?: 'EMPTY'));
+    error_log("Edit Comment CSRF Debug - POST data keys: " . implode(', ', array_keys($_POST)));
+
     if (!SecurityUtils::validateCSRFToken($csrfToken)) {
+        error_log("Edit Comment CSRF Debug - Token validation FAILED");
         http_response_code(403);
         echo json_encode([
             'success' => false,
             'message' => 'セキュリティトークンが無効です',
             'error_code' => 'CSRF_TOKEN_INVALID',
+            'debug' => [
+                'session_id' => session_id(),
+                'received_token' => $csrfToken ? substr($csrfToken, 0, 8) . '...' : 'EMPTY',
+                'session_has_token' => isset($_SESSION['csrf_token'])
+            ],
             'timestamp' => date('c')
         ]);
         exit;
     }
+    error_log("Edit Comment CSRF Debug - Token validation SUCCESS");
 
     // パラメータ取得
     $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;
@@ -151,13 +161,41 @@ try {
     }
 
     // 差し替えキー検証
-    $storedKey = openssl_decrypt($existingFile['replace_key'], 'aes-256-ecb', $config['key']);
+
+    // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
+    try {
+        // まず新しいGCM形式で試行
+        $storedKey = SecurityUtils::decryptSecure($existingFile['replace_key'], $config['key']);
+    } catch (Exception $e) {
+        try {
+            // レガシーのECB形式で試行（既存データとの互換性のため）
+            $storedKey = SecurityUtils::decryptLegacyECB($existingFile['replace_key'], $config['key']);
+        } catch (Exception $e2) {
+            $errorMsg = "Replace key decryption failed for file ID: " . $fileId;
+            $errorMsg .= " - GCM: " . $e->getMessage() . " - ECB: " . $e2->getMessage();
+            error_log($errorMsg);
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => '差し替えキーの復号化に失敗しました',
+                'error_code' => 'DECRYPTION_FAILED',
+                'timestamp' => date('c')
+            ]);
+            exit;
+        }
+    }
+
     if ($replaceKey !== $storedKey) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
             'message' => '差し替えキーが正しくありません',
             'error_code' => 'INVALID_REPLACE_KEY',
+            'debug' => [
+                'input_length' => mb_strlen($replaceKey),
+                'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen($storedKey),
+                'decryption_success' => $storedKey !== false
+            ],
             'timestamp' => date('c')
         ]);
         exit;

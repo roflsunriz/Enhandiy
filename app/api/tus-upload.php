@@ -22,6 +22,15 @@ header('Access-Control-Allow-Methods: POST, PATCH, HEAD, OPTIONS');
 header('Access-Control-Allow-Headers: Upload-Offset, Upload-Length, Upload-Metadata, Tus-Resumable, Content-Type');
 header('Access-Control-Expose-Headers: Upload-Offset, Upload-Length, Tus-Resumable, Location');
 
+// セッション開始（CSRFトークン検証のため）
+// セキュリティクラスがまだ読み込まれていない場合の対処
+if (!class_exists('SecurityUtils')) {
+    require_once __DIR__ . '/../../src/Core/Utils.php';
+}
+if (session_status() === PHP_SESSION_NONE) {
+    SecurityUtils::startSecureSession();
+}
+
 // Tus.ioバージョン
 $tus_version = '1.0.0';
 header('Tus-Resumable: ' . $tus_version);
@@ -43,6 +52,20 @@ try {
     http_response_code(500);
     echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
     exit;
+}
+
+// ---------- DB スキーマ確認: upload_token / client_ip が無い旧環境に自動対応 ----------
+try {
+    $columnsRes = $db->query("PRAGMA table_info(tus_uploads);");
+    $columns = $columnsRes ? $columnsRes->fetchAll(PDO::FETCH_COLUMN, 1) : [];
+    if ($columns && !in_array('upload_token', $columns, true)) {
+        $db->exec("ALTER TABLE tus_uploads ADD COLUMN upload_token TEXT");
+    }
+    if ($columns && !in_array('client_ip', $columns, true)) {
+        $db->exec("ALTER TABLE tus_uploads ADD COLUMN client_ip TEXT");
+    }
+} catch (Exception $e) {
+    error_log('Schema auto-update failed: ' . $e->getMessage());
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -122,8 +145,8 @@ function handleCreate()
     $clientIP = SecurityUtils::getClientIP();
     $rateLimitResult = SecurityUtils::checkUploadRateLimit(
         $clientIP,
-        $config['security']['max_uploads_per_hour'] ?? 50,
-        $config['security']['max_concurrent_uploads'] ?? 5
+        $ret['security']['max_uploads_per_hour'] ?? 50,
+        $ret['security']['max_concurrent_uploads'] ?? 5
     );
     
     if (!$rateLimitResult['allowed']) {
@@ -143,6 +166,29 @@ function handleCreate()
     // メタデータの解析
     $metadata = parseMetadata($_SERVER['HTTP_UPLOAD_METADATA'] ?? '');
 
+    // CSRFトークンの検証（メタデータから取得）
+    $csrfToken = $metadata['csrf_token'] ?? null;
+    
+    // デバッグ情報をログ出力
+    error_log("TUS CSRF Debug - Session ID: " . session_id());
+    error_log("TUS CSRF Debug - Session csrf_token: " . ($_SESSION['csrf_token'] ?? 'NOT_SET'));
+    error_log("TUS CSRF Debug - Received csrf_token: " . ($csrfToken ?? 'NULL'));
+    error_log("TUS CSRF Debug - Session status: " . session_status());
+    
+    if (!SecurityUtils::validateCSRFToken($csrfToken)) {
+        error_log("TUS upload CSRF validation failed for IP: {$clientIP}");
+
+        // 取得済みの同時並行トークンを解放してレートリミットを回復させる
+        if (isset($uploadToken)) {
+            SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
+            error_log("TUS CSRF fail - released upload token: {$uploadToken}");
+        }
+
+        http_response_code(403);
+        echo json_encode(['error' => 'Invalid CSRF token']);
+        exit;
+    }
+
     // アップロードIDを生成
     $uploadId = generateUploadId();
     $currentTime = time();
@@ -159,8 +205,16 @@ function handleCreate()
 
     // データベースに記録
     try {
-        // 差し替えキーの検証
+        // 差し替えキーの検証（システムレベルで必須）
         if (empty($metadata['replacekey'])) {
+            error_log("TUS Upload Debug - Missing replacekey. Available metadata: " . json_encode($metadata));
+
+            // 差し替えキー不足でエラーの場合もトークンを解放
+            if (isset($uploadToken)) {
+                SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
+                error_log("TUS missing replacekey - released upload token: {$uploadToken}");
+            }
+
             http_response_code(400);
             echo json_encode(['error' => '差し替えキーは必須です。']);
             exit;
@@ -198,7 +252,12 @@ function handleCreate()
         if (!$result) {
             throw new Exception('Database write failed');
         }
-    } catch (Exception $e) {
+            } catch (Exception $e) {
+        // データベース書き込み失敗時にもトークンを解放
+        if (isset($uploadToken)) {
+            SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
+            error_log("TUS create DB error - released upload token: {$uploadToken}");
+        }
         http_response_code(500);
         echo json_encode(['error' => 'Failed to create upload session']);
         exit;

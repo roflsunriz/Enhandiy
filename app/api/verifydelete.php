@@ -14,15 +14,13 @@ ini_set('log_errors', '1'); // ログファイルにエラーを記録
 error_reporting(E_ALL);
 header('Content-Type: application/json; charset=utf-8');
 
-// セッション開始
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 try {
     // 設定とユーティリティの読み込み
     require_once '../../config/config.php';
     require_once '../../src/Core/Utils.php';
+
+    // セキュアセッション開始
+    SecurityUtils::startSecureSession();
 
     $configInstance = new config();
     $config = $configInstance->index();
