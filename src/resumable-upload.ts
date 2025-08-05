@@ -647,22 +647,27 @@ export async function enhancedFileUpload(): Promise<void> {
   // デバッグ情報を出力
   const fileInput = document.getElementById('multipleFileInput') as HTMLInputElement;
   
-          // ファイル選択状況確認
+  // ファイル選択状況確認
   
-  // 単一ファイルの場合（multipleFileInputから最初のファイルを取得）
-  if (fileInput?.files && fileInput.files.length > 0) {
-    const singleFile = fileInput.files[0];
-    // 単一ファイルアップロード
-    const options = getUploadOptions();
-    uploadFileResumable(singleFile, options);
-    return;
-  }
-  
-  // 複数ファイルの場合（既存のselectedFiles配列を使用）
+  // まず selectedFiles 配列をチェック（ドラッグ&ドロップやファイル選択で追加されたファイル）
   const selectedFiles = (window as unknown as { selectedFiles?: File[] }).selectedFiles;
   if (selectedFiles && selectedFiles.length > 0) {
     // 複数ファイルアップロード
     enhancedMultipleUpload(selectedFiles);
+    return;
+  }
+  
+  // fileInput.files から複数ファイル取得（直接ファイル選択の場合）
+  if (fileInput?.files && fileInput.files.length > 0) {
+    const fileList = Array.from(fileInput.files);
+    if (fileList.length === 1) {
+      // 単一ファイル
+      const options = getUploadOptions();
+      uploadFileResumable(fileList[0], options);
+    } else {
+      // 複数ファイル - 全てのファイルを処理
+      enhancedMultipleUpload(fileList);
+    }
     return;
   }
   

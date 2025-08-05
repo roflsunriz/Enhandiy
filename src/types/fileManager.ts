@@ -74,6 +74,7 @@ export interface IFileManagerRenderer {
 
 export interface IFileManagerEvents {
   init(): void;
+  reinitializeEvents(): void;
 }
 
 export {};
