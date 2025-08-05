@@ -12,7 +12,7 @@
 <div class="row bg-white radius box-shadow">
   <div class="col-sm-12">
     <div class="page-header">
-      <h1>📁 フォルダ管理 <small>フォルダナビゲーション</small></h1>
+      <h1>📁 フォルダ管理</h1>
     </div>
 
     <!-- パンくずリスト -->
