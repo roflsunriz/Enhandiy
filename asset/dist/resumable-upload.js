@@ -1,4 +1,4 @@
-import{r as P,i as K,$ as b,f as m,g as x,b as N}from"./errorHandling.js";import{g as _}from"./http.js";import{a as F}from"./modal.js";const g={};let T=!1;P(()=>{console.log("Resumable Upload functionality initialized (TypeScript)"),K(),H(),b(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
+import{r as P,i as K,$ as b,f as m,g as x,c as N}from"./errorHandling.js";import{g as _}from"./http.js";import{a as F}from"./modal.js";const g={};let T=!1;P(()=>{console.log("Resumable Upload functionality initialized (TypeScript)"),K(),H(),b(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
       <div class="global-upload-status">
         <h6>アップロード進行状況</h6>
         <div class="global-upload-progress">
