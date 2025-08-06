@@ -120,7 +120,7 @@ function handleOptions()
  */
 function handleCreate()
 {
-    global $db, $data_directory, $max_file_size, $config;
+    global $db, $data_directory, $max_file_size, $config, $key, $ret;
 
     // Upload-Lengthヘッダーをチェック
     $uploadLength = $_SERVER['HTTP_UPLOAD_LENGTH'] ?? null;
