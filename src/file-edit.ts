@@ -103,6 +103,15 @@ export function openEditDialog(fileId: string, fileName: string, comment: string
   
   // モーダルを表示
   showModal('editModal');
+  
+  // ボタンの表示切り替え（コメント編集タブ用）- showModal後に実行
+  setTimeout(() => {
+    const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
+    const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
+    
+    if (saveCommentBtn) saveCommentBtn.style.display = 'inline-block';
+    if (replaceFileBtn) replaceFileBtn.style.display = 'none';
+  }, 10);
 }
 
 /**
@@ -129,15 +138,17 @@ export function editComment(fileId: string, fileName: string, currentComment: st
   // コメントタブを表示
   activateTab('comment-tab', 'commentTab');
   
-  // ボタンの表示切り替え
-  const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
-  const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
-  
-  if (saveCommentBtn) saveCommentBtn.style.display = 'inline-block';
-  if (replaceFileBtn) replaceFileBtn.style.display = 'none';
-  
   // モーダルを表示
   showModal('editModal');
+  
+  // ボタンの表示切り替え（コメント編集タブ用）- showModal後に実行
+  setTimeout(() => {
+    const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
+    const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
+    
+    if (saveCommentBtn) saveCommentBtn.style.display = 'inline-block';
+    if (replaceFileBtn) replaceFileBtn.style.display = 'none';
+  }, 10);
 }
 
 /**
@@ -156,15 +167,17 @@ export function replaceFile(fileId: string, currentFilename: string = ''): void 
   // 差し替えタブを表示
   activateTab('replace-tab', 'replaceTab');
   
-  // ボタンの表示切り替え
-  const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
-  const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
-  
-  if (replaceFileBtn) replaceFileBtn.style.display = 'inline-block';
-  if (saveCommentBtn) saveCommentBtn.style.display = 'none';
-  
   // モーダルを表示
   showModal('editModal');
+  
+  // ボタンの表示切り替え（ファイル差し替えタブ用）- showModal後に実行
+  setTimeout(() => {
+    const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
+    const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
+    
+    if (replaceFileBtn) replaceFileBtn.style.display = 'inline-block';
+    if (saveCommentBtn) saveCommentBtn.style.display = 'none';
+  }, 10);
 }
 
 /**
