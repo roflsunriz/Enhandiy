@@ -167,7 +167,7 @@ phpUploader v3.1.0-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ## 🎯 利用想定
 
-phpUploader v2.0.0-roflsunriz は、以下のような用途に最適化されています：
+phpUploader v3.1.0-roflsunriz は、以下のような用途に最適化されています：
 
 ### **基本的な利用シーン**
 - **小規模チーム**: 少人数での安全なファイル共有
@@ -393,7 +393,7 @@ scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v2.0.0-roflsunriz)**
+### **コミュニティフォーク版 (v3.1.0-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
