@@ -1,8 +1,8 @@
-# phpUploader v3.1.0-roflsunriz
+# phpUploader v3.2.0-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v3.1.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
+phpUploader v3.2.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
 ![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
@@ -135,6 +135,11 @@ phpUploader v3.1.0-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ## ⚠️ 重要: バージョンアップでの変更について
 
+### **Ver.3.2.0 の重要な変更**
+- **ファイル編集モーダル修正**: タブとボタンの状態が一致しない問題を修正しました
+- **モーダル状態管理改善**: showModal後のボタン表示制御を改善し、UIの整合性を向上させました
+- **バグ修正**: 差し替えタブに切り替えてからモーダルを再開時にボタンが正しく表示されない問題を解決
+
 ### **Ver.3.1.0 の重要な変更**
 - **削除キー必須化**: 新規ファイルアップロード時に削除キーの設定が必須になりました
 - **パスワード強度チェック**: 弱いパスワード（6文字未満、よく使われるパスワード）は自動拒否されます
@@ -167,7 +172,7 @@ phpUploader v3.1.0-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ## 🎯 利用想定
 
-phpUploader v3.1.0-roflsunriz は、以下のような用途に最適化されています：
+phpUploader v3.2.0-roflsunriz は、以下のような用途に最適化されています：
 
 ### **基本的な利用シーン**
 - **小規模チーム**: 少人数での安全なファイル共有
@@ -393,7 +398,7 @@ scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v3.1.0-roflsunriz)**
+### **コミュニティフォーク版 (v3.2.0-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
@@ -412,6 +417,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.1.0-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.2.0-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀
