@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0-roflsunriz] - 2025-08-07
+
+### Fixed
+
+- **データベースのセキュリティ強化**: tus_uploadsテーブルに保存されていた平文キーを暗号化するようにした
+- **データベースのfile_history操作記録強化**: RESTful APIだけでなくコメント編集やファイル差し替え操作APIでもファイル変更履歴が保存されるように修正
+- **UI調整**: ファイルアップロードリストの調整
+- **動的更新**: 個別削除時にファイルリストが更新されない問題を修正、一括削除とファイル階層移動時の動的更新は未修正
+
+
 ## [3.4.0-roflsunriz] - 2025-08-06
 
 ### Fixed

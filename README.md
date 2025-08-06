@@ -1,8 +1,8 @@
-# phpUploader v3.4.0-roflsunriz
+# phpUploader v3.5.0-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v3.4.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
+phpUploader v3.5.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
 ![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
@@ -403,7 +403,7 @@ scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v3.4.0-roflsunriz)**
+### **コミュニティフォーク版 (v3.5.0-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
@@ -422,6 +422,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.4.0-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.5.0-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀
