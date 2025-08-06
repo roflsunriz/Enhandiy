@@ -221,6 +221,14 @@ function handleCreate()
             ) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
+        // セキュリティ: キーを暗号化して保存
+        $encryptedDlKey = (!empty($metadata['dlkey']) && trim($metadata['dlkey']) !== '')
+            ? SecurityUtils::encryptSecure($metadata['dlkey'], $key) : null;
+        $encryptedDelKey = (!empty($metadata['delkey']) && trim($metadata['delkey']) !== '')
+            ? SecurityUtils::encryptSecure($metadata['delkey'], $key) : null;
+        $encryptedReplaceKey = (!empty($metadata['replacekey']) && trim($metadata['replacekey']) !== '')
+            ? SecurityUtils::encryptSecure($metadata['replacekey'], $key) : null;
+
         $result = $sql->execute([
             $uploadId,
             $fileSize,
@@ -230,9 +238,9 @@ function handleCreate()
             $currentTime,
             $expiresAt,
             $metadata['comment'] ?? null,
-            $metadata['dlkey'] ?? null,
-            $metadata['delkey'] ?? null, // 新しいセキュリティポリシーでは無視されるが互換性のため保存
-            $metadata['replacekey'],
+            $encryptedDlKey,     // 暗号化済み
+            $encryptedDelKey,    // 暗号化済み
+            $encryptedReplaceKey,// 暗号化済み
             isset($metadata['max_downloads']) ? intval($metadata['max_downloads']) : null,
             isset($metadata['expires_days']) ? $currentTime + (intval($metadata['expires_days']) * 24 * 60 * 60) : null,
             isset($metadata['folder_id']) ? intval($metadata['folder_id']) : null,
@@ -469,14 +477,52 @@ function completeUpload($uploadId, $upload)
             ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)
         ");
 
+        // セキュリティ: 暗号化されたキーを復号化してから処理
+        $dlKeyHash = null;
+        $delKeyHash = null;
+        $encryptedReplaceKey = null;
+
+        // ダウンロードキーの処理
+        if (!empty($upload['dl_key']) && trim($upload['dl_key']) !== '') {
+            try {
+                $decryptedDlKey = SecurityUtils::decryptSecure($upload['dl_key'], $key);
+                $dlKeyHash = SecurityUtils::hashPassword($decryptedDlKey);
+            } catch (Exception $e) {
+                // 復号化失敗時のフォールバック（レガシー平文データ対応）
+                $dlKeyHash = SecurityUtils::hashPassword($upload['dl_key']);
+            }
+        }
+
+        // 削除キーの処理
+        if (!empty($upload['del_key']) && trim($upload['del_key']) !== '') {
+            try {
+                $decryptedDelKey = SecurityUtils::decryptSecure($upload['del_key'], $key);
+                $delKeyHash = SecurityUtils::hashPassword($decryptedDelKey);
+            } catch (Exception $e) {
+                // 復号化失敗時のフォールバック（レガシー平文データ対応）
+                $delKeyHash = SecurityUtils::hashPassword($upload['del_key']);
+            }
+        }
+
+        // 差し替えキーの処理
+        if (!empty($upload['replace_key']) && trim($upload['replace_key']) !== '') {
+            try {
+                $decryptedReplaceKey = SecurityUtils::decryptSecure($upload['replace_key'], $key);
+                $encryptedReplaceKey = SecurityUtils::encryptSecure($decryptedReplaceKey, $key);
+            } catch (Exception $e) {
+                // 復号化失敗時のフォールバック（レガシー平文データ対応）
+                $encryptedReplaceKey = SecurityUtils::encryptSecure($upload['replace_key'], $key);
+            }
+        }
+
         $insertData = [
             htmlspecialchars($originalFileName, ENT_QUOTES, 'UTF-8'),
             htmlspecialchars($upload['comment'] ?? '', ENT_QUOTES, 'UTF-8'),
             $upload['file_size'],
             time(),
-            empty($upload['dl_key']) ? null : SecurityUtils::hashPassword($upload['dl_key']),
-            empty($upload['del_key']) ? null : SecurityUtils::hashPassword($upload['del_key']),
-            empty($metadata['replacekey']) ? null : SecurityUtils::encryptSecure($metadata['replacekey'], $key),
+            $dlKeyHash,
+            $delKeyHash,
+            $encryptedReplaceKey,
             $upload['max_downloads'],
             $upload['share_expires_at'],
             $upload['folder_id']

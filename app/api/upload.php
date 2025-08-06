@@ -176,9 +176,12 @@ try {
     }
 
     // 削除キーのバリデーション（新しいセキュリティポリシーでは無効化）
-    if (isset($config['deletion_security']['legacy_del_key_support']) && 
-        $config['deletion_security']['legacy_del_key_support'] && 
-        !empty($delKey) && mb_strlen($delKey) < $config['security']['min_key_length']) {
+    if (
+        isset($config['deletion_security']['legacy_del_key_support'])
+        && $config['deletion_security']['legacy_del_key_support']
+        && !empty($delKey)
+        && mb_strlen($delKey) < $config['security']['min_key_length']
+    ) {
         $validationErrors[] = "削除キーは{$config['security']['min_key_length']}文字以上で設定してください。";
     }
 
