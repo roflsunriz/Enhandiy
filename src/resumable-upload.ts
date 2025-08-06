@@ -495,17 +495,14 @@ function onUploadComplete(filename: string, _method: string): void {
       try {
         // FolderManagerがある場合は、それが内部的にFileManagerも更新する
         if (window.folderManager) {
-          
           await window.folderManager.refreshAll();
         } 
         // FolderManagerがない場合は、FileManagerを直接更新
         else if (window.fileManagerInstance) {
-          
           await window.fileManagerInstance.refreshFromServer();
         }
         // 両方ともない場合はページをリロード
         else {
-          
           window.location.reload();
         }
         

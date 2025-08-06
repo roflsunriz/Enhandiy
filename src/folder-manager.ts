@@ -620,16 +620,29 @@ export async function moveFile(fileId: string): Promise<void> {
       folder_id: folderId
     });
     
+    // アップロード完了処理と同じパターンで更新（showAlertの前に実行）
+    setTimeout(async () => {
+      try {
+        // FolderManagerがある場合は、それが内部的にFileManagerも更新する
+        if (window.folderManager) {
+          await window.folderManager.refreshAll();
+        } 
+        // FolderManagerがない場合は、FileManagerを直接更新
+        else if (window.fileManagerInstance) {
+          await window.fileManagerInstance.refreshFromServer();
+        }
+        // 両方ともない場合はページをリロード
+        else {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('ファイル移動: 更新処理エラー:', error);
+        // エラーが発生した場合はページをリロード
+        window.location.reload();
+      }
+    }, 1000);
+    
     await showAlert('ファイルを移動しました');
-    
-    // 動的更新
-    if (window.fileManagerInstance) {
-      await window.fileManagerInstance.refreshFromServer();
-    }
-    
-    if (window.folderManager) {
-      await window.folderManager.refreshAll();
-    }
     
   } catch (error) {
     console.error('ファイル移動エラー:', error);

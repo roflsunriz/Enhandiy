@@ -599,15 +599,29 @@ export class FileManagerEvents {
         if (deleteResponse.ok) {
           const result = await deleteResponse.json();
           if (result.success) {
+            // アップロード完了処理と同じパターンで更新（showAlertの前に実行）
+            setTimeout(async () => {
+              try {
+                // FolderManagerがある場合は、それが内部的にFileManagerも更新する
+                if (window.folderManager) {
+                  await window.folderManager.refreshAll();
+                } 
+                // FolderManagerがない場合は、FileManagerを直接更新
+                else if (window.fileManagerInstance) {
+                  await window.fileManagerInstance.refreshFromServer();
+                }
+                // 両方ともない場合はページをリロード
+                else {
+                  window.location.reload();
+                }
+              } catch (error) {
+                console.error('個別削除: 更新処理エラー:', error);
+                // エラーが発生した場合はページをリロード
+                window.location.reload();
+              }
+            }, 1000);
+            
             await showAlert('ファイルを削除しました。');
-            
-            // ファイル一覧を更新
-            this.core.refresh();
-            
-            // フォルダマネージャーも更新
-            if (typeof (window as unknown as { folderManager?: { refreshAll: () => void } }).folderManager?.refreshAll === 'function') {
-              (window as unknown as { folderManager: { refreshAll: () => void } }).folderManager.refreshAll();
-            }
           } else {
             await showAlert(result.message || 'ファイルの削除に失敗しました。');
           }
@@ -705,10 +719,29 @@ export class FileManagerEvents {
           }
         }
         
-        await showAlert(message);
+        // アップロード完了処理と同じパターンで更新（showAlertの前に実行）
+        setTimeout(async () => {
+          try {
+            // FolderManagerがある場合は、それが内部的にFileManagerも更新する
+            if (window.folderManager) {
+              await window.folderManager.refreshAll();
+            } 
+            // FolderManagerがない場合は、FileManagerを直接更新
+            else if (window.fileManagerInstance) {
+              await window.fileManagerInstance.refreshFromServer();
+            }
+            // 両方ともない場合はページをリロード
+            else {
+              window.location.reload();
+            }
+          } catch (error) {
+            console.error('一括削除: 更新処理エラー:', error);
+            // エラーが発生した場合はページをリロード
+            window.location.reload();
+          }
+        }, 1000);
         
-        // ファイル一覧を更新
-        this.core.refresh();
+        await showAlert(message);
         
         // 選択状態をクリア
         this.core.clearSelection();
