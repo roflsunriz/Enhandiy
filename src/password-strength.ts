@@ -176,6 +176,7 @@ function isPasswordTooWeak(password: string): boolean {
 function initPasswordStrength(): void {
   const dlkeyInput = document.getElementById('dlkeyInput') as HTMLInputElement;
   const delkeyInput = document.getElementById('delkeyInput') as HTMLInputElement;
+  const replaceKeyInput = document.getElementById('replaceKeyInput') as HTMLInputElement;
   
   if (dlkeyInput) {
     dlkeyInput.addEventListener('input', (e) => {
@@ -191,12 +192,20 @@ function initPasswordStrength(): void {
     });
   }
   
+  if (replaceKeyInput) {
+    replaceKeyInput.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      updatePasswordStrengthUI('replaceKeyInput', 'replacekey-strength', target.value);
+    });
+  }
+  
   // フォーム送信時の検証
   const uploadForm = document.getElementById('upload') as HTMLFormElement;
   if (uploadForm) {
     uploadForm.addEventListener('submit', (e) => {
       const dlkey = dlkeyInput?.value || '';
       const delkey = delkeyInput?.value || '';
+      const replacekey = replaceKeyInput?.value || '';
       
       // DLキーが入力されている場合の強度チェック
       if (dlkey && isPasswordTooWeak(dlkey)) {
@@ -211,6 +220,14 @@ function initPasswordStrength(): void {
         e.preventDefault();
         alert('削除キーが弱すぎます。より複雑なキーを設定してください。');
         delkeyInput?.focus();
+        return;
+      }
+      
+      // 差し替えキーの強度チェック（必須）
+      if (replacekey && isPasswordTooWeak(replacekey)) {
+        e.preventDefault();
+        alert('差し替えキーが弱すぎます。より複雑なキーを設定してください。');
+        replaceKeyInput?.focus();
         return;
       }
     });

@@ -1,8 +1,8 @@
-# phpUploader v3.2.0-roflsunriz
+# phpUploader v3.3.0-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v3.2.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
+phpUploader v3.3.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
 ![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
@@ -134,6 +134,11 @@ phpUploader v3.2.0-roflsunriz は、オリジナルのphpUploaderをベースに
 - オプション機能の有効化
 
 ## ⚠️ 重要: バージョンアップでの変更について
+
+### **Ver.3.3.0 の重要な変更**
+- **差し替えキーのパスワード強度チェック**: アップロード時の差し替えキー設定にパスワード強度チェックを追加しました
+- **適切な強度チェック適用**: ファイル編集モーダルでの認証時は強度チェックを除外し、新規設定時のみ適用
+- **セキュリティ向上**: 弱い差し替えキーの設定を防ぎ、より安全なファイル管理を実現
 
 ### **Ver.3.2.0 の重要な変更**
 - **ファイル編集モーダル修正**: タブとボタンの状態が一致しない問題を修正しました
@@ -398,7 +403,7 @@ scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v3.2.0-roflsunriz)**
+### **コミュニティフォーク版 (v3.3.0-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
@@ -417,6 +422,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.2.0-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.3.0-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀

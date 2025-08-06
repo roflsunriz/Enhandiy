@@ -138,6 +138,12 @@
           <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
                  placeholder="差し替えキーを入力してください" required>
           <p class="help-block">ファイル差し替え時とコメント編集時に必要なキーです（必須項目）</p>
+          <div class="password-strength" id="replacekey-strength" style="visibility: hidden;">
+            <div class="strength-bar">
+              <div class="strength-level" id="replacekey-strength-level"></div>
+            </div>
+            <span class="strength-text" id="replacekey-strength-text"></span>
+          </div>
         </div>
       </div>
       <?php else : ?>
@@ -148,6 +154,12 @@
           <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
                  placeholder="差し替えキーを入力してください" required>
           <p class="help-block">ファイル差し替え時に必要なキーです（必須項目）</p>
+          <div class="password-strength" id="replacekey-strength" style="visibility: hidden;">
+            <div class="strength-bar">
+              <div class="strength-level" id="replacekey-strength-level"></div>
+            </div>
+            <span class="strength-text" id="replacekey-strength-text"></span>
+          </div>
         </div>
       </div>
       <?php endif; ?>
