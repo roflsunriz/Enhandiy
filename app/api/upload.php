@@ -296,6 +296,25 @@ try {
         $responseHandler->error('ファイル情報の更新に失敗しました。', [], 500);
     }
 
+    // ファイル履歴の記録（新規アップロード）
+    try {
+        $historyStmt = $db->prepare(
+            "INSERT INTO file_history " .
+            "(file_id, new_filename, change_type, changed_at, changed_by) " .
+            "VALUES (?, ?, ?, ?, ?)"
+        );
+        $historyStmt->execute([
+            $fileId,
+            $fileName,
+            'file_upload',
+            time(),
+            $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+        ]);
+    } catch (Exception $historyError) {
+        // 履歴記録失敗時はログに記録するが処理は継続
+        error_log('File history recording failed: ' . $historyError->getMessage());
+    }
+
     // アクセスログの記録
     $logger->access($fileId, 'upload', 'success');
 

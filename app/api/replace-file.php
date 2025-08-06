@@ -150,15 +150,41 @@ try {
         exit;
     }
 
+    // データベース更新
     $stmt = $pdo->prepare('UPDATE uploaded SET origin_file_name = ?, size = ? WHERE id = ?');
-    $stmt->execute([$originalName, $fileSize, $fileId]);
+    $updateSuccess = $stmt->execute([$originalName, $fileSize, $fileId]);
+
+    if ($updateSuccess) {
+        // 履歴記録（ファイル差し替え履歴）
+        try {
+            $historyStmt = $pdo->prepare(
+                "INSERT INTO file_history " .
+                "(file_id, old_filename, new_filename, change_type, changed_at, changed_by) " .
+                "VALUES (?, ?, ?, ?, ?, ?)"
+            );
+            $historyStmt->execute([
+                $fileId,
+                $existing['origin_file_name'],  // 元のファイル名
+                $originalName,                  // 新しいファイル名
+                'file_replace',
+                time(),
+                $_SERVER['REMOTE_ADDR'] ?? 'unknown' // IPアドレスを記録
+            ]);
+        } catch (Exception $historyError) {
+            // 履歴記録失敗時はログに記録するが処理は継続
+            error_log('File history recording failed: ' . $historyError->getMessage());
+        }
+    }
 
     echo json_encode([
         'success' => true,
         'message' => 'ファイルを差し替えました',
         'file_id' => $fileId,
+        'old_filename' => $existing['origin_file_name'],
         'new_original_name' => $originalName,
-        'size' => $fileSize
+        'old_size' => $existing['size'],
+        'new_size' => $fileSize,
+        'history_recorded' => $updateSuccess
     ]);
 } catch (Exception $e) {
     http_response_code(500);

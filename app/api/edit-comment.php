@@ -196,6 +196,28 @@ try {
     $success = $stmt->execute([$sanitizedComment, $fileId]);
 
     if ($success) {
+        // 履歴記録（コメントが変更された場合のみ）
+        if ($existingFile['comment'] !== $sanitizedComment) {
+            try {
+                $historyStmt = $pdo->prepare(
+                    "INSERT INTO file_history " .
+                    "(file_id, old_comment, new_comment, change_type, changed_at, changed_by) " .
+                    "VALUES (?, ?, ?, ?, ?, ?)"
+                );
+                $historyStmt->execute([
+                    $fileId,
+                    $existingFile['comment'],
+                    $sanitizedComment,
+                    'comment_edit',
+                    time(),
+                    $_SERVER['REMOTE_ADDR'] ?? 'unknown' // IPアドレスを記録
+                ]);
+            } catch (Exception $historyError) {
+                // 履歴記録失敗時はログに記録するが処理は継続
+                error_log('File history recording failed: ' . $historyError->getMessage());
+            }
+        }
+
         // ログ記録（引数付きでLogger初期化）
         try {
             $logger = new Logger('../../logs');
@@ -205,7 +227,8 @@ try {
                 'new_comment' => $sanitizedComment,
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
                 'replace_key_required' => true,
-                'auth_method' => 'csrf_and_replace_key'
+                'auth_method' => 'csrf_and_replace_key',
+                'history_recorded' => ($existingFile['comment'] !== $sanitizedComment)
             ]);
         } catch (Exception $logError) {
             // ログ記録失敗時は処理を継続

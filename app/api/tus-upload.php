@@ -538,6 +538,25 @@ function completeUpload($uploadId, $upload)
 
         $fileId = $db->lastInsertId();
 
+        // ファイル履歴の記録（TUSアップロード）
+        try {
+            $historyStmt = $db->prepare(
+                "INSERT INTO file_history " .
+                "(file_id, new_filename, change_type, changed_at, changed_by) " .
+                "VALUES (?, ?, ?, ?, ?)"
+            );
+            $historyStmt->execute([
+                $fileId,
+                $originalFileName,
+                'tus_upload',
+                time(),
+                'tus_client' // TUSクライアントからのアップロード
+            ]);
+        } catch (Exception $historyError) {
+            // 履歴記録失敗時はログに記録するが処理は継続
+            error_log('File history recording failed: ' . $historyError->getMessage());
+        }
+
         // 最終ファイルパスを決定
         if ($encrypt_filename) {
             // セキュアなファイル名の生成（ハッシュ化）
