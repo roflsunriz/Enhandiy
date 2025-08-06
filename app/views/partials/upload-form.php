@@ -55,44 +55,77 @@
         </p>
       </div>
 
+      <!-- 上段: コメント・フォルダ -->
       <div class="form-section">
-        <div class="form-group">
-          <label for="commentInput">コメント （任意）</label>
-          <input type="text" class="form-control" id="commentInput" name="comment" placeholder="コメントを入力...">
-          <p class="help-block"><?php echo $max_comment ?? 80; ?>文字以内で入力</p>
+        <div class="row align-items-start">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="commentInput">コメント <small class="text-muted">(任意)</small></label>
+              <input type="text" class="form-control" id="commentInput" name="comment" placeholder="コメントを入力...">
+              <p class="help-block"><?php echo $max_comment ?? 80; ?>文字以内で入力</p>
+            </div>
+          </div>
+          <?php if (isset($folders_enabled) && $folders_enabled) : ?>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="folder-select">保存先フォルダ</label>
+              <select class="form-control" id="folder-select" name="folder_id">
+                <option value="">ルートフォルダ</option>
+                <!-- フォルダ一覧はJavaScriptで動的に生成 -->
+              </select>
+              <p class="help-block">ファイルを保存するフォルダを選択してください</p>
+            </div>
+          </div>
+          <?php else : ?>
+          <div class="col-sm-6"></div>
+          <?php endif; ?>
         </div>
       </div>
 
-      <?php if (isset($folders_enabled) && $folders_enabled) : ?>
-      <!-- フォルダ選択 -->
-      <div class="form-group">
-        <label for="folder-select">保存先フォルダ</label>
-        <select class="form-control" id="folder-select" name="folder_id">
-          <option value="">ルートフォルダ</option>
-          <!-- フォルダ一覧はJavaScriptで動的に生成 -->
-        </select>
-        <p class="help-block">ファイルを保存するフォルダを選択してください</p>
-      </div>
-      <?php endif; ?>
-
+      <!-- 下段: DLキー・削除キー -->
       <div class="form-section">
-        <div class="form-group">
-          <label for="dlkeyInput">
-            DLキー
-            <?php if (isset($dlkey_required) && $dlkey_required) : ?>
-              <span class="text-danger">*必須</span>
-            <?php else : ?>
-              <small class="text-muted">(任意)</small>
-            <?php endif; ?>
-          </label>
-          <input type="text" class="form-control" id="dleyInput" name="dlkey"
-                 placeholder="<?php echo (isset($dlkey_required) && $dlkey_required) ?
-                                'DLキーを入力してください' :
-                                'DLキーを入力... (空白時は認証不要)'; ?>"
-                 <?php echo (isset($dlkey_required) && $dlkey_required) ? 'required' : ''; ?>>
-          <p class="help-block">ファイルダウンロード時に必要なキーです</p>
+        <div class="row align-items-start">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="dlkeyInput">
+                DLキー
+                <?php if (isset($dlkey_required) && $dlkey_required) : ?>
+                  <span class="text-danger">*必須</span>
+                <?php else : ?>
+                  <small class="text-muted">(任意)</small>
+                <?php endif; ?>
+              </label>
+              <input type="text" class="form-control" id="dlkeyInput" name="dlkey"
+                     placeholder="<?php echo (isset($dlkey_required) && $dlkey_required) ?
+                                    'DLキーを入力してください (8文字以上推奨)' :
+                                    'DLキーを入力... (空白時は認証不要)'; ?>"
+                     <?php echo (isset($dlkey_required) && $dlkey_required) ? 'required' : ''; ?>>
+              <p class="help-block">ファイルダウンロード時に必要なキーです</p>
+              <div class="password-strength" id="dlkey-strength" style="visibility: hidden;">
+                <div class="strength-bar">
+                  <div class="strength-level" id="dlkey-strength-level"></div>
+                </div>
+                <span class="strength-text" id="dlkey-strength-text"></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="delkeyInput">
+                削除キー <span class="text-danger">*必須</span>
+              </label>
+              <input type="text" class="form-control" id="delkeyInput" name="delkey"
+                     placeholder="削除キーを入力してください (8文字以上推奨)" required>
+              <p class="help-block">ファイル削除時に必要なキーです（必須項目）</p>
+              <div class="password-strength" id="delkey-strength" style="visibility: hidden;">
+                <div class="strength-bar">
+                  <div class="strength-level" id="delkey-strength-level"></div>
+                </div>
+                <span class="strength-text" id="delkey-strength-text"></span>
+              </div>
+            </div>
+          </div>
         </div>
-        <!-- 削除キーフィールドは新しいセキュリティポリシー（マスターキーのみ認証）により廃止 -->
       </div>
 
       <?php
@@ -104,7 +137,7 @@
           <label for="replacekeyInput">差し替えキー <span class="text-danger">*必須</span></label>
           <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
                  placeholder="差し替えキーを入力してください" required>
-          <p class="help-block">ファイル差し替え時に必要なキーです（必須項目）</p>
+          <p class="help-block">ファイル差し替え時とコメント編集時に必要なキーです（必須項目）</p>
         </div>
       </div>
       <?php else : ?>

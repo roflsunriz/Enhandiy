@@ -61,5 +61,6 @@
     <script type="module" src="./asset/dist/drag-drop.js"></script>
     <script type="module" src="./asset/dist/folder-manager.js"></script>
     <script type="module" src="./asset/dist/resumable-upload.js"></script>
+    <script type="module" src="./asset/dist/password-strength.js"></script>
   </body>
 </html>

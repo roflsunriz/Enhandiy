@@ -5,6 +5,9 @@
 
 import { showModal, hideModal } from './bootstrap';
 
+// Bootstrap関数を再エクスポート
+export { showModal, hideModal };
+
 /**
  * モーダルを開く
  * @param type モーダルのタイプ ('ok' または 'okcansel')

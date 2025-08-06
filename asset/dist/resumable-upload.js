@@ -1,4 +1,4 @@
-import{r as K,i as N,$ as b,f as m,g as x,c as H}from"./errorHandling.js";import{g as A}from"./http.js";import{a as q}from"./modal.js";const y={};let T=!1;K(()=>{N(),G(),b(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
+import{r as K,i as N,$ as b,f as m,g as x,d as H}from"./errorHandling.js";import{g as A}from"./http.js";import{a as q}from"./modal.js";const y={};let T=!1;K(()=>{N(),G(),b(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
       <div class="global-upload-status">
         <h6>アップロード進行状況</h6>
         <div class="global-upload-progress">

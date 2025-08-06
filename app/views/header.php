@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="./asset/dist/share-css.css">
     <link rel="stylesheet" href="./asset/dist/dragdrop.css">
     <link rel="stylesheet" href="./asset/dist/folders.css">
+    <link rel="stylesheet" href="./asset/dist/password-strength-css.css">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->

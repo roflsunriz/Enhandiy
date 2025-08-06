@@ -179,6 +179,57 @@
   </div>
 </div>
 
+<!-- 削除認証モーダル -->
+<div class="modal fade" id="deleteAuthModal" tabindex="-1" aria-labelledby="deleteAuthModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="deleteAuthModalLabel">ファイル削除認証</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>ファイルを削除するには、<strong>マスターキーまたは削除キー</strong>のどちらか一方を入力してください。</p>
+        <div id="deleteFileName" class="alert alert-info">
+          <strong>削除対象:</strong> <span id="deleteTargetName"></span>
+        </div>
+        
+        <form id="deleteAuthForm">
+          <div class="form-group">
+            <label for="deleteAuthMasterKey">マスターキー</label>
+            <input type="password" class="form-control" id="deleteAuthMasterKey" 
+                   name="master_key" placeholder="マスターキーを入力（任意）">
+            <p class="help-block">管理者用のマスターキーです</p>
+          </div>
+          
+          <div class="text-center">
+            <strong>または</strong>
+          </div>
+          
+          <div class="form-group">
+            <label for="deleteAuthDelKey">削除キー</label>
+            <input type="password" class="form-control" id="deleteAuthDelKey" 
+                   name="delete_key" placeholder="削除キーを入力（任意）">
+            <p class="help-block">アップロード時に設定した削除キーです</p>
+          </div>
+          
+          <input type="hidden" id="deleteAuthFileId" name="file_id">
+          <input type="hidden" name="csrf_token" 
+                 value="<?php echo htmlspecialchars($csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+        </form>
+        
+        <div class="alert alert-warning">
+          <span class="glyphicon glyphicon-warning-sign"></span>
+          <strong>注意:</strong> 削除されたファイルは復元できません。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="deleteAuthConfirmBtn">ファイルを削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 共有リンクモーダル -->
 <div class="modal fade" id="shareLinkModal" tabindex="-1" aria-labelledby="shareLinkModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">

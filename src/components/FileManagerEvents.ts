@@ -6,7 +6,7 @@
 import { FileManagerCore } from './FileManagerCore';
 import { ViewMode } from '../types/fileManager';
 import { FileApi, AuthApi } from '../api/client';
-import { showAlert, showConfirm, showPasswordPrompt } from '../utils/modal';
+import { showAlert, showConfirm, showPasswordPrompt, showModal, hideModal } from '../utils/modal';
 // import { openShareModal } from '../file-edit'; // 使用しない
 
 export class FileManagerEvents {
@@ -564,62 +564,72 @@ export class FileManagerEvents {
   }
 
   /**
-   * ファイル削除（マスターキー認証）
+   * ファイル削除（マスターキーまたは削除キー認証）
    */
   private async deleteFile(fileId: string): Promise<void> {
     const file = this.core.getFiles().find(f => f.id === fileId);
     if (!file) return;
 
-    // 確認ダイアログ
-    if (!(await showConfirm(`「${file.name}」を削除しますか？この操作は取り消せません。`))) {
-      return;
-    }
-
-    // マスターキー入力
-    const masterKey = await showPasswordPrompt('管理者マスターキーを入力してください:');
-    if (!masterKey) {
-      await showAlert('削除処理がキャンセルされました。');
-      return;
+    // 削除認証モーダルを表示
+    const authResult = await this.showDeleteAuthModal(file.name || `ファイル${fileId}`, fileId);
+    if (!authResult) {
+      return; // キャンセルされた
     }
 
     try {
       // 進捗表示
       const progressMessage = this.showProgressMessage('削除中...');
 
-      // 一括削除APIを使用（単一ファイルでも統一）
-      const response = await FileApi.bulkDeleteFiles([fileId], masterKey);
+      // 2段階削除処理：1.検証＋トークン生成 → 2.実際の削除
+      const key = authResult.masterKey || authResult.deleteKey || '';
+      const verifyResponse = await AuthApi.verifyDelete(fileId, key);
 
-      // 進捗メッセージを削除
-      this.hideProgressMessage(progressMessage);
+      if (verifyResponse.success && verifyResponse.data?.token) {
+        // トークンを使って実際の削除を実行
+        const deleteResponse = await fetch(`./delete.php?id=${fileId}&key=${verifyResponse.data.token}`, {
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
 
-      if (response.success && response.data) {
-        const { summary, details } = response.data;
+        // 進捗メッセージを削除
+        this.hideProgressMessage(progressMessage);
 
-        if (summary.deleted_count > 0) {
-          await showAlert('ファイルを削除しました。');
-          
-          // ファイル一覧を更新
-          this.core.refresh();
-        } else if (summary.failed_count > 0) {
-          const failedFile = details.failed_files[0];
-          await showAlert(`削除に失敗しました: ${failedFile.reason}`);
-        } else if (summary.not_found_count > 0) {
-          await showAlert('ファイルが見つかりませんでした。');
+        if (deleteResponse.ok) {
+          const result = await deleteResponse.json();
+          if (result.success) {
+            await showAlert('ファイルを削除しました。');
+            
+            // ファイル一覧を更新
+            this.core.refresh();
+            
+            // フォルダマネージャーも更新
+            if (typeof (window as unknown as { folderManager?: { refreshAll: () => void } }).folderManager?.refreshAll === 'function') {
+              (window as unknown as { folderManager: { refreshAll: () => void } }).folderManager.refreshAll();
+            }
+          } else {
+            await showAlert(result.message || 'ファイルの削除に失敗しました。');
+          }
+        } else {
+          await showAlert('削除処理でエラーが発生しました。');
         }
-        
       } else {
-        // エラー処理
-        const errorCode = typeof response.error === 'object' && response.error ? 
-          (response.error as { code?: string }).code : response.error as string | undefined;
+        // 進捗メッセージを削除
+        this.hideProgressMessage(progressMessage);
+        
+        // 検証エラー処理
+        const errorCode = typeof verifyResponse.error === 'object' && verifyResponse.error ? 
+          (verifyResponse.error as { code?: string }).code : verifyResponse.error as string | undefined;
           
         let errorMessage = 'ファイルの削除に失敗しました。';
         
-        if (errorCode === 'MASTER_KEY_REQUIRED') {
-          errorMessage = 'マスターキーの入力が必要です。';
-        } else if (errorCode === 'INVALID_MASTER_KEY') {
-          errorMessage = 'マスターキーが正しくありません。';
-        } else if (response.message) {
-          errorMessage = response.message;
+        if (errorCode === 'AUTH_REQUIRED') {
+          errorMessage = 'マスターキーまたは削除キーの入力が必要です。';
+        } else if (errorCode === 'INVALID_KEY') {
+          errorMessage = 'マスターキーまたは削除キーが正しくありません。';
+        } else if (verifyResponse.message) {
+          errorMessage = verifyResponse.message;
         }
         
         await showAlert(errorMessage);
@@ -761,6 +771,64 @@ export class FileManagerEvents {
     if (element && element.parentNode) {
       element.parentNode.removeChild(element);
     }
+  }
+
+  /**
+   * 削除認証モーダルを表示
+   */
+  private async showDeleteAuthModal(fileName: string, fileId: string): Promise<{ masterKey?: string, deleteKey?: string } | null> {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('deleteAuthModal');
+      if (!modal) {
+        resolve(null);
+        return;
+      }
+
+      // モーダル内容の設定
+      const targetNameElement = modal.querySelector('#deleteTargetName');
+      const masterKeyInput = modal.querySelector('#deleteAuthMasterKey') as HTMLInputElement;
+      const deleteKeyInput = modal.querySelector('#deleteAuthDelKey') as HTMLInputElement;
+      const fileIdInput = modal.querySelector('#deleteAuthFileId') as HTMLInputElement;
+      const confirmButton = modal.querySelector('#deleteAuthConfirmBtn');
+
+      if (targetNameElement) targetNameElement.textContent = fileName;
+      if (masterKeyInput) masterKeyInput.value = '';
+      if (deleteKeyInput) deleteKeyInput.value = '';
+      if (fileIdInput) fileIdInput.value = fileId;
+
+      // イベントリスナー設定
+      const handleConfirm = () => {
+        const masterKey = masterKeyInput?.value.trim() || undefined;
+        const deleteKey = deleteKeyInput?.value.trim() || undefined;
+
+        // どちらか一方の入力が必要
+        if (!masterKey && !deleteKey) {
+          alert('マスターキーまたは削除キーのどちらか一方を入力してください。');
+          return;
+        }
+
+        cleanup();
+        hideModal('deleteAuthModal');
+        resolve({ masterKey, deleteKey });
+      };
+
+      const handleCancel = () => {
+        cleanup();
+        hideModal('deleteAuthModal');
+        resolve(null);
+      };
+
+      const cleanup = () => {
+        confirmButton?.removeEventListener('click', handleConfirm);
+        modal.removeEventListener('hidden.bs.modal', handleCancel);
+      };
+
+      confirmButton?.addEventListener('click', handleConfirm);
+      modal.addEventListener('hidden.bs.modal', handleCancel, { once: true });
+
+      // モーダル表示
+      showModal('deleteAuthModal');
+    });
   }
 
   /**

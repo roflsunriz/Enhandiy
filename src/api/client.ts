@@ -32,10 +32,21 @@ export class FileApi {
   }
 
   /**
-   * ファイルを削除
+   * ファイルを削除（旧メソッド）
    */
   static async deleteFile(fileId: string): Promise<ApiResponse> {
     return post('./app/api/verifydelete.php', { id: fileId });
+  }
+
+  /**
+   * ファイルを削除（マスターキーまたは削除キー認証）
+   */
+  static async deleteFileWithAuth(fileId: string, masterKey?: string, deleteKey?: string): Promise<ApiResponse> {
+    const key = masterKey || deleteKey || '';
+    return post('./app/api/verifydelete.php', { 
+      id: fileId,
+      key: key 
+    });
   }
 
   /**

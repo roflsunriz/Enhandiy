@@ -40,13 +40,14 @@ class config {
             
             // DLキー・DELキーの必須設定
             'dlkey_required' => false,  // true: 必須, false: 任意
+            'delkey_required' => true,  // true: 必須, false: 任意
             // 削除セキュリティポリシー（Ver 3.0+）
             'deletion_security' => [
-                'auth_mode' => 'master_only',     // 'master_only': マスターキーのみで削除可能
-                'bulk_delete_enabled' => true,    // 一括削除機能の有効/無効
+                'auth_mode' => 'key_or_master',   // 'key_or_master': 削除キーまたはマスターキーで削除可能
+                'bulk_delete_enabled' => true,    // 一括削除機能の有効/無効（マスターキーのみ）
                 'max_bulk_delete_files' => 100,   // 一括削除の最大ファイル数
                 'require_confirmation' => true,   // 削除確認ダイアログ必須
-                'legacy_del_key_support' => false // 旧個別削除キーサポート（非推奨）
+                'individual_delete_enabled' => true // 個別削除キーサポート
             ],
             
             // アップロード方式設定
