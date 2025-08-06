@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0-roflsunriz] - 2025-08-06
+
+### Fixed
+
+- **弱いパスワード自動拒否機能の修正**: WEAK_PASSWORDSリストに含まれるパスワードが正しく拒否されない問題を修正
+- **大文字小文字バリエーション対応**: "test"、"TEST"、"TeSt"など大文字小文字のバリエーションも含めて弱いパスワードを確実に検出・拒否
+- **アップロード時検証強化**: フォーム送信時のパスワード強度チェックが正しく動作するようパスワード検証を`getUploadOptions`関数に移動
+- **UI/UX改善**: 弱いパスワードでのアップロード拒否時に「通信エラー」ではなく適切なパスワードエラーメッセージを統合モーダルで表示
+
+### Security
+
+- **セキュリティ強化**: 弱いパスワードのバリエーションを完全に阻止し、より堅牢な認証システムを実現
+
 ## [3.3.0-roflsunriz] - 2025-08-06
 
 ### Added

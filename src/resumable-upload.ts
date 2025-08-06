@@ -16,6 +16,7 @@ import {
   TusWindowGlobals,
   UploadWindowGlobals
 } from './types/upload';
+import { isPasswordTooWeak } from './password-strength';
 
 // 外部ライブラリの型定義
 declare global {
@@ -653,7 +654,15 @@ export async function enhancedFileUpload(): Promise<void> {
   const selectedFiles = (window as unknown as { selectedFiles?: File[] }).selectedFiles;
   if (selectedFiles && selectedFiles.length > 0) {
     // 複数ファイルアップロード
-    enhancedMultipleUpload(selectedFiles);
+    try {
+      await enhancedMultipleUpload(selectedFiles);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
+        await showAlert(error.message);
+      } else {
+        throw error; // その他のエラーは上位に委ねる
+      }
+    }
     return;
   }
   
@@ -662,11 +671,27 @@ export async function enhancedFileUpload(): Promise<void> {
     const fileList = Array.from(fileInput.files);
     if (fileList.length === 1) {
       // 単一ファイル
-      const options = getUploadOptions();
-      uploadFileResumable(fileList[0], options);
+      try {
+        const options = getUploadOptions();
+        uploadFileResumable(fileList[0], options);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
+          await showAlert(error.message);
+        } else {
+          throw error; // その他のエラーは上位に委ねる
+        }
+      }
     } else {
       // 複数ファイル - 全てのファイルを処理
-      enhancedMultipleUpload(fileList);
+      try {
+        await enhancedMultipleUpload(fileList);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
+          await showAlert(error.message);
+        } else {
+          throw error; // その他のエラーは上位に委ねる
+        }
+      }
     }
     return;
   }
@@ -678,7 +703,7 @@ export async function enhancedFileUpload(): Promise<void> {
 /**
  * 複数ファイルの拡張アップロード
  */
-function enhancedMultipleUpload(selectedFiles: File[]): void {
+async function enhancedMultipleUpload(selectedFiles: File[]): Promise<void> {
   if (selectedFiles.length === 0) return;
   
   (window as unknown as { isUploading: boolean }).isUploading = true;
@@ -692,7 +717,20 @@ function enhancedMultipleUpload(selectedFiles: File[]): void {
   const progressBars = document.querySelectorAll('.file-item .upload-progress');
   progressBars.forEach(bar => (bar as HTMLElement).style.display = 'block');
   
-  const options = getUploadOptions();
+  let options;
+  try {
+    options = getUploadOptions();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
+      await showAlert(error.message);
+      (window as unknown as { isUploading: boolean }).isUploading = false;
+      if (uploadContainer) uploadContainer.style.display = 'none';
+      return;
+    } else {
+      throw error;
+    }
+  }
+  
   let completedCount = 0;
   const totalCount = selectedFiles.length;
   
@@ -731,11 +769,29 @@ function getUploadOptions(): UploadOptions {
   const expiresDaysInput = document.getElementById('expiresDaysUploadInput') as HTMLInputElement;
   const folderSelect = document.getElementById('folder-select') as HTMLSelectElement;
   
+  // パスワード値を取得
+  const dlkey = dleyInput?.value || '';
+  const delkey = delkeyInput?.value || '';
+  const replacekey = replaceKeyInput?.value || '';
+  
+  // パスワード強度チェック
+  if (dlkey && isPasswordTooWeak(dlkey)) {
+    throw new Error('DLキーが弱すぎます。より複雑なキーを設定してください。');
+  }
+  
+  if (delkey && isPasswordTooWeak(delkey)) {
+    throw new Error('削除キーが弱すぎます。より複雑なキーを設定してください。');
+  }
+  
+  if (replacekey && isPasswordTooWeak(replacekey)) {
+    throw new Error('差し替えキーが弱すぎます。より複雑なキーを設定してください。');
+  }
+  
   return {
     comment: commentInput?.value || '',
-    dlkey: dleyInput?.value || '',
-    delkey: delkeyInput?.value || '',
-    replacekey: replaceKeyInput?.value || '',
+    dlkey: dlkey,
+    delkey: delkey,
+    replacekey: replacekey,
     maxDownloads: maxDownloadsInput ? parseInt(maxDownloadsInput.value) || undefined : undefined,
     expiresDays: expiresDaysInput ? parseInt(expiresDaysInput.value) || undefined : undefined,
     folderId: folderSelect?.value || undefined

@@ -7,6 +7,7 @@ import { ready, $, addClass, removeClass } from './utils/dom';
 import { initializeErrorHandling } from './utils/errorHandling';
 import { showAlert } from './utils/modal';
 import { UploadedFile, UploadOptions, UploadApiResponse } from './types/upload';
+import { isPasswordTooWeak } from './password-strength';
 
 // グローバル変数
 let selectedFiles: UploadedFile[] = [];
@@ -448,9 +449,15 @@ async function uploadFilesSequentially(index: number): Promise<void> {
     }, 500);
     
   } catch (error) {
-    // エラー処理
-    const errorData = error as UploadApiResponse;
-    handleUploadError(errorData, file.name);
+    // パスワードエラーの場合は適切なメッセージを表示
+    if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
+      await showAlert(error.message);
+    } else {
+      // その他のエラー処理
+      const errorData = error as UploadApiResponse;
+      handleUploadError(errorData, file.name);
+    }
+    
     isUploading = false;
     const uploadContainer = $('#uploadContainer') as HTMLElement;
     if (uploadContainer) uploadContainer.style.display = 'none';
@@ -462,7 +469,18 @@ async function uploadSingleFile(file: File, options?: UploadOptions, progressBar
     const formData = new FormData();
     formData.append('file', file);
     
-    const opts = options || getUploadOptions();
+    let opts: UploadOptions;
+    try {
+      opts = options || getUploadOptions();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
+        reject(error);
+        return;
+      } else {
+        throw error;
+      }
+    }
+    
     formData.append('comment', opts.comment || '');
     formData.append('dlkey', opts.dlkey || '');
     formData.append('delkey', opts.delkey || '');
@@ -526,11 +544,29 @@ function getUploadOptions(): UploadOptions {
   const expiresDaysInput = document.getElementById('expiresDaysUploadInput') as HTMLInputElement;
   const folderSelect = document.getElementById('folder-select') as HTMLSelectElement;
   
+  // パスワード値を取得
+  const dlkey = dleyInput?.value || '';
+  const delkey = delkeyInput?.value || '';
+  const replacekey = replaceKeyInput?.value || '';
+  
+  // パスワード強度チェック
+  if (dlkey && isPasswordTooWeak(dlkey)) {
+    throw new Error('DLキーが弱すぎます。より複雑なキーを設定してください。');
+  }
+  
+  if (delkey && isPasswordTooWeak(delkey)) {
+    throw new Error('削除キーが弱すぎます。より複雑なキーを設定してください。');
+  }
+  
+  if (replacekey && isPasswordTooWeak(replacekey)) {
+    throw new Error('差し替えキーが弱すぎます。より複雑なキーを設定してください。');
+  }
+  
   return {
     comment: commentInput?.value || '',
-    dlkey: dleyInput?.value || '',
-    delkey: delkeyInput?.value || '',
-    replacekey: replaceKeyInput?.value || '',
+    dlkey: dlkey,
+    delkey: delkey,
+    replacekey: replacekey,
     maxDownloads: maxDownloadsInput ? parseInt(maxDownloadsInput.value) || undefined : undefined,
     expiresDays: expiresDaysInput ? parseInt(expiresDaysInput.value) || undefined : undefined,
     folderId: folderSelect?.value || undefined

@@ -166,6 +166,17 @@ function updatePasswordStrengthUI(
 function isPasswordTooWeak(password: string): boolean {
   if (password.length === 0) return false; // 空欄は許可（任意の場合）
   
+  // 最低長さチェック
+  if (password.length < 6) {
+    return true;
+  }
+  
+  // 簡単なパスワードチェック（大文字小文字を無視）
+  const lowerPassword = password.toLowerCase();
+  if (WEAK_PASSWORDS.includes(lowerPassword) || WEAK_PASSWORDS_JP.includes(password)) {
+    return true; // 危険なパスワードは即座に拒否
+  }
+  
   const strength = evaluatePasswordStrength(password);
   return strength.level === 'weak' && strength.score < 20;
 }
