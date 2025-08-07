@@ -52,6 +52,7 @@ class ApiRouter
         $this->addRoute('GET', '/api/files', 'handleGetFiles', array('read'), 'file');
         $this->addRoute('POST', '/api/files', 'handlePostFile', array('write'), 'file');
         $this->addRoute('GET', '/api/files/(\d+)', 'handleGetFile', array('read'), 'file');
+        $this->addRoute('GET', '/api/files/(\d+)/download', 'handleDownloadFile', array('read'), 'file');
         $this->addRoute('DELETE', '/api/files/(\d+)', 'handleDeleteFile', array('delete'), 'file');
         $this->addRoute('PUT', '/api/files/(\d+)', 'handleReplaceFile', array('write'), 'file');
         $this->addRoute('POST', '/api/files/(\d+)/replace', 'handleReplaceFile', array('write'), 'file');
@@ -210,7 +211,7 @@ class ApiRouter
             'file_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'file')),
             'folder_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'folder')),
             'system_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'system')),
-            'api_version' => '4.0.1'
+            'api_version' => '4.0.2'
         ];
     }
 }

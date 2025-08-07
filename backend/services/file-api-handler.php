@@ -365,6 +365,118 @@ class FileApiHandler
     }
 
     /**
+     * ファイルダウンロード
+     */
+    public function handleDownloadFile(int $fileId): void
+    {
+        try {
+            // データベース接続
+            $db_directory = '../../db';
+            $dsn = 'sqlite:' . $db_directory . '/uploader.db';
+            $pdo = new PDO($dsn);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+            // ファイル情報取得
+            $stmt = $pdo->prepare("SELECT * FROM uploaded WHERE id = ?");
+            $stmt->execute(array($fileId));
+            $fileData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$fileData) {
+                $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
+                return;
+            }
+
+            // ファイルパスの決定
+            $data_directory = $this->config['data_directory'] ?? dirname(__DIR__, 2) . '/data';
+            $data_directory = realpath($data_directory);
+
+            if ($data_directory === false) {
+                $this->response->error('データディレクトリが見つかりません', [], 500, 'DATA_DIR_NOT_FOUND');
+                return;
+            }
+
+            // ファイルパス生成（新形式と旧形式の両方に対応）
+            if (!empty($fileData['stored_file_name'])) {
+                // 新形式（ハッシュ化されたファイル名）
+                $filePath = $data_directory . DIRECTORY_SEPARATOR . $fileData['stored_file_name'];
+            } else {
+                // 旧形式（互換性のため）
+                $fileExtension = pathinfo($fileData['origin_file_name'], PATHINFO_EXTENSION);
+                $filePath = $data_directory . DIRECTORY_SEPARATOR . 'file_' . $fileId . '.' . $fileExtension;
+            }
+
+            // セキュリティ：パストラバーサル攻撃対策
+            $realFilePath = realpath($filePath);
+            if ($realFilePath === false || strpos($realFilePath, $data_directory) !== 0) {
+                $this->response->error('不正なファイルパスが検出されました', [], 500, 'INVALID_FILE_PATH');
+                return;
+            }
+
+            // ファイル存在確認
+            if (!file_exists($filePath)) {
+                $this->response->error('ファイルが存在しません', [], 404, 'PHYSICAL_FILE_NOT_FOUND');
+                return;
+            }
+
+            // ファイルサイズ取得
+            $fileSize = filesize($filePath);
+            if ($fileSize === false) {
+                $this->response->error('ファイルサイズの取得に失敗しました', [], 500, 'FILE_SIZE_ERROR');
+                return;
+            }
+
+            // ダウンロード回数の更新
+            $updateStmt = $pdo->prepare('UPDATE uploaded SET "count" = "count" + 1, updated_at = ? WHERE id = ?');
+            $updateStmt->execute([time(), $fileId]);
+
+            // ダウンロードログの記録（Loggerが利用可能な場合）
+            if (class_exists('Logger')) {
+                $logger = new Logger(
+                    $this->config['log_directory'] ?? './logs',
+                    $this->config['log_level'] ?? Logger::LOG_INFO
+                );
+                $logger->access($fileId, 'api_download', 'success', [
+                    'api_key' => $this->auth->getApiKey(),
+                    'file_name' => $fileData['origin_file_name']
+                ]);
+            }
+
+            // レスポンスヘッダーの設定
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename*=UTF-8\'\'' .
+                rawurlencode($fileData['origin_file_name']));
+            header('Content-Transfer-Encoding: binary');
+            header('Content-Length: ' . $fileSize);
+            header('Cache-Control: no-cache, must-revalidate');
+            header('Expires: 0');
+
+            // 出力バッファのクリア
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            // ファイルの出力
+            $handle = fopen($filePath, 'rb');
+            if ($handle) {
+                while (!feof($handle)) {
+                    echo fread($handle, 8192);
+                    flush();
+                }
+                fclose($handle);
+            } else {
+                $this->response->error('ファイルの読み込みに失敗しました', [], 500, 'FILE_READ_ERROR');
+                return;
+            }
+        } catch (PDOException $e) {
+            error_log('Database error in download: ' . $e->getMessage());
+            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
+        } catch (Exception $e) {
+            error_log('Download error: ' . $e->getMessage());
+            $this->response->error('ダウンロード処理でエラーが発生しました', [], 500, 'DOWNLOAD_ERROR');
+        }
+    }
+
+    /**
      * ファイル情報更新（コメント編集）
      */
     public function handleUpdateFile(int $fileId): void

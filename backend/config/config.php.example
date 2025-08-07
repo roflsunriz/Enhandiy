@@ -244,7 +244,7 @@ class config {
     {
         // v4.0.0-roflsunriz: composer.jsonのversionフィールドは削除したため、
         // 固定バージョンを返す。リリース時に手動で更新する。
-        return '4.0.1';
+        return '4.0.2';
     }
 
     /**

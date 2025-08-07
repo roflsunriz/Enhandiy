@@ -87,6 +87,7 @@ API キーは `config/config.php` で設定します。
 | GET    | `/api/files` | read | ファイル一覧取得 (ページネーション対応) |
 | POST   | `/api/files` | write | ファイルアップロード (multipart/form-data) |
 | GET    | `/api/files/{id}` | read | 単一ファイル情報取得 |
+| GET    | `/api/files/{id}/download` | read | ファイルダウンロード (バイナリデータ) |
 | PUT/POST| `/api/files/{id}/replace` または `/api/files/{id}` | write | 既存ファイルの差し替え |
 | PATCH  | `/api/files/{id}` | write | コメント等メタデータ更新 |
 | DELETE | `/api/files/{id}` | delete | ファイル削除 |
@@ -106,6 +107,19 @@ curl -X POST -H "Authorization: Bearer <API_KEY>" \
      -F "folder_id=3" \
      -F "comment=月報" \
      https://example.com/api/files
+```
+
+#### 4.1.3 例: ファイルダウンロード
+
+```bash
+# ファイルをダウンロードして保存
+curl -H "Authorization: Bearer <API_KEY>" \
+     -o "downloaded_file.pdf" \
+     https://example.com/api/files/123/download
+
+# ダウンロード情報のみ取得（ヘッダー確認）
+curl -I -H "Authorization: Bearer <API_KEY>" \
+     https://example.com/api/files/123/download
 ```
 
 ### 4.2 フォルダ API
@@ -137,13 +151,18 @@ curl -X POST -H "Authorization: Bearer <API_KEY>" \
 | 403 | `PERMISSION_DENIED` | 権限不足 |
 | 404 | `ENDPOINT_NOT_FOUND` | ルート不明 |
 | 404 | `FILE_NOT_FOUND` / `FOLDER_NOT_FOUND` | リソース不在 |
+| 404 | `PHYSICAL_FILE_NOT_FOUND` | 物理ファイル不在 |
 | 429 | `RATE_LIMIT_EXCEEDED` | レート制限超過 |
+| 500 | `DATA_DIR_NOT_FOUND` | データディレクトリ不在 |
+| 500 | `INVALID_FILE_PATH` | 不正なファイルパス |
+| 500 | `FILE_READ_ERROR` | ファイル読み込みエラー |
 | 503 | `API_DISABLED` | API 機能無効 |
 
 ---
 
 ## 6. CHANGELOG (簡易)
 
+* **4.0.1-roflsunriz** – ファイルダウンロードAPIを追加
 * **4.0.0-roflsunriz** – フォルダ構造整理（APIエンドポイントは変更なし）
 * **3.x-roflsunriz** – 一括操作、パスワード強度チェック、セキュリティ強化
 * **2.0.0** – 初回実装 (ファイル / フォルダ CRUD, システム情報, API キー認証, レート制限)
