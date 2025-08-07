@@ -1,6 +1,6 @@
 {
   "name": "php-uploader-frontend",
-  "version": "4.0.0-roflsunriz",
+  "version": "4.0.1-roflsunriz",
   "description": "Modern TypeScript frontend for PHP file uploader",
   "type": "module",
   "scripts": {
