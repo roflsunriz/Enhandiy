@@ -98,17 +98,17 @@ jobs:
           # 必要なディレクトリを作成
           mkdir -p data db config
           # config.php.exampleからconfig.phpを作成
-          if [ ! -f config/config.php ]; then
-            cp config/config.php.example config/config.php
+          if [ ! -f backend/config/config.php ]; then
+            cp backend/config/config.php.example backend/config/config.php
             echo "✅ config.php.exampleからconfig.phpを作成しました"
           fi
           # 設定ファイルの構文チェック
-          php -l config/config.php
+          php -l backend/config/config.php
 
       - name: Test version synchronization
         run: |
           echo "🧪 バージョン同期テストを実行中..."
-          php scripts/test-version.php || {
+          php infrastructure/scripts/test-version.php || {
             echo "⚠️ バージョンテストで問題が発生しましたが、継続します"
             exit 0
           }
@@ -121,7 +121,7 @@ jobs:
       - name: Test Docker build
         run: |
           echo "🐳 Dockerビルドテストを実行中..."
-          docker build -t phpuploader-test ./docker/ || {
+          docker build -t phpuploader-test ./infrastructure/docker/ || {
             echo "⚠️ Dockerビルドに問題がありましたが、継続します"
             exit 0
           }
@@ -152,7 +152,7 @@ jobs:
       - name: Check for sensitive files
         run: |
           # 機密ファイルがコミットされていないかチェック
-          if [ -f "config/config.php" ]; then
+          if [ -f "backend/config/config.php" ]; then
             echo "Error: config.php should not be committed"
             exit 1
           fi

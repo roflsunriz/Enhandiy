@@ -6,16 +6,16 @@ on:
       branch:
         description: 'Branch to check'
         required: true
-        default: 'feature/todo-improvements-backup'
+        default: 'main'
         type: string
   push:
     branches:
-      - 'feature/todo-improvements-backup'
+      - 'main'
       - 'release/*'
   pull_request:
     branches:
       - 'main'
-      - 'master'
+      - 'release/*'
 
 jobs:
   quality-check:
@@ -55,8 +55,8 @@ jobs:
           echo "📋 Validating configuration files..."
           
           # config.php.example の存在確認
-          if [ ! -f "config/config.php.example" ]; then
-            echo "❌ config/config.php.example not found"
+          if [ ! -f "backend/config/config.php.example" ]; then
+            echo "❌ backend/config/config.php.example not found"
             exit 1
           fi
           
@@ -82,14 +82,14 @@ jobs:
           echo "🗄️ Checking database schema files..."
           
           # マイグレーションファイルの確認
-          if [ -f "migrate_db.php" ]; then
-            php -l migrate_db.php
+          if [ -f "backend/scripts/migrate_db.php" ]; then
+            php -l backend/scripts/migrate_db.php
             echo "✅ migrate_db.php syntax OK"
           fi
           
-          if [ -f "app/models/init.php" ]; then
-            php -l app/models/init.php
-            echo "✅ app/models/init.php syntax OK"
+          if [ -f "backend/models/init.php" ]; then
+            php -l backend/models/init.php
+            echo "✅ backend/models/init.php syntax OK"
           fi
           
           echo "✅ Database schema check completed"
@@ -99,8 +99,8 @@ jobs:
           echo "🌐 Checking API endpoints..."
           
           # API関連ファイルの構文チェック
-          if [ -d "app/api" ]; then
-            find app/api -name "*.php" -print0 | xargs -0 -n1 php -l
+          if [ -d "backend/api" ]; then
+            find backend/api -name "*.php" -print0 | xargs -0 -n1 php -l
             echo "✅ API files syntax check completed"
           fi
           
@@ -243,7 +243,7 @@ jobs:
           # 必須項目のチェック
           CHECKLIST_ITEMS=(
             "composer.json:$([ -f composer.json ] && echo '✅' || echo '❌')"
-            "config.php.example:$([ -f config/config.php.example ] && echo '✅' || echo '❌')"
+            "config.php.example:$([ -f backend/config/config.php.example ] && echo '✅' || echo '❌')"
             "README.md:$([ -f README.md ] && echo '✅' || echo '❌')"
             "License file:$([ -f LICENSE ] || [ -f MIT-LICENSE.txt ] && echo '✅' || echo '❌')"
             "Release notes:$(ls RELEASE_NOTES*.md >/dev/null 2>&1 && echo '✅' || echo '❌')"

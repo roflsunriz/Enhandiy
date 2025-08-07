@@ -24,7 +24,7 @@
     },
     "autoload": {
         "classmap": [
-            "app/models/"
+            "backend/models/"
         ]
     },
     "config": {
@@ -32,6 +32,6 @@
     },
     "scripts": {
         "check-syntax": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l",
-        "release": "php scripts/release.php"
+        "release": "php infrastructure/scripts/release.php"
     }
 }
