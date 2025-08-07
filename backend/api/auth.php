@@ -128,7 +128,7 @@ class ApiAuth
         }
 
         // レート制限の実装（簡易版：1時間ごとのリセット）
-        $rateLimitFile = dirname(__FILE__) . '/data/rate_limits/' . md5($apiKey) . '.json';
+        $rateLimitFile = dirname(__DIR__, 2) . '/data/rate_limits/' . md5($apiKey) . '.json';
         $rateLimitDir = dirname($rateLimitFile);
         if (!is_dir($rateLimitDir)) {
             mkdir($rateLimitDir, 0755, true);
