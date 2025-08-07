@@ -1,6 +1,6 @@
 {
     "name": "roflsunriz/php-uploader",
-    "version": "3.5.0-roflsunriz",
+
     "description": "Simple PHP file uploader with download/delete authentication",
 
     "type": "project",

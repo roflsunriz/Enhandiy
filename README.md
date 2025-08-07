@@ -1,8 +1,8 @@
-# phpUploader v3.5.0-roflsunriz
+# phpUploader v4.0.0-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v3.5.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
+phpUploader v4.0.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
 ![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
@@ -135,6 +135,10 @@ phpUploader v3.5.0-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ## ⚠️ 重要: バージョンアップでの変更について
 
+### **Ver.4.0.0 の重要な変更**
+- **大規模なフォルダー構造の整理**: フォルダー構造を整理し、フォルダーの管理が容易になりました
+- **APIの呼び出し箇所変更**: フォルダー構造を整理したことでURLが変わりました
+
 ### **Ver.3.3.0 の重要な変更**
 - **差し替えキーのパスワード強度チェック**: アップロード時の差し替えキー設定にパスワード強度チェックを追加しました
 - **適切な強度チェック適用**: ファイル編集モーダルでの認証時は強度チェックを除外し、新規設定時のみ適用
@@ -177,7 +181,7 @@ phpUploader v3.5.0-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ## 🎯 利用想定
 
-phpUploader v3.2.0-roflsunriz は、以下のような用途に最適化されています：
+phpUploader v4.0.0-roflsunriz は、以下のような用途に最適化されています：
 
 ### **基本的な利用シーン**
 - **小規模チーム**: 少人数での安全なファイル共有
@@ -207,10 +211,10 @@ phpUploader v3.2.0-roflsunriz は、以下のような用途に最適化され�
 
 ```bash
 # config.php.exampleをコピーして設定ファイルを作成
-cp config/config.php.example config/config.php
+cp backend/config/config.php.example backend/config/config.php
 ```
 
-③ `config/config.php`を任意の値で編集して下さい。
+③ `backend/config/config.php`を任意の値で編集して下さい。
 
 **重要**: 以下の項目は必ず変更してください：
 
@@ -224,7 +228,7 @@ cp config/config.php.example config/config.php
 'key' => hash('sha256', 'YOUR_ENCRYPTION_SEED_HERE'),   // 暗号化キー
 'session_salt' => hash('sha256', 'YOUR_SESSION_SALT'),  // セッションソルト
 
-// v2.0新機能の設定例
+// v4.0.0新機能の設定例
 'folders_enabled' => true,                              // フォルダ機能有効化
 'api_enabled' => true,                                  // API機能有効化
 'allow_comment_edit' => true,                           // コメント編集許可
@@ -238,15 +242,15 @@ cp config/config.php.example config/config.php
 
 - **DBファイル**: `./db/uploader.db` (SQLiteデータベース)
 - **データディレクトリ**: `./data` (アップロードファイル保存用)
-- **ログディレクトリ**: `./logs` (システムログ保存用)
+- **ログディレクトリ**: `./storage/logs` (システムログ保存用)
 - **一時ディレクトリ**: `./temp` (再開可能アップロード用一時ファイル)
 
 **自動マイグレーション**: v1.xからアップグレードする場合、初回アクセス時にデータベースが自動的に新しいスキーマに更新されます。
 
 ⑤ 以下のディレクトリには`.htaccess`などを用いて外部からの直接アクセスを遮断させて下さい：
-- `config/` (設定ファイル)
+- `backend/config/` (設定ファイル)
 - `db/` (データベースファイル)
-- `logs/` (ログファイル)
+- `storage/logs/` (ログファイル)
 - `temp/` (一時ファイル)
 
 **セキュリティ設定例（Apache）:**
@@ -286,7 +290,7 @@ cp -r /path/to/phpUploader /path/to/phpUploader_backup
 ```
 
 ② 新しいバージョンのファイルで更新
-③ `config/config.php`に新しい設定オプションを追加（上記の設定例を参照）
+③ `backend/config/config.php`に新しい設定オプションを追加（上記の設定例を参照）
 ④ アプリケーションにアクセス - データベースマイグレーションが自動実行されます
 
 **マイグレーション確認**: 初回アクセス時にログファイルでマイグレーション状況を確認できます。
@@ -305,25 +309,31 @@ cd phpUploader
 # cd phpUploader
 
 # 2. 設定ファイルを作成
-cp config/config.php.example config/config.php
+cp backend/config/config.php.example backend/config/config.php
 
 # 3. 設定ファイルを編集（master, keyを変更）
 # エディタで config/config.php を開いて編集
 
-# 4. Dockerでサーバー起動
+# 4. カレントディレクトリをinfrastructureディレクトリに変更
+cd infrastructure
+
+# 5. Dockerでサーバー起動
 docker-compose up -d web
 
-# 5. ブラウザで http://localhost にアクセス
+# 6. ブラウザで http://localhost にアクセス
 
 # 終了するとき
 docker-compose down web
+
+# 再ビルドしたいとき
+docker-compose build --no-cache
 ```
 
 ## Security Notes
 
 **設定ファイルのセキュリティ**:
 
-- `config/config.php`は機密情報を含むため、必ず外部アクセスを遮断してください
+- `backend/config/config.php`は機密情報を含むため、必ず外部アクセスを遮断してください
 - `master`と`key`には推測困難なランダムな値を設定してください
 - 本番環境では`config`と`db`、`logs`ディレクトリへの直接アクセスを禁止してください
 
@@ -403,7 +413,7 @@ scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v3.5.0-roflsunriz)**
+### **コミュニティフォーク版 (v4.0.0-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
@@ -422,6 +432,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v3.5.0-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v4.0.0-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀

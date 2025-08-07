@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0-roflsunriz] - 2025-08-07
+
+### BREAKING CHANGES
+
+- **フォルダー構造の整理**: 大規模なフォルダー構造の整理により、コードベースの保守性が向上
+  - `backend/`: サーバーサイドロジック全体を整理
+  - `frontend/`: クライアントサイドコード（TypeScript/JavaScript）を集約  
+  - `docs/`: ドキュメント類を統一
+  - `infrastructure/`: Docker設定とスクリプト類を集約
+- **APIの呼び出し箇所変更**: フォルダー構造整理により一部URLが変更
+  - 直接APIファイルにアクセスするカスタム実装は更新が必要
+  - 公式APIエンドポイント（`/api/router.php`経由）は変更なし
+
+### Changed
+
+- **コードベース整理**: 明確な責任分離により開発効率が向上
+- **保守性向上**: 関連ファイルのグループ化によりメンテナンスが容易に
+- **設定管理統一**: `backend/config/`に設定を集約
+- **スクリプト改善**: `infrastructure/scripts/`にデプロイメントツールを整理
+
+### Security
+
+- v3.x系のセキュリティ機能をすべて継承
+  - AES-GCM暗号化
+  - パスワード強度チェック  
+  - CSRF保護
+  - レート制限
+  - 入力値検証
+
+
 ## [3.5.0-roflsunriz] - 2025-08-07
 
 ### Fixed

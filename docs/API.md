@@ -1,7 +1,7 @@
-# phpUploader RESTful API ドキュメント (v2.0+)
+# phpUploader RESTful API ドキュメント (v4.0.0-roflsunriz)
 
 > 本ドキュメントは phpUploader に同梱される RESTful API の使用方法をまとめたものです。
-> ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/app/api/router.php` 経由で自動ルーティングされます。
+> ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/api/router.php` 経由で自動ルーティングされます。
 > 以降の例では **相対パス** (`/api/...`) で表記します。
 
 ---
@@ -144,4 +144,6 @@ curl -X POST -H "Authorization: Bearer <API_KEY>" \
 
 ## 6. CHANGELOG (簡易)
 
+* **4.0.0-roflsunriz** – フォルダ構造整理（APIエンドポイントは変更なし）
+* **3.x-roflsunriz** – 一括操作、パスワード強度チェック、セキュリティ強化
 * **2.0.0** – 初回実装 (ファイル / フォルダ CRUD, システム情報, API キー認証, レート制限)
