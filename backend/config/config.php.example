@@ -242,16 +242,9 @@ class config {
      */
     private function getVersion(): string
     {
-        $composerPath = __DIR__ . '/../composer.json';
-
-        if (file_exists($composerPath)) {
-            $composerData = json_decode(file_get_contents($composerPath), true);
-            if (isset($composerData['version'])) {
-                return $composerData['version'];
-            }
-        }
-
-        return 'x.x.x';
+        // v4.0.0-roflsunriz: composer.jsonのversionフィールドは削除したため、
+        // 固定バージョンを返す。リリース時に手動で更新する。
+        return '4.0.1';
     }
 
     /**
