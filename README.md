@@ -1,8 +1,8 @@
-# phpUploader v4.0.2-roflsunriz
+# phpUploader v4.0.3-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v4.0.2-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
+phpUploader v4.0.3-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
 ![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
@@ -88,13 +88,6 @@ phpUploader v4.0.2-roflsunriz は、オリジナルのphpUploaderをベースに
 // ファイル編集・管理
 'allow_comment_edit' => true,
 'allow_file_replace' => true,
-'replace_key_required' => true,
-'delete_key_required' => true,          // v3.1.0: 削除キー必須化
-
-// セキュリティ機能
-'password_strength_check' => true,      // v3.1.0: パスワード強度チェック
-'min_password_strength' => 30,          // v3.1.0: 最小パスワード強度スコア
-'encryption_method' => 'GCM',           // v3.0.0: 暗号化方式（GCM推奨）
 
 // 一括操作機能
 'bulk_operations_enabled' => true,      // v3.0.0: 一括操作機能
@@ -102,12 +95,10 @@ phpUploader v4.0.2-roflsunriz は、オリジナルのphpUploaderをベースに
 
 // 再開可能アップロード
 'upload_method_priority' => 'resumable',
-'tus_max_size' => 1073741824, // 1GB
 
 // API設定
 'api_enabled' => true,
-'api_rate_limit' => 100,
-'api_cors_enabled' => true,
+'api_rate_limit' => 100
 ```
 
 ## 🗄️ データベース変更
@@ -181,7 +172,7 @@ phpUploader v4.0.2-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ## 🎯 利用想定
 
-phpUploader v4.0.2-roflsunriz は、以下のような用途に最適化されています：
+phpUploader v4.0.3-roflsunriz は、以下のような用途に最適化されています：
 
 ### **基本的な利用シーン**
 - **小規模チーム**: 少人数での安全なファイル共有
@@ -413,7 +404,7 @@ scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v4.0.2-roflsunriz)**
+### **コミュニティフォーク版 (v4.0.3-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
@@ -432,6 +423,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v4.0.2-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v4.0.3-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀
