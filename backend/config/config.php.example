@@ -66,10 +66,10 @@ class config {
             'file_edit_admin_only' => false, // true: 管理者のみ編集可能, false: 誰でも編集可能
             // 注意: 差し替えキーはシステムレベルで必須のため設定項目はありません
 
-            // ディレクトリ設定
-            'db_directory' => dirname(__DIR__) . '/db',
-            'data_directory' => dirname(__DIR__) . '/data',
-            'log_directory' => dirname(__DIR__) . '/storage/logs',
+            // ディレクトリ設定（アプリケーションルート直下を参照）
+            'db_directory' => $this->getAppRoot() . '/db',
+            'data_directory' => $this->getAppRoot() . '/data',
+            'log_directory' => $this->getAppRoot() . '/storage/logs',
 
             // セキュリティ設定
             'security' => [
@@ -251,7 +251,7 @@ class config {
      */
     private function getAppRoot(): string
     {
-        // config.phpの位置からアプリケーションルートを算出
-        return dirname(__DIR__);
+        // config.phpの位置（backend/config）から2階層上がアプリケーションルート
+        return dirname(__DIR__, 2);
     }
 }
