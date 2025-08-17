@@ -139,7 +139,7 @@ try {
 
     // 認証キーの処理（空のキーは認証不要として扱うため、NULLとして保存）
     $dlKey = $_POST['dlkey'] ?? '';
-    // 削除キー（新しいセキュリティポリシーでは無視されるが、既存互換性のため保存）
+    // 削除キー（システムポリシーで常に必須）
     $delKey = $_POST['delkey'] ?? '';
 
     // バリデーション
@@ -175,13 +175,11 @@ try {
         $validationErrors[] = "ダウンロードキーは{$config['security']['min_key_length']}文字以上で設定してください。";
     }
 
-    // 削除キーのバリデーション（新しいセキュリティポリシーでは無効化）
-    if (
-        isset($config['deletion_security']['legacy_del_key_support'])
-        && $config['deletion_security']['legacy_del_key_support']
-        && !empty($delKey)
-        && mb_strlen($delKey) < $config['security']['min_key_length']
-    ) {
+    // 削除キー必須＆長さチェック（常時強制）
+    if (empty($delKey)) {
+        $responseHandler->error('削除キーは必須入力です。', [], 400, 'delkey_required');
+    }
+    if (!empty($delKey) && mb_strlen($delKey) < $config['security']['min_key_length']) {
         $validationErrors[] = "削除キーは{$config['security']['min_key_length']}文字以上で設定してください。";
     }
 

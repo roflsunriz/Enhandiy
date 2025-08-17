@@ -57,36 +57,36 @@ try {
         $responseHandler->error('ファイルが見つかりません。', [], 404);
     }
 
-    // マスターキーチェック
+    // マスターキーチェック＋削除キー検証（常時必須）
     $isValidAuth = false;
     if ($inputKey === $config['master']) {
         $isValidAuth = true;
         $logger->info('Master key used for delete', ['file_id' => $fileId]);
     } else {
-        // 削除キーが設定されていない場合
-        if (empty($fileData['del_key_hash'])) {
-            $isValidAuth = true;
+        // ファイル側に削除キーが未設定の場合も許可しない（レガシーデータ対策）
+        if (!empty($fileData['del_key_hash']) && !empty($inputKey)) {
+            $isValidAuth = SecurityUtils::verifyPassword($inputKey, $fileData['del_key_hash']);
         } else {
-            // ハッシュ化されたキーとの照合
-            if (!empty($inputKey)) {
-                $isValidAuth = SecurityUtils::verifyPassword($inputKey, $fileData['del_key_hash']);
-            } else {
-                // キーが設定されているが、入力されていない場合
-                $isValidAuth = false;
-            }
+            $isValidAuth = false;
         }
     }
 
     if (!$isValidAuth) {
-        // 削除キーが設定されているが、入力されていない場合
-        if (!empty($fileData['del_key_hash']) && empty($inputKey)) {
+        // 削除キー未入力または未設定（レガシーデータ）
+        if (empty($inputKey)) {
             $logger->info('Delete key required', ['file_id' => $fileId]);
-            $responseHandler->error('削除キーの入力が必要です。', [], 200, 'AUTH_REQUIRED');
-        } else {
-            // キーが間違っている場合
-            $logger->warning('Invalid delete key', ['file_id' => $fileId]);
-            $responseHandler->error('削除キーが正しくありません。', [], 200, 'INVALID_KEY');
+            $responseHandler->error('削除キーの入力が必要です。', [], 403, 'AUTH_REQUIRED');
         }
+
+        // ファイル側に削除キーが存在しない場合
+        if (empty($fileData['del_key_hash'])) {
+            $logger->warning('Delete key not set on file; deletion denied without master', ['file_id' => $fileId]);
+            $responseHandler->error('このファイルには削除キーが設定されていません。削除するにはマスターキーが必要です。', [], 403, 'DELKEY_NOT_SET');
+        }
+
+        // キーが間違っている場合
+        $logger->warning('Invalid delete key', ['file_id' => $fileId]);
+        $responseHandler->error('削除キーが正しくありません。', [], 403, 'INVALID_KEY');
         exit;  // 追加: 認証失敗時は処理を中断してトークン生成を防止
     }
 

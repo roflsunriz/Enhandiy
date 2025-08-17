@@ -576,7 +576,8 @@ function getUploadOptions(): UploadOptions {
 function handleUploadError(data: UploadApiResponse, filename: string): void {
   let errorMessage = '';
   
-  switch (data.status) {
+  const status = (data as any).error_code ? (data as any).error_code : data.status;
+  switch (status) {
     case 'filesize_over':
       errorMessage = 'ファイル容量が大きすぎます: ' + filename;
       break;

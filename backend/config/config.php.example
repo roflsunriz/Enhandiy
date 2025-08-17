@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PHP Uploader Ver.2.0 設定ファイル
+ * PHP Uploader Ver.4.0.3 設定ファイル
  *
  * このファイルおよびデータディレクトリは外部からアクセスできないように
  * .htaccess等で保護してください
@@ -38,9 +38,8 @@ class config {
             'max_comment' => 1024,     // 制限値を増加
             'max_file_size' => 100, // MB
             
-            // DLキー・DELキーの必須設定
+            // DLキーの必須設定（DELキーはシステムレベルで常に必須のため設定を廃止）
             'dlkey_required' => false,  // true: 必須, false: 任意
-            'delkey_required' => true,  // true: 必須, false: 任意
             // 削除セキュリティポリシー（Ver 3.0+）
             'deletion_security' => [
                 'auth_mode' => 'key_or_master',   // 'key_or_master': 削除キーまたはマスターキーで削除可能
@@ -70,7 +69,7 @@ class config {
             // ディレクトリ設定
             'db_directory' => dirname(__DIR__) . '/db',
             'data_directory' => dirname(__DIR__) . '/data',
-            'log_directory' => dirname(__DIR__) . '/logs',
+            'log_directory' => dirname(__DIR__) . '/storage/logs',
 
             // セキュリティ設定
             'security' => [
@@ -244,7 +243,7 @@ class config {
     {
         // v4.0.0-roflsunriz: composer.jsonのversionフィールドは削除したため、
         // 固定バージョンを返す。リリース時に手動で更新する。
-        return '4.0.2';
+        return '4.0.3';
     }
 
     /**

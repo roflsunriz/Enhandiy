@@ -211,6 +211,26 @@ function handleCreate()
             exit;
         }
 
+        // 削除キーの検証（システムレベルで必須）
+        if (empty($metadata['delkey'])) {
+            if (isset($uploadToken)) {
+                SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
+            }
+            http_response_code(400);
+            echo json_encode(['error' => '削除キーは必須です。', 'status' => 'delkey_required']);
+            exit;
+        }
+
+        // 削除キーの長さチェック
+        if (!empty($metadata['delkey']) && mb_strlen($metadata['delkey']) < ($ret['security']['min_key_length'] ?? 8)) {
+            if (isset($uploadToken)) {
+                SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
+            }
+            http_response_code(400);
+            echo json_encode(['error' => '削除キーは十分な長さが必要です。', 'min_length' => ($ret['security']['min_key_length'] ?? 8)]);
+            exit;
+        }
+
         // upload_token列とclient_ip列を追加
         $sql = $db->prepare("
             INSERT INTO tus_uploads (
