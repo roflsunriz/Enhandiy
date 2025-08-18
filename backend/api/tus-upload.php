@@ -476,12 +476,11 @@ function completeUpload($uploadId, $upload)
             // セキュリティ：メタデータのログ出力を削除（機密情報が含まれる可能性）
 
 
-    // 拡張子チェック
+    // 拡張子チェック（ポリシー対応）
     $ext = pathinfo($originalFileName, PATHINFO_EXTENSION);
-
-    if (!in_array(strtolower($ext), $extension)) {
+    $policy = SecurityUtils::getUploadExtensionPolicy($GLOBALS['ret'] ?? []);
+    if (!SecurityUtils::isExtensionAllowed(strtolower($ext), $policy)) {
         // 不正な拡張子の場合は削除
-
         unlink($upload['chunk_path']);
         $db->prepare("DELETE FROM tus_uploads WHERE id = ?")->execute([$uploadId]);
         return false;

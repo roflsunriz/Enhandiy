@@ -129,9 +129,14 @@ try {
     $dataDir = $config['data_directory'] ?? './data';
     $originalName = SecurityUtils::escapeHtml($_FILES['file']['name']);
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-    if (!in_array($ext, $config['extension'])) {
+    $policy = SecurityUtils::getUploadExtensionPolicy($config);
+    if (!SecurityUtils::isExtensionAllowed($ext, $policy)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => '許可されていない拡張子です']);
+        $message = '許可されていない拡張子です';
+        if ($policy['mode'] === 'blacklist') {
+            $message = '禁止されている拡張子です';
+        }
+        echo json_encode(['success' => false, 'message' => $message]);
         exit;
     }
 

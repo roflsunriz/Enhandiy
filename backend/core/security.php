@@ -126,12 +126,17 @@ class SecurityUtils
             $errors[] = "ファイルサイズが制限を超えています。最大: " . ($config['max_file_size'] ?? 10) . "MB";
         }
 
-        // 拡張子のチェック
-        $allowedExtensions = $config['extension'] ?? ['jpg', 'png', 'gif', 'pdf', 'txt'];
+        // 拡張子のチェック（ポリシー対応）
         $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-        if (!in_array($fileExtension, $allowedExtensions, true)) {
-            $errors[] = "許可されていない拡張子です。許可されている拡張子: " . implode(', ', $allowedExtensions);
+        $policy = self::getUploadExtensionPolicy($config);
+        if (!self::isExtensionAllowed($fileExtension, $policy)) {
+            if ($policy['mode'] === 'whitelist') {
+                $errors[] = "許可されていない拡張子です。許可: " . implode(', ', $policy['whitelist']);
+            } elseif ($policy['mode'] === 'blacklist') {
+                $errors[] = "禁止されている拡張子です。禁止: " . implode(', ', $policy['blacklist']);
+            } else {
+                $errors[] = "許可されていない拡張子です。";
+            }
         }
 
         // MIMEタイプの基本チェック
@@ -256,6 +261,52 @@ class SecurityUtils
         }
 
         return $errors;
+    }
+
+    /**
+     * アップロード拡張子ポリシーを取得
+     * - 後方互換: config['extension'] がある場合は whitelist に取り込む
+     */
+    public static function getUploadExtensionPolicy(array $config): array
+    {
+        $defaultPolicy = [
+            'mode' => 'all',
+            'whitelist' => [],
+            'blacklist' => ['php','phtml','php3','php4','php5','phar','cgi','exe','bat','cmd','ps1','vbs']
+        ];
+
+        $policy = $config['upload_extension_policy'] ?? $defaultPolicy;
+
+        // 後方互換: 旧 'extension' が設定されていれば whitelist に統合
+        if (!empty($config['extension']) && is_array($config['extension'])) {
+            $legacy = array_values(array_unique(array_map('strtolower', $config['extension'])));
+            $existingWhitelist = $policy['whitelist'] ?? [];
+            $policy['whitelist'] = array_values(array_unique(array_merge($existingWhitelist, $legacy)));
+        }
+
+        // 正規化
+        $policy['mode'] = in_array($policy['mode'] ?? 'all', ['all','whitelist','blacklist'], true) ? $policy['mode'] : 'all';
+        $policy['whitelist'] = array_values(array_unique(array_map('strtolower', $policy['whitelist'] ?? [])));
+        $policy['blacklist'] = array_values(array_unique(array_map('strtolower', $policy['blacklist'] ?? [])));
+
+        return $policy;
+    }
+
+    /**
+     * 拡張子がポリシー上許可されるか判定
+     */
+    public static function isExtensionAllowed(string $extension, array $policy): bool
+    {
+        $ext = strtolower($extension);
+        switch ($policy['mode']) {
+            case 'whitelist':
+                return in_array($ext, $policy['whitelist'], true);
+            case 'blacklist':
+                return !in_array($ext, $policy['blacklist'], true);
+            case 'all':
+            default:
+                return true;
+        }
     }
 
     /**

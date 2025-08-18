@@ -150,10 +150,17 @@ try {
         $validationErrors[] = "ファイルサイズが上限({$config['max_file_size']}MB)を超えています。";
     }
 
-    // 拡張子チェック
+    // 拡張子チェック（ポリシー対応）
     $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-    if (!in_array($fileExtension, $config['extension'])) {
-        $validationErrors[] = "許可されていない拡張子です。(" . implode(', ', $config['extension']) . "のみ)";
+    $policy = SecurityUtils::getUploadExtensionPolicy($config);
+    if (!SecurityUtils::isExtensionAllowed($fileExtension, $policy)) {
+        if ($policy['mode'] === 'whitelist') {
+            $validationErrors[] = "許可されていない拡張子です。(" . implode(', ', $policy['whitelist']) . "のみ)";
+        } elseif ($policy['mode'] === 'blacklist') {
+            $validationErrors[] = "禁止されている拡張子です。(" . implode(', ', $policy['blacklist']) . ")";
+        } else {
+            $validationErrors[] = "許可されていない拡張子です。";
+        }
     }
 
     // フォルダIDの存在確認（フォルダ機能が有効な場合のみ）

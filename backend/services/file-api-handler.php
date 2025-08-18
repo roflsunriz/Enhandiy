@@ -284,10 +284,17 @@ class FileApiHandler
             $fileSize = $_FILES['file']['size'];
             $tmpPath = $_FILES['file']['tmp_name'];
 
-            // 拡張子チェック
+            // 拡張子チェック（ポリシー対応）
             $ext = strtolower(pathinfo($newFileName, PATHINFO_EXTENSION));
-            if (!in_array($ext, $this->config['extension'])) {
-                $this->response->error('許可されていない拡張子です', [], 400, 'INVALID_EXTENSION');
+            $policy = SecurityUtils::getUploadExtensionPolicy($this->config);
+            if (!SecurityUtils::isExtensionAllowed($ext, $policy)) {
+                if ($policy['mode'] === 'whitelist') {
+                    $this->response->error('許可されていない拡張子です', ['allowed' => $policy['whitelist']], 400, 'INVALID_EXTENSION');
+                } elseif ($policy['mode'] === 'blacklist') {
+                    $this->response->error('禁止されている拡張子です', ['blocked' => $policy['blacklist']], 400, 'INVALID_EXTENSION');
+                } else {
+                    $this->response->error('許可されていない拡張子です', [], 400, 'INVALID_EXTENSION');
+                }
                 return;
             }
 

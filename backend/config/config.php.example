@@ -94,7 +94,23 @@ class config {
             'log_level' => 'INFO', // DEBUG, INFO, WARNING, ERROR
             'log_retention_days' => 30,
 
-            // アップロードできる拡張子
+            // アップロード拡張子ポリシー
+            // mode: 'all' | 'whitelist' | 'blacklist'
+            //  - all: すべて許可（サイズやMIME等の他チェックは継続）
+            //  - whitelist: 許可した拡張子のみ
+            //  - blacklist: 拒否した拡張子以外を許可
+            'upload_extension_policy' => [
+                'mode' => 'all',
+                'whitelist' => [
+                    // 下記の従来リストをデフォルトの参考として残す
+                ],
+                'blacklist' => [
+                    // 例: セキュリティ観点で拒否したい拡張子
+                    'php', 'phtml', 'php3', 'php4', 'php5', 'phar', 'cgi', 'exe', 'bat', 'cmd', 'ps1', 'vbs'
+                ],
+            ],
+
+            // 互換性のための従来設定（whitelistとして扱う）。新規では未使用。
             'extension' => [
                 // アーカイブ・圧縮ファイル
                 'zip', 'rar', 'lzh', '7z', 'tar', 'gz', 'bz2', 'xz',
