@@ -29,6 +29,7 @@ class AppInitializer
         $this->createDirectories();
         $this->initializeDatabase();
         $this->setupDatabase();
+        $this->runAutoMigrationsIfNeeded();
 
         return $this->db;
     }
@@ -222,6 +223,9 @@ class AppInitializer
 
             // 既存データの移行（必要に応じて）
             $this->migrateExistingData();
+
+            // 新スキーマのデフォルトユーザーバージョンを設定（存在しない場合）
+            $this->initializeUserVersion();
         } catch (PDOException $e) {
             $this->throwError('データベースの初期化に失敗しました: ' . $e->getMessage());
         }
@@ -284,6 +288,87 @@ class AppInitializer
                     error_log("Column migration failed for {$columnName}: " . $e->getMessage());
                 }
             }
+        }
+
+        // レガシー（v2.x 以前）互換: 旧カラムが存在し新カラムが無い場合の最低限の移行
+        // v2.x では dl_key / del_key が平文で存在していた可能性がある。
+        // 新スキーマでは dl_key_hash / del_key_hash を使用するため、
+        // 旧カラムがあり新カラムが無い場合は新カラムを追加して値のコピー（ハッシュ化は不可のためそのまま移す）
+        $hasDlKey = in_array('dl_key', $columnNames, true);
+        $hasDelKey = in_array('del_key', $columnNames, true);
+        $hasDlKeyHash = in_array('dl_key_hash', $columnNames, true);
+        $hasDelKeyHash = in_array('del_key_hash', $columnNames, true);
+
+        if ($hasDlKey && !$hasDlKeyHash) {
+            try {
+                $this->db->exec("ALTER TABLE uploaded ADD COLUMN dl_key_hash text");
+                // 旧キーは暗号化保存のため新ハッシュと互換なし → 未設定（NULL）で移行
+                $this->db->exec("UPDATE uploaded SET dl_key_hash = NULL");
+            } catch (PDOException $e) {
+                error_log('Legacy migration (dl_key_hash) failed: ' . $e->getMessage());
+            }
+        }
+
+        if ($hasDelKey && !$hasDelKeyHash) {
+            try {
+                $this->db->exec("ALTER TABLE uploaded ADD COLUMN del_key_hash text");
+                // 旧キーは暗号化保存のため新ハッシュと互換なし → 未設定（NULL）で移行
+                $this->db->exec("UPDATE uploaded SET del_key_hash = NULL");
+            } catch (PDOException $e) {
+                error_log('Legacy migration (del_key_hash) failed: ' . $e->getMessage());
+            }
+        }
+
+        // 可能なら created_at / updated_at を input_date から初期化
+        try {
+            $this->db->exec("UPDATE uploaded SET created_at = input_date WHERE created_at IS NULL OR created_at = ''");
+            $this->db->exec("UPDATE uploaded SET updated_at = created_at WHERE updated_at IS NULL OR updated_at = ''");
+        } catch (PDOException $e) {
+            error_log('Timestamp backfill failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * SQLite ユーザーバージョンを初期化（未設定時のみ）
+     * 新系のベースを 4003 とする
+     */
+    private function initializeUserVersion(): void
+    {
+        $stmt = $this->db->query('PRAGMA user_version');
+        $current = (int)($stmt->fetchColumn() ?: 0);
+        if ($current === 0) {
+            $this->db->exec('PRAGMA user_version = 4003');
+        }
+    }
+
+    /**
+     * レガシー（2.x 以前）を検知して必要なら自動マイグレーションを実行
+     * 判定基準:
+     * - user_version < 3000
+     * - または uploaded に dl_key / del_key があり、dl_key_hash / del_key_hash が無い
+     */
+    private function runAutoMigrationsIfNeeded(): void
+    {
+        try {
+            $stmt = $this->db->query('PRAGMA user_version');
+            $userVersion = (int)($stmt->fetchColumn() ?: 0);
+
+            $columns = $this->db->query('PRAGMA table_info(uploaded)')->fetchAll();
+            $columnNames = array_column($columns, 'name');
+
+            $isLegacyColumns = in_array('dl_key', $columnNames, true)
+                && in_array('del_key', $columnNames, true)
+                && !in_array('dl_key_hash', $columnNames, true)
+                && !in_array('del_key_hash', $columnNames, true);
+
+            if ($userVersion < 3000 || $isLegacyColumns) {
+                // 最低限のスキーマ延長を適用
+                $this->migrateExistingData();
+                // マイグレーション完了を示すユーザーバージョンへ更新
+                $this->db->exec('PRAGMA user_version = 4003');
+            }
+        } catch (PDOException $e) {
+            error_log('Auto migration check failed: ' . $e->getMessage());
         }
     }
 
