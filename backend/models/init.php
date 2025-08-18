@@ -218,11 +218,12 @@ class AppInitializer
 
             $this->db->exec($logQuery);
 
-            // インデックスの作成
-            $this->createIndexes();
-
             // 既存データの移行（必要に応じて）
+            // 先に不足カラムを追加してからインデックスを作成する
             $this->migrateExistingData();
+
+            // インデックスの作成（必要なカラムが揃ってから）
+            $this->createIndexes();
 
             // 新スキーマのデフォルトユーザーバージョンを設定（存在しない場合）
             $this->initializeUserVersion();
