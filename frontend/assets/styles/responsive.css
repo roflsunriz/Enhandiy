@@ -471,3 +471,34 @@
     transform: translateY(0);
   }
 }
+
+/* ===================================================
+   アップロードモーダル内のフォーム余白をコンパクト化
+   ================================================= */
+
+/* モーダル内だけ余白を詰める（通常ページのフォームには影響しない） */
+#uploadModal .modal-body .upload-form .form-section {
+  margin-bottom: 12px;
+}
+
+#uploadModal .modal-body .form-group {
+  margin-bottom: 10px;
+}
+
+#uploadModal .modal-body .form-group label {
+  margin-bottom: 4px;
+}
+
+#uploadModal .modal-body .form-group input {
+  padding: 8px 10px;
+}
+
+/* パスワード強度等の補助エリアも高さを少し詰める */
+#uploadModal .modal-body .password-strength {
+  min-height: 40px;
+}
+
+/* モーダル内の2カラム時の最低高さを抑える */
+#uploadModal .modal-body .form-section .row .form-group {
+  min-height: 90px;
+}
