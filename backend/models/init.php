@@ -330,14 +330,14 @@ class AppInitializer
 
     /**
      * SQLite ユーザーバージョンを初期化（未設定時のみ）
-     * 新系のベースを 4003 とする
+     * 新系のベースを 4004 とする
      */
     private function initializeUserVersion(): void
     {
         $stmt = $this->db->query('PRAGMA user_version');
         $current = (int)($stmt->fetchColumn() ?: 0);
         if ($current === 0) {
-            $this->db->exec('PRAGMA user_version = 4003');
+            $this->db->exec('PRAGMA user_version = 4004');
         }
     }
 
@@ -365,7 +365,7 @@ class AppInitializer
                 // 最低限のスキーマ延長を適用
                 $this->migrateExistingData();
                 // マイグレーション完了を示すユーザーバージョンへ更新
-                $this->db->exec('PRAGMA user_version = 4003');
+                $this->db->exec('PRAGMA user_version = 4004');
             }
         } catch (PDOException $e) {
             error_log('Auto migration check failed: ' . $e->getMessage());
