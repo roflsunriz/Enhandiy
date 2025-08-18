@@ -801,7 +801,7 @@ async function enhancedMultipleUpload(selectedFiles: File[]): Promise<void> {
  */
 function getUploadOptions(): UploadOptions {
   const commentInput = document.getElementById('commentInput') as HTMLInputElement;
-  const dleyInput = document.getElementById('dleyInput') as HTMLInputElement;
+  const dlkeyInput = document.getElementById('dlkeyInput') as HTMLInputElement;
   const delkeyInput = document.getElementById('delkeyInput') as HTMLInputElement;
   const replaceKeyInput = document.getElementById('replaceKeyInput') as HTMLInputElement;
   const maxDownloadsInput = document.getElementById('maxDownloadsUploadInput') as HTMLInputElement;
@@ -809,7 +809,7 @@ function getUploadOptions(): UploadOptions {
   const folderSelect = document.getElementById('folder-select') as HTMLSelectElement;
   
   // パスワード値を取得
-  const dlkey = dleyInput?.value || '';
+  const dlkey = dlkeyInput?.value || '';
   const delkey = delkeyInput?.value || '';
   const replacekey = replaceKeyInput?.value || '';
   

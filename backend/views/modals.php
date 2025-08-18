@@ -117,6 +117,55 @@
   </div>
 </div>
 
+<!-- ダウンロード認証モーダル -->
+<div class="modal fade" id="downloadAuthModal" tabindex="-1" 
+aria-labelledby="downloadAuthModalLabel" aria-hidden="true"
+data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="downloadAuthModalLabel">ファイルダウンロード認証</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>ファイルをダウンロードするには、<strong>マスターキーまたはダウンロードキー</strong>のどちらか一方を入力してください。</p>
+        <div id="downloadFileName" class="alert alert-info">
+          <strong>ダウンロード対象:</strong> <span id="downloadTargetName"></span>
+        </div>
+        
+        <form id="downloadAuthForm">
+          <div class="form-group">
+            <label for="downloadAuthMasterKey">マスターキー</label>
+            <input type="password" class="form-control" id="downloadAuthMasterKey" 
+                   name="master_key" placeholder="マスターキーを入力（任意）">
+            <p class="help-block">管理者用のマスターキーです</p>
+          </div>
+          
+          <div class="text-center">
+            <strong>または</strong>
+          </div>
+          
+          <div class="form-group">
+            <label for="downloadAuthDlKey">ダウンロードキー</label>
+            <input type="password" class="form-control" id="downloadAuthDlKey" 
+                   name="download_key" placeholder="ダウンロードキーを入力（任意）">
+            <p class="help-block">アップロード時に設定したダウンロードキーです</p>
+          </div>
+          
+          <input type="hidden" id="downloadAuthFileId" name="file_id">
+          <input type="hidden" name="csrf_token" 
+                 value="<?php echo htmlspecialchars($csrf_token ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="downloadAuthConfirmBtn">ダウンロード</button>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
 <!-- アップロード用モーダル -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">

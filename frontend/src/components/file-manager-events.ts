@@ -537,8 +537,10 @@ export class FileManagerEvents {
         // 認証要求 or キー不一致
         const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
         if (errCode === 'AUTH_REQUIRED' || errCode === 'INVALID_KEY') {
-          key = await showPasswordPrompt('ダウンロードキーを入力してください:') ?? '';
-          if (!key) return; // キャンセル
+          const modalResult = await this.showDownloadAuthModal(file.name || 'download', fileId);
+          if (!modalResult) return; // キャンセル
+          key = (modalResult.masterKey || modalResult.downloadKey || '').trim();
+          if (!key) return; // 未入力はキャンセル扱い
           continue; // 再トライ
         }
 
@@ -550,6 +552,64 @@ export class FileManagerEvents {
         return;
       }
     }
+  }
+
+  /**
+   * ダウンロード認証モーダルを表示
+   */
+  private async showDownloadAuthModal(fileName: string, fileId: string): Promise<{ masterKey?: string, downloadKey?: string } | null> {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('downloadAuthModal');
+      if (!modal) {
+        resolve(null);
+        return;
+      }
+
+      // モーダル内容の設定
+      const targetNameElement = modal.querySelector('#downloadTargetName');
+      const masterKeyInput = modal.querySelector('#downloadAuthMasterKey') as HTMLInputElement;
+      const downloadKeyInput = modal.querySelector('#downloadAuthDlKey') as HTMLInputElement;
+      const fileIdInput = modal.querySelector('#downloadAuthFileId') as HTMLInputElement;
+      const confirmButton = modal.querySelector('#downloadAuthConfirmBtn');
+
+      if (targetNameElement) (targetNameElement as HTMLElement).textContent = fileName;
+      if (masterKeyInput) masterKeyInput.value = '';
+      if (downloadKeyInput) downloadKeyInput.value = '';
+      if (fileIdInput) fileIdInput.value = fileId;
+
+      // イベントリスナー設定
+      const handleConfirm = () => {
+        const masterKey = masterKeyInput?.value.trim() || undefined;
+        const downloadKey = downloadKeyInput?.value.trim() || undefined;
+
+        // どちらか一方の入力が必要
+        if (!masterKey && !downloadKey) {
+          alert('マスターキーまたはダウンロードキーのどちらか一方を入力してください。');
+          return;
+        }
+
+        cleanup();
+        hideModal('downloadAuthModal');
+        resolve({ masterKey, downloadKey });
+      };
+
+      const handleCancel = () => {
+        cleanup();
+        hideModal('downloadAuthModal');
+        resolve(null);
+      };
+
+      const cleanup = () => {
+        confirmButton?.removeEventListener('click', handleConfirm);
+        modal.removeEventListener('hidden.bs.modal', handleCancel as EventListener);
+      };
+
+      confirmButton?.addEventListener('click', handleConfirm);
+      modal.addEventListener('hidden.bs.modal', handleCancel as EventListener, { once: true } as AddEventListenerOptions);
+
+      // モーダル表示
+      showModal('downloadAuthModal');
+    });
   }
 
   /**
