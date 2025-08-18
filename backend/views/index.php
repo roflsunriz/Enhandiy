@@ -23,8 +23,9 @@
   <!-- アップロード起動ボタン（モーダル） -->
   <div class="row">
     <div class="col-sm-12 text-center my-15">
+      <?php require_once __DIR__ . '/icons.php'; ?>
       <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#uploadModal">
-        📁 ファイルをアップロード
+        <?php echo render_icon('folder', 18, 'icon'); ?> ファイルをアップロード
       </button>
     </div>
   </div>

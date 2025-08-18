@@ -184,7 +184,10 @@ data-bs-backdrop="static" data-bs-keyboard="false">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-        <input type="submit" form="upload" class="btn btn-success btn-upload" id="uploadBtn" value="📁 ファイルをアップロード">
+        <?php require_once __DIR__ . '/icons.php'; ?>
+        <button type="submit" form="upload" class="btn btn-success btn-upload" id="uploadBtn">
+          <?php echo render_icon('folder', 18, 'icon'); ?> ファイルをアップロード
+        </button>
       </div>
     </div>
   </div>

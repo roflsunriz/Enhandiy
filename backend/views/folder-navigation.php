@@ -7,6 +7,7 @@
 
 ?>
 
+<?php require_once __DIR__ . '/icons.php'; ?>
 <?php if (isset($folders_enabled) && $folders_enabled) : ?>
 <!-- フォルダナビゲーション -->
 <div class="row bg-white radius box-shadow">
@@ -16,9 +17,9 @@
     <!-- パンくずリスト -->
     <div class="form-section">
       <div class="folder-breadcrumb">
-        <label>📍 現在の場所:</label>
+        <label><?php echo render_icon('map-marker', 18, 'icon'); ?> 現在の場所:</label>
         <ol class="breadcrumb folder-breadcrumb-list">
-          <li><a href="?folder=" class="breadcrumb-link">🏠 ルート</a></li>
+          <li><a href="?folder=" class="breadcrumb-link"><?php echo render_icon('home', 18, 'icon'); ?> ルート</a></li>
           <?php if (isset($breadcrumb) && is_array($breadcrumb)) : ?>
                 <?php foreach ($breadcrumb as $index => $bc) : ?>
                     <?php if ($index + 1 === count($breadcrumb)) : ?>
@@ -58,7 +59,7 @@
                      data-folder-id="<?php echo $folder['id']; ?>">
           <div class="folder-item-wrapper pos-relative">
             <a href="?folder=<?php echo $folder['id']; ?>" class="folder-item">
-              <span class="folder-icon">📁</span>
+              <span class="folder-icon"><?php echo render_icon('folder', 20, 'icon'); ?></span>
               <span class="folder-name"><?php echo htmlspecialchars($folder['name']); ?></span>
             </a>
                 <?php // 全てのフォルダに管理メニューを表示 ?>
@@ -72,20 +73,20 @@
                   <li>
                       <a class="dropdown-item rename-folder" href="#"
                          data-folder-id="<?php echo $folder['id']; ?>">
-                          ✏️ 名前変更
+                           <?php echo render_icon('pencil', 16, 'icon'); ?> 名前変更
                       </a>
                   </li>
                   <li>
                       <a class="dropdown-item move-folder" href="#"
                          data-folder-id="<?php echo $folder['id']; ?>">
-                          📁 移動
+                           <?php echo render_icon('folder-move', 16, 'icon'); ?> 移動
                       </a>
                   </li>
                   <li><hr class="dropdown-divider"></li>
                   <li>
                       <a class="dropdown-item delete-folder text-danger-soft" href="#"
                          data-folder-id="<?php echo $folder['id']; ?>">
-                          🗑 削除
+                           <?php echo render_icon('trash-can', 16, 'icon'); ?> 削除
                       </a>
                   </li>
                 </ul>

@@ -61,12 +61,15 @@ export function showInfo(message: string): void {
 /**
  * メッセージ要素を作成
  */
+import { messageIcon } from './icons';
+
 function createMessageElement(message: string, type: MessageType): HTMLElement {
   const element = document.createElement('div');
   element.className = `status-message status-message--${type}`;
+  const iconSvg = messageIcon(type, 16);
   element.innerHTML = `
     <div class="status-message__content">
-      <span class="status-message__icon">${getMessageIcon(type)}</span>
+      <span class="status-message__icon">${iconSvg}</span>
       <span class="status-message__text">${escapeHtml(message)}</span>
       <button class="status-message__close" aria-label="閉じる">&times;</button>
     </div>
@@ -83,22 +86,7 @@ function createMessageElement(message: string, type: MessageType): HTMLElement {
   return element;
 }
 
-/**
- * メッセージタイプに応じたアイコンを取得
- */
-function getMessageIcon(type: MessageType): string {
-  switch (type) {
-    case 'success':
-      return '✓';
-    case 'error':
-      return '✗';
-    case 'warning':
-      return '⚠';
-    case 'info':
-    default:
-      return 'ℹ';
-  }
-}
+ 
 
 /**
  * HTMLエスケープ

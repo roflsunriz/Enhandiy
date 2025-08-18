@@ -5,6 +5,7 @@
 
 import { FileData } from '../types/global';
 import { FileManagerCore } from './file-manager-core';
+import { actionIcons, fileIconForMime } from '../utils/icons';
 
 export class FileManagerRenderer {
   private core: FileManagerCore;
@@ -55,7 +56,7 @@ export class FileManagerRenderer {
               リスト
             </button>
             <button class="file-manager__refresh-btn" title="最新の状態に更新">
-              🔄 更新
+              ${actionIcons.refresh(18)} 更新
             </button>
           </div>
         </div>
@@ -165,7 +166,7 @@ export class FileManagerRenderer {
     // 現在のソートフィールドのアイコンを設定
     const currentHeader = this.core.container.querySelector(`[data-sort="${currentField}"] .sort-icon`);
     if (currentHeader) {
-      currentHeader.textContent = currentDirection === 'asc' ? ' ↑' : ' ↓';
+      (currentHeader as HTMLElement).innerHTML = currentDirection === 'asc' ? ` ${actionIcons.arrowUp(16)}` : ` ${actionIcons.arrowDown(16)}`;
     }
   }
 
@@ -243,7 +244,7 @@ export class FileManagerRenderer {
    */
   private createGridItem(file: FileData): string {
     const isSelected = this.core.getState().selectedFiles.has(file.id.toString());
-    const fileIcon = this.getFileIcon(file.type || '');
+    const fileIcon = fileIconForMime(file.type || '', 20);
     const fileSize = this.formatFileSize(file.size);
     const uploadDate = this.formatDate(file.upload_date || '');
     
@@ -336,28 +337,28 @@ export class FileManagerRenderer {
         <td class="file-list__downloads">${this.formatDownloads(file)}</td>
         <td class="file-list__actions">
           <button class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
-            ⬇
+            ${actionIcons.download(18)}
           </button>
           <button class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
-            🔗
+            ${actionIcons.share(18)}
           </button>
           ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
           <button class="btn btn-xs btn-success file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
-            ✏
+            ${actionIcons.edit(18)}
           </button>
           ` : ''}
           ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
           <button class="btn btn-xs btn-warning file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
-            📁
+            ${actionIcons.move(18)}
           </button>
           ` : ''}
           ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
           <button class="btn btn-xs btn-warning file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
-            🔄
+            ${actionIcons.replace(18)}
           </button>
           ` : ''}
           <button class="btn btn-xs btn-danger file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
-            🗑
+            ${actionIcons.delete(18)}
           </button>
         </td>
       </tr>
@@ -455,20 +456,8 @@ export class FileManagerRenderer {
   /**
    * ユーティリティメソッド
    */
-  private getFileIcon(mimeType: string): string {
-    if (!mimeType) return '📄'; // 未知のファイルタイプは文書アイコン
-    if (mimeType.startsWith('image/')) return '🖼';
-    if (mimeType.startsWith('video/')) return '🎥';
-    if (mimeType.startsWith('audio/')) return '🎵';
-    if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('zip') || mimeType.includes('archive') || mimeType.includes('compressed')) return '📦';
-    if (mimeType.includes('text') || mimeType.includes('plain')) return '📝';
-    if (mimeType.includes('javascript') || mimeType.includes('json')) return '📜';
-    if (mimeType.includes('html') || mimeType.includes('xml')) return '🌐';
-    if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
-    if (mimeType.includes('excel') || mimeType.includes('sheet')) return '📊';
-    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📽';
-    return '📄'; // デフォルトは文書アイコン
+  private getFileIcon(_mimeType: string): string {
+    return '';
   }
 
   private getFileTypeClass(mimeType: string): string {

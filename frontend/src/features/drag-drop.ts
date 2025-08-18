@@ -8,6 +8,7 @@ import { initializeErrorHandling } from '../utils/error-handling';
 import { showAlert } from '../utils/modal';
 import { UploadedFile, UploadOptions, UploadApiResponse } from '../types/upload';
 import { isPasswordTooWeak } from './password-strength';
+import { fileIconForExt } from '../utils/icons';
 
 // グローバル変数
 let selectedFiles: UploadedFile[] = [];
@@ -292,24 +293,7 @@ function updateFilesList(): void {
 
 function getFileIcon(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase() || '';
-  
-  // アイコンマッピング
-  const iconMap: Record<string, string> = {
-    // 画像
-    'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'bmp': '🖼️', 'svg': '🖼️', 'webp': '🖼️',
-    // 動画
-    'mp4': '🎬', 'avi': '🎬', 'mov': '🎬', 'wmv': '🎬', 'flv': '🎬', 'mkv': '🎬', 'webm': '🎬',
-    // 音声
-    'mp3': '🎵', 'wav': '🎵', 'aac': '🎵', 'ogg': '🎵', 'flac': '🎵', 'm4a': '🎵', 'wma': '🎵',
-    // ドキュメント
-    'pdf': '📄', 'doc': '📝', 'docx': '📝', 'xls': '📊', 'xlsx': '📊', 'ppt': '📊', 'pptx': '📊',
-    // アーカイブ
-    'zip': '🗜️', 'rar': '🗜️', 'lzh': '🗜️', '7z': '🗜️', 'tar': '🗜️', 'gz': '🗜️',
-    // 開発
-    'html': '🌐', 'css': '🎨', 'js': '⚙️', 'json': '⚙️', 'xml': '⚙️', 'sql': '🗃️'
-  };
-  
-  return iconMap[ext] || '📎';
+  return fileIconForExt(ext, 20);
 }
 
 function formatFileSize(bytes: number): string {

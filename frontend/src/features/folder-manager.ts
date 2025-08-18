@@ -4,6 +4,7 @@
  */
 
 import { ready } from '../utils/dom';
+import { actionIcons } from '../utils/icons';
 import { FolderApi } from '../api/client';
 import { FolderData } from '../types/global';
 import { initializeErrorHandling } from '../utils/error-handling';
@@ -181,7 +182,7 @@ class SimpleFolderManager {
   private updateBreadcrumb(breadcrumb: Array<{id: number, name: string}>): void {
     const breadcrumbContainer = document.querySelector('.breadcrumb');
     if (breadcrumbContainer) {
-      let breadcrumbHtml = '<li><a href="?folder=" class="breadcrumb-link">🏠 ルート</a></li>';
+      let breadcrumbHtml = `<li><a href="?folder=" class="breadcrumb-link">${actionIcons.home(16)} ルート</a></li>`;
       
       breadcrumb.forEach((folder, index) => {
         if (index + 1 === breadcrumb.length) {
@@ -246,7 +247,7 @@ class SimpleFolderManager {
             <div class="col-sm-3 col-xs-6" style="margin-bottom: 15px;" data-folder-id="${folder.id}">
               <div class="folder-item-wrapper" style="position: relative;">
                 <a href="?folder=${folder.id}" class="folder-item">
-                  <span class="folder-icon">📁</span>
+                  <span class="folder-icon">${actionIcons.move(18)}</span>
                   <span class="folder-name">${this.escapeHtml(folder.name)}</span>
                 </a>
                 <div class="folder-menu" style="position: absolute; top: 5px; right: 5px; opacity: 0; transition: opacity 0.2s;">
@@ -259,18 +260,18 @@ class SimpleFolderManager {
                     <ul class="dropdown-menu dropdown-menu-end" style="min-width: 120px;">
                       <li>
                         <a class="dropdown-item rename-folder" href="#" data-folder-id="${folder.id}">
-                          ✏️ 名前変更
+                          ${actionIcons.edit(16)} 名前変更
                         </a>
                       </li>
                       <li>
                         <a class="dropdown-item move-folder" href="#" data-folder-id="${folder.id}">
-                          📁 移動
+                          ${actionIcons.move(16)} 移動
                         </a>
                       </li>
                       <li><hr class="dropdown-divider"></li>
                       <li>
                         <a class="dropdown-item delete-folder" href="#" data-folder-id="${folder.id}" style="color: #d9534f;">
-                          🗑 削除
+                          ${actionIcons.delete(16)} 削除
                         </a>
                       </li>
                     </ul>
@@ -392,8 +393,8 @@ class SimpleFolderManager {
   
   // フォルダ名変更ダイアログ
   private async showRenameFolderDialog(folderId: string): Promise<void> {
-    const folderElement = document.querySelector(`[data-folder-id="${folderId}"] .folder-item`);
-    const currentName = folderElement ? folderElement.textContent?.trim().replace('📁', '').trim() : '';
+    const folderNameEl = document.querySelector(`[data-folder-id="${folderId}"] .folder-item .folder-name`);
+    const currentName = folderNameEl ? folderNameEl.textContent?.trim() : '';
     
     const newName = await showPrompt('新しいフォルダ名を入力してください:', currentName);
     if (!newName || !newName.trim() || newName.trim() === currentName) return;
@@ -508,8 +509,8 @@ class SimpleFolderManager {
   
   // フォルダ削除確認ダイアログ
   private async showDeleteFolderDialog(folderId: string): Promise<void> {
-    const folderElement = document.querySelector(`[data-folder-id="${folderId}"] .folder-item`);
-    const folderName = folderElement ? folderElement.textContent?.trim().replace('📁', '').trim() : 'フォルダ';
+    const folderNameEl = document.querySelector(`[data-folder-id="${folderId}"] .folder-item .folder-name`);
+    const folderName = folderNameEl ? folderNameEl.textContent?.trim() : 'フォルダ';
     
     try {
       // フォルダ内のファイル数を確認
