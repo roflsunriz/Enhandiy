@@ -8,7 +8,8 @@ import { ready, $, addClass, removeClass } from '../utils/dom';
 import { showError } from '../utils/messages';
 import { getCsrfToken } from '../utils/http';
 import { initializeErrorHandling } from '../utils/error-handling';
-import { showAlert } from '../utils/modal';
+import { showAlert, hideModal } from '../utils/modal';
+import { showToast } from '../utils/bootstrap';
 import { 
   UploadInfo, 
   UploadOptions, 
@@ -28,6 +29,7 @@ declare global {
 // グローバル変数
 const resumableUploads: Record<string, UploadInfo> = {};
 let isResumableAvailable = false;
+let uploadHadErrors = false;
 
 // Tus.ioの利用可能性をチェック
 ready(() => {
@@ -48,6 +50,17 @@ ready(() => {
         <div class="global-upload-info"></div>
       </div>
     `);
+  }
+  // エラートーストが未定義なら用意しておく
+  if (!document.getElementById('uploadErrorToast')) {
+    const toastHtml = `
+      <div id="uploadErrorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" style="position: fixed; top: 20px; right: 20px; z-index: 1060;">
+        <div class="d-flex">
+          <div class="toast-body">アップロードに失敗しました。</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
   }
   
   // Resumable upload module loaded
@@ -177,6 +190,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
           
           // グローバルリストから削除
           delete resumableUploads[file.name];
+          uploadHadErrors = true;
           
           // Tus.ioが失敗した場合はフォールバック（設定で有効な場合）
           if (fallbackEnabled) {
@@ -306,10 +320,12 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
         } else {
           console.error('Fallback upload failed with response:', data);
           handleUploadError(data, file.name);
+          uploadHadErrors = true;
           reject(new Error('Upload failed: ' + data.status));
         }
       } catch {
         console.error('Failed to parse response:', xhr.responseText);
+        uploadHadErrors = true;
         reject(new Error('Invalid response format'));
       }
     });
@@ -328,6 +344,7 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
         message: 'Network error: ' + xhr.statusText
       };
       handleUploadError(errorData, file.name);
+      uploadHadErrors = true;
       reject(new Error('Network error: ' + xhr.statusText));
     });
     
@@ -464,6 +481,13 @@ function onUploadComplete(filename: string, _method: string): void {
   
   // 全てのアップロードが完了したかチェック
   if (Object.keys(resumableUploads).length === 0) {
+    // 失敗がなければモーダルを閉じる。失敗があれば閉じずにトースト通知を表示
+    if (!uploadHadErrors) {
+      hideModal('uploadModal');
+    } else {
+      // 失敗をユーザーに通知（トースト要素があれば表示）
+      showToast('uploadErrorToast');
+    }
     setTimeout(async () => {
       const globalStatus = $('.global-upload-status');
       if (globalStatus) {
@@ -477,6 +501,24 @@ function onUploadComplete(filename: string, _method: string): void {
           container.parentNode.removeChild(container);
         }
       });
+      
+      // 選択済みファイル配列と入力要素をクリア（ページリロードなしの再アップロード対策）
+      try {
+        const winAny = window as unknown as { selectedFiles?: unknown };
+        if (Array.isArray(winAny.selectedFiles)) {
+          (winAny.selectedFiles as unknown[]).length = 0;
+        }
+        const selectedFilesList = document.getElementById('selectedFilesList');
+        if (selectedFilesList) {
+          selectedFilesList.innerHTML = '';
+        }
+        const multipleFileInput = document.getElementById('multipleFileInput') as HTMLInputElement | null;
+        const folderInput = document.getElementById('folderInput') as HTMLInputElement | null;
+        if (multipleFileInput) multipleFileInput.value = '';
+        if (folderInput) folderInput.value = '';
+        const fileCountSpan = document.querySelector('#selectedFilesContainer .file-count') as HTMLElement | null;
+        if (fileCountSpan) fileCountSpan.textContent = '0';
+      } catch {}
       
       // 選択ファイルコンテナを非表示
       const selectedFilesContainer = document.getElementById('selectedFilesContainer');
