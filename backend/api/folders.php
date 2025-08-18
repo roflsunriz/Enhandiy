@@ -223,7 +223,7 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
  */
 function handleMoveFolderViaPost($db, $input)
 {
-    if (!isset($input['id']) || !isset($input['new_parent_id'])) {
+    if (!isset($input['id']) || !array_key_exists('new_parent_id', $input)) {
         http_response_code(400);
         echo json_encode(['error' => 'フォルダIDと移動先の親IDが必要です'], JSON_UNESCAPED_UNICODE);
         return;
@@ -255,8 +255,8 @@ function handleUpdateFolder($db)
         return handleRenameFolder($db, $id, $name);
     }
 
-    // 移動の場合
-    if (isset($input['parent_id'])) {
+    // 移動の場合（null も許容するため array_key_exists を使用）
+    if (array_key_exists('parent_id', $input)) {
         $parent_id = $input['parent_id'] === null ? null : intval($input['parent_id']);
         return handleMoveFolder($db, $id, $parent_id);
     }
