@@ -32,7 +32,7 @@
         </ul>
         
         <!-- タブコンテント -->
-        <div class="tab-content" style="margin-top: 15px;">
+        <div class="tab-content mt-15">
           <!-- コメント編集タブ -->
           <div role="tabpanel" class="tab-pane active" id="commentTab">
             <form id="editCommentForm">
@@ -95,8 +95,8 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="saveCommentBtn" style="display: inline-block;">コメント保存</button>
-        <button type="button" class="btn btn-warning" id="replaceFileBtn" style="display: none;">ファイル差し替え</button>
+        <button type="button" class="btn btn-primary" id="saveCommentBtn">コメント保存</button>
+        <button type="button" class="btn btn-warning d-none" id="replaceFileBtn">ファイル差し替え</button>
       </div>
     </div>
   </div>
@@ -315,7 +315,7 @@
         </div>
 
         <!-- 生成された共有リンク -->
-        <div id="shareResultPanel" style="display: none;">
+        <div id="shareResultPanel" class="d-none">
           <!-- 共有形式選択 -->
           <div class="form-group">
             <label>共有形式を選択</label>
@@ -337,9 +337,9 @@
             <label for="shareUrl">共有内容</label>
             <div class="input-group">
               <textarea class="form-control" id="shareUrl" rows="3" readonly></textarea>
-              <span class="input-group-btn" style="vertical-align: top;">
-                <button class="btn btn-success" type="button" id="copyShareUrlBtn"
-                        title="クリップボードにコピー" style="height: 80px;">
+              <span class="input-group-btn va-top">
+                <button class="btn btn-success h-80" type="button" id="copyShareUrlBtn"
+                        title="クリップボードにコピー">
                   <span class="glyphicon glyphicon-copy"></span><br>
                   コピー
                 </button>

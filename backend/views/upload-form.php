@@ -40,11 +40,11 @@
       </div>
 
       <!-- ファイル入力要素 -->
-      <input id="multipleFileInput" type="file" multiple style="display:none">
-      <input id="folderInput" type="file" webkitdirectory multiple style="display:none">
+      <input id="multipleFileInput" type="file" multiple class="d-none">
+      <input id="folderInput" type="file" webkitdirectory multiple class="d-none">
 
       <!-- 選択ファイル表示 -->
-      <div id="selectedFilesContainer" class="selected-files-container" style="display: none;">
+      <div id="selectedFilesContainer" class="selected-files-container d-none">
         <h5>選択されたファイル:</h5>
         <div id="selectedFilesList" class="selected-files-list"></div>
         <button type="button" class="btn btn-sm btn-default" id="clearFilesBtn">クリア</button>
@@ -127,7 +127,7 @@
                                     'DLキーを入力... (空白時は認証不要)'; ?>"
                      <?php echo (isset($dlkey_required) && $dlkey_required) ? 'required' : ''; ?>>
               <p class="help-block">ファイルダウンロード時に必要なキーです</p>
-              <div class="password-strength" id="dlkey-strength" style="visibility: hidden;">
+              <div class="password-strength is-invisible" id="dlkey-strength">
                 <div class="strength-bar">
                   <div class="strength-level" id="dlkey-strength-level"></div>
                 </div>
@@ -143,7 +143,7 @@
               <input type="text" class="form-control" id="delkeyInput" name="delkey"
                      placeholder="削除キーを入力してください (8文字以上推奨)" required>
               <p class="help-block">ファイル削除時に必要なキーです（必須項目）</p>
-              <div class="password-strength" id="delkey-strength" style="visibility: hidden;">
+              <div class="password-strength is-invisible" id="delkey-strength">
                 <div class="strength-bar">
                   <div class="strength-level" id="delkey-strength-level"></div>
                 </div>
@@ -164,7 +164,7 @@
           <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
                  placeholder="差し替えキーを入力してください" required>
           <p class="help-block">ファイル差し替え時とコメント編集時に必要なキーです（必須項目）</p>
-          <div class="password-strength" id="replacekey-strength" style="visibility: hidden;">
+          <div class="password-strength is-invisible" id="replacekey-strength">
             <div class="strength-bar">
               <div class="strength-level" id="replacekey-strength-level"></div>
             </div>
@@ -180,7 +180,7 @@
           <input type="text" class="form-control" id="replaceKeyInput" name="replacekey" 
                  placeholder="差し替えキーを入力してください" required>
           <p class="help-block">ファイル差し替え時に必要なキーです（必須項目）</p>
-          <div class="password-strength" id="replacekey-strength" style="visibility: hidden;">
+          <div class="password-strength is-invisible" id="replacekey-strength">
             <div class="strength-bar">
               <div class="strength-level" id="replacekey-strength-level"></div>
             </div>
@@ -191,11 +191,11 @@
       <?php endif; ?>
 
       <!-- プログレスバーエリア -->
-      <div id="progressContainer" style="display: none;" class="form-section">
+      <div id="progressContainer" class="form-section d-none">
         <h5>アップロード進行状況</h5>
         <div class="progress">
           <div id="progressBar" class="progress-bar progress-bar-info progress-bar-striped active" 
-               role="progressbar" style="width: 0%">
+               role="progressbar">
             <span id="progressText">0%</span>
           </div>
         </div>
@@ -203,7 +203,7 @@
       </div>
 
       <div class="form-section text-right">
-        <button type="button" class="btn btn-default btn-lg" id="cancelBtn" style="display: none;">キャンセル</button>
+        <button type="button" class="btn btn-default btn-lg d-none" id="cancelBtn">キャンセル</button>
       </div>
     </form>
 

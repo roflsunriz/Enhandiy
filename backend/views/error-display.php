@@ -7,7 +7,7 @@
 
 ?>
 
-<div class="row bg-white radius box-shadow" id="errorContainer" style="display: none;">
+<div class="row bg-white radius box-shadow d-none" id="errorContainer">
   <div class="col-sm-12">
     <div class="panel panel-danger">
       <div class="panel-heading">

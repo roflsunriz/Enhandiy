@@ -22,7 +22,7 @@
 
   <!-- アップロード起動ボタン（モーダル） -->
   <div class="row">
-    <div class="col-sm-12 text-center" style="margin: 15px 0;">
+    <div class="col-sm-12 text-center my-15">
       <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#uploadModal">
         📁 ファイルをアップロード
       </button>

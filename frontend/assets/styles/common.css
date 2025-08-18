@@ -130,6 +130,17 @@
   border-bottom-left-radius: 0;
 }
 
+/* 汎用ユーティリティ */
+.d-none { display: none; }
+.is-invisible { visibility: hidden; }
+.mt-15 { margin-top: 15px; }
+.my-15 { margin-top: 15px; margin-bottom: 15px; }
+.va-top { vertical-align: top; }
+.h-80 { height: 80px; }
+
+/* プログレスバー初期幅 */
+#progressBar { width: 0; }
+
 /* ヘルプテキストの改善 */
 .help-block {
   margin-top: 5px;
