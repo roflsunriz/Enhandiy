@@ -128,6 +128,20 @@ permissions:
   pull-requests: write # PR関連の操作（必要に応じて）
 ```
 
+## コンソールからのタグ作成&リリースとタグの削除方法
+
+```bash
+# タグ作成
+git tag -a v4.0.4-roflsunriz -m "Release v4.0.4-roflsunriz"
+git push origin v4.0.4-roflsunriz
+
+# リリース作成
+
+# タグ削除
+git tag -d v4.0.4-roflsunriz
+git push origin :refs/tags/v4.0.4-roflsunriz
+```
+
 ## 🐛 トラブルシューティング
 
 ### よくある問題
