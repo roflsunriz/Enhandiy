@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PHP Uploader Ver.4.0.3 設定ファイル
+ * PHP Uploader Ver.4.1.0 設定ファイル
  *
  * このファイルおよびデータディレクトリは外部からアクセスできないように
  * .htaccess等で保護してください
@@ -259,7 +259,7 @@ class config {
     {
         // v4.0.0-roflsunriz: composer.jsonのversionフィールドは削除したため、
         // 固定バージョンを返す。リリース時に手動で更新する。
-        return '4.0.3';
+        return '4.1.0';
     }
 
     /**
