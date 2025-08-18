@@ -109,8 +109,14 @@ export function openEditDialog(fileId: string, fileName: string, comment: string
     const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
     const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
     
-    if (saveCommentBtn) saveCommentBtn.style.display = 'inline-block';
-    if (replaceFileBtn) replaceFileBtn.style.display = 'none';
+    if (saveCommentBtn) {
+      removeClass(saveCommentBtn, 'd-none');
+      saveCommentBtn.style.display = 'inline-block';
+    }
+    if (replaceFileBtn) {
+      addClass(replaceFileBtn, 'd-none');
+      replaceFileBtn.style.display = 'none';
+    }
   }, 10);
 }
 
@@ -146,8 +152,14 @@ export function editComment(fileId: string, fileName: string, currentComment: st
     const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
     const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
     
-    if (saveCommentBtn) saveCommentBtn.style.display = 'inline-block';
-    if (replaceFileBtn) replaceFileBtn.style.display = 'none';
+    if (saveCommentBtn) {
+      removeClass(saveCommentBtn, 'd-none');
+      saveCommentBtn.style.display = 'inline-block';
+    }
+    if (replaceFileBtn) {
+      addClass(replaceFileBtn, 'd-none');
+      replaceFileBtn.style.display = 'none';
+    }
   }, 10);
 }
 
@@ -175,8 +187,14 @@ export function replaceFile(fileId: string, currentFilename: string = ''): void 
     const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
     const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
     
-    if (replaceFileBtn) replaceFileBtn.style.display = 'inline-block';
-    if (saveCommentBtn) saveCommentBtn.style.display = 'none';
+    if (replaceFileBtn) {
+      removeClass(replaceFileBtn, 'd-none');
+      replaceFileBtn.style.display = 'inline-block';
+    }
+    if (saveCommentBtn) {
+      addClass(saveCommentBtn, 'd-none');
+      saveCommentBtn.style.display = 'none';
+    }
   }, 10);
 }
 
@@ -204,7 +222,10 @@ export function openShareModal(fileId: string, filename: string, comment: string
   const shareResultPanel = $('#shareResultPanel') as HTMLElement;
   const regenerateBtn = $('#regenerateShareLinkBtn') as HTMLElement;
   const generateBtn = $('#generateShareLinkBtn') as HTMLElement;
-  if (shareResultPanel) shareResultPanel.style.display = 'none';
+  if (shareResultPanel) {
+    addClass(shareResultPanel, 'd-none');
+    shareResultPanel.style.display = 'none';
+  }
   if (regenerateBtn) regenerateBtn.style.display = 'none';
   if (generateBtn) generateBtn.style.display = 'inline-block';
   
@@ -336,11 +357,23 @@ function handleTabChange(event: Event): void {
   const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
   
   if (targetHref === '#commentTab') {
-    if (saveCommentBtn) saveCommentBtn.style.display = 'inline-block';
-    if (replaceFileBtn) replaceFileBtn.style.display = 'none';
+    if (saveCommentBtn) {
+      removeClass(saveCommentBtn, 'd-none');
+      saveCommentBtn.style.display = 'inline-block';
+    }
+    if (replaceFileBtn) {
+      addClass(replaceFileBtn, 'd-none');
+      replaceFileBtn.style.display = 'none';
+    }
   } else if (targetHref === '#replaceTab') {
-    if (saveCommentBtn) saveCommentBtn.style.display = 'none';
-    if (replaceFileBtn) replaceFileBtn.style.display = 'inline-block';
+    if (saveCommentBtn) {
+      addClass(saveCommentBtn, 'd-none');
+      saveCommentBtn.style.display = 'none';
+    }
+    if (replaceFileBtn) {
+      removeClass(replaceFileBtn, 'd-none');
+      replaceFileBtn.style.display = 'inline-block';
+    }
   }
 }
 
@@ -445,6 +478,7 @@ function displayShareLink(shareData: {
   // 結果パネルを表示
   const shareResultPanel = $('#shareResultPanel') as HTMLElement;
   if (shareResultPanel) {
+    removeClass(shareResultPanel, 'd-none');
     shareResultPanel.style.display = 'block';
   }
   
