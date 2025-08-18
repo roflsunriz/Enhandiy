@@ -121,8 +121,8 @@ jobs:
           
           ### Quick Setup
           1. Extract the downloaded archive
-          2. Copy `config/config.php.example` to `config/config.php`
-          3. Configure your settings in `config/config.php`
+          2. Copy `backend/config/config.php.example` to `backend/config/config.php`
+          3. Configure your settings in `backend/config/config.php`
           4. Set up your web server to point to the project root
           5. Access the application - database will be created automatically
           
