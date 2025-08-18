@@ -20,8 +20,14 @@
   <!-- ステータスメッセージ部分 -->
   <?php include __DIR__ . '/status-messages.php'; ?>
 
-  <!-- アップロードフォーム部分 -->
-  <?php include __DIR__ . '/upload-form.php'; ?>
+  <!-- アップロード起動ボタン（モーダル） -->
+  <div class="row">
+    <div class="col-sm-12 text-center" style="margin: 15px 0;">
+      <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#uploadModal">
+        📁 ファイルをアップロード
+      </button>
+    </div>
+  </div>
 
   <!-- エラー表示部分 -->
   <?php include __DIR__ . '/error-display.php'; ?>

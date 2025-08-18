@@ -11,9 +11,7 @@
 <!-- フォルダナビゲーション -->
 <div class="row bg-white radius box-shadow">
   <div class="col-sm-12">
-    <div class="page-header">
-      <h1>📁 フォルダ管理</h1>
-    </div>
+    <!-- タイトルは省略し、パンくずと一覧を優先表示 -->
 
     <!-- パンくずリスト -->
     <div class="form-section">
@@ -41,15 +39,15 @@
 
     <!-- フォルダ一覧 -->
     <div class="form-section">
-      <div class="folder-header" style="display: flex; justify-content: space-between;
+        <div class="folder-actions" style="display: flex; justify-content: space-between;
                                     align-items: center; margin-bottom: 15px;">
-        <h4 style="margin: 0; color: #333;">📂 フォルダ一覧</h4>
-        <div class="folder-actions">
-          <button type="button" class="btn btn-success btn-sm" id="create-folder-btn" title="新しいフォルダを作成">
-            <span class="glyphicon glyphicon-plus"></span> フォルダ作成
-          </button>
+          <!-- フォルダ作成ボタンを画面右端に -->
+          <div style="margin-left: auto;">
+            <button type="button" class="btn btn-success btn-sm" id="create-folder-btn" title="新しいフォルダを作成">
+              <span class="glyphicon glyphicon-plus"></span> フォルダ作成
+            </button>
+          </div>
         </div>
-      </div>
 
     <?php if (!empty($folders)) : ?>
     <div class="row" id="folder-grid">

@@ -102,6 +102,30 @@
   </div>
 </div>
 
+<!-- アップロード用モーダル -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="uploadModalLabel">ファイルをアップロード</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <?php
+          // モーダル内にアップロードフォーム本体を埋め込む（固定ボタンは含めない）
+          $render_as_modal_body = true;
+          include __DIR__ . '/upload-form.php';
+          $render_as_modal_body = false;
+        ?>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+        <input type="submit" form="upload" class="btn btn-success btn-upload" id="uploadBtn" value="📁 ファイルをアップロード">
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 汎用アラートモーダル -->
 <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
   <div class="modal-dialog">

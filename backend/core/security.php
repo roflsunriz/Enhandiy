@@ -285,7 +285,9 @@ class SecurityUtils
         }
 
         // 正規化
-        $policy['mode'] = in_array($policy['mode'] ?? 'all', ['all','whitelist','blacklist'], true) ? $policy['mode'] : 'all';
+        $allowedModes = ['all', 'whitelist', 'blacklist'];
+        $policyMode = $policy['mode'] ?? 'all';
+        $policy['mode'] = in_array($policyMode, $allowedModes, true) ? $policyMode : 'all';
         $policy['whitelist'] = array_values(array_unique(array_map('strtolower', $policy['whitelist'] ?? [])));
         $policy['blacklist'] = array_values(array_unique(array_map('strtolower', $policy['blacklist'] ?? [])));
 

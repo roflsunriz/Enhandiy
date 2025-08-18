@@ -227,7 +227,10 @@ function handleCreate()
                 SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
             }
             http_response_code(400);
-            echo json_encode(['error' => '削除キーは十分な長さが必要です。', 'min_length' => ($ret['security']['min_key_length'] ?? 8)]);
+            echo json_encode([
+                'error' => '削除キーは十分な長さが必要です。',
+                'min_length' => ($ret['security']['min_key_length'] ?? 8)
+            ]);
             exit;
         }
 

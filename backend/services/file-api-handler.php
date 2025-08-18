@@ -289,9 +289,19 @@ class FileApiHandler
             $policy = SecurityUtils::getUploadExtensionPolicy($this->config);
             if (!SecurityUtils::isExtensionAllowed($ext, $policy)) {
                 if ($policy['mode'] === 'whitelist') {
-                    $this->response->error('許可されていない拡張子です', ['allowed' => $policy['whitelist']], 400, 'INVALID_EXTENSION');
+                    $this->response->error(
+                        '許可されていない拡張子です',
+                        ['allowed' => $policy['whitelist']],
+                        400,
+                        'INVALID_EXTENSION'
+                    );
                 } elseif ($policy['mode'] === 'blacklist') {
-                    $this->response->error('禁止されている拡張子です', ['blocked' => $policy['blacklist']], 400, 'INVALID_EXTENSION');
+                    $this->response->error(
+                        '禁止されている拡張子です',
+                        ['blocked' => $policy['blacklist']],
+                        400,
+                        'INVALID_EXTENSION'
+                    );
                 } else {
                     $this->response->error('許可されていない拡張子です', [], 400, 'INVALID_EXTENSION');
                 }

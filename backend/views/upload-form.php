@@ -6,12 +6,15 @@
  */
 
 ?>
+<?php $render_as_modal_body = isset($render_as_modal_body) ? (bool)$render_as_modal_body : false; ?>
 
+<?php if (!$render_as_modal_body) : ?>
 <div class="row bg-white radius box-shadow">
   <div class="col-sm-12">
     <div class="page-header">
       <h1><?php echo $title; ?> <small>ファイルアップロード</small></h1>
     </div>
+<?php endif; ?>
     <form id="upload" class="upload-form">
       <input type="hidden" id="csrfToken" name="csrf_token" 
              value="<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>">
@@ -54,21 +57,27 @@
           <?php
             $policy = $upload_extension_policy ?? null;
             $mode = is_array($policy) && isset($policy['mode']) ? $policy['mode'] : 'all';
-            $wl = is_array($policy) && isset($policy['whitelist']) && is_array($policy['whitelist']) ? $policy['whitelist'] : [];
-            $bl = is_array($policy) && isset($policy['blacklist']) && is_array($policy['blacklist']) ? $policy['blacklist'] : [];
+            $wl = (is_array($policy) && isset($policy['whitelist']) && is_array($policy['whitelist']))
+                ? $policy['whitelist']
+                : [];
+            $bl = (is_array($policy) && isset($policy['blacklist']) && is_array($policy['blacklist']))
+                ? $policy['blacklist']
+                : [];
             // 後方互換: 旧extensionをwhitelistに統合表示
             if (empty($wl) && isset($extension) && is_array($extension)) {
-              $wl = $extension;
+                $wl = $extension;
             }
 
             if ($mode === 'whitelist') {
-              echo '<strong>対応拡張子:</strong> ' . htmlspecialchars(implode(', ', $wl), ENT_QUOTES, 'UTF-8');
+                echo '<strong>対応拡張子:</strong> ' . htmlspecialchars(implode(', ', $wl), ENT_QUOTES, 'UTF-8');
             } elseif ($mode === 'blacklist') {
-              echo '<strong>禁止拡張子:</strong> ' . htmlspecialchars(implode(', ', $bl), ENT_QUOTES, 'UTF-8') . '（上記以外はアップロード可能）';
+                echo '<strong>禁止拡張子:</strong> '
+                    . htmlspecialchars(implode(', ', $bl), ENT_QUOTES, 'UTF-8')
+                    . '（上記以外はアップロード可能）';
             } else { // all
-              echo '<strong>対応拡張子:</strong> すべて（全拡張子を許可）';
+                echo '<strong>対応拡張子:</strong> すべて（全拡張子を許可）';
             }
-          ?>
+            ?>
         </p>
       </div>
 
@@ -198,9 +207,13 @@
       </div>
     </form>
 
-    <!-- 右下固定のアップロードボタン -->
+    <?php if (!$render_as_modal_body) : ?>
+    <!-- 右下固定のアップロードボタン（通常ページ時のみ） -->
     <div class="upload-button-fixed">
       <input type="submit" form="upload" class="btn btn-success btn-lg btn-upload" value="📁 ファイルをアップロード" id="uploadBtn">
     </div>
+    <?php endif; ?>
+<?php if (!$render_as_modal_body) : ?>
   </div>
 </div>
+<?php endif; ?>
