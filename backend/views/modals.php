@@ -66,14 +66,29 @@
                 <label for="replaceFileInput">新しいファイル</label>
                 <input type="file" class="form-control" id="replaceFileInput" name="file" required>
                 <p class="help-block">
-                  <?php echo isset($max_file_size) ? $max_file_size : 100; ?>MBまでのファイルがアップロードできます。<br>
-                  対応拡張子： <?php
-                    if (isset($extension) && is_array($extension)) {
-                        foreach ($extension as $ext) {
-                            echo $ext . ' ';
-                        }
-                    } else {
-                        echo 'zip pdf jpg png';
+                  <strong>最大サイズ:</strong> <?php echo $max_file_size ?? 100; ?>MBまでアップロード可能<br>
+                  <?php
+                    $policy = $upload_extension_policy ?? null;
+                    $mode = is_array($policy) && isset($policy['mode']) ? $policy['mode'] : 'all';
+                    $wl = (is_array($policy) && isset($policy['whitelist']) && is_array($policy['whitelist']))
+                        ? $policy['whitelist']
+                        : [];
+                    $bl = (is_array($policy) && isset($policy['blacklist']) && is_array($policy['blacklist']))
+                        ? $policy['blacklist']
+                        : [];
+                    // 後方互換: 旧extensionをwhitelistに統合表示
+                    if (empty($wl) && isset($extension) && is_array($extension)) {
+                        $wl = $extension;
+                    }
+
+                    if ($mode === 'whitelist') {
+                        echo '<strong>対応拡張子:</strong> ' . htmlspecialchars(implode(', ', $wl), ENT_QUOTES, 'UTF-8');
+                    } elseif ($mode === 'blacklist') {
+                        echo '<strong>禁止拡張子:</strong> '
+                            . htmlspecialchars(implode(', ', $bl), ENT_QUOTES, 'UTF-8')
+                            . '（上記以外はアップロード可能）';
+                    } else { // all
+                        echo '<strong>対応拡張子:</strong> すべて（全拡張子を許可）';
                     }
                     ?>
                 </p>
