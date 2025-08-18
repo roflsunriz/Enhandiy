@@ -405,6 +405,12 @@ export class FileManagerCore {
         (button as HTMLButtonElement).disabled = true;
         button.classList.add('disabled');
       });
+      // リフレッシュボタンも無効化
+      const refreshBtn = this.container.querySelector('.file-manager__refresh-btn') as HTMLButtonElement | null;
+      if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('disabled');
+      }
     } else {
       this.container.classList.remove('file-manager--loading');
       
@@ -414,6 +420,12 @@ export class FileManagerCore {
         (button as HTMLButtonElement).disabled = false;
         button.classList.remove('disabled');
       });
+      // リフレッシュボタンも有効化
+      const refreshBtn = this.container.querySelector('.file-manager__refresh-btn') as HTMLButtonElement | null;
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove('disabled');
+      }
     }
   }
 

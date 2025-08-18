@@ -94,6 +94,12 @@ export class FileManagerEvents {
       return;
     }
     
+    // リフレッシュボタン
+    if (target.classList.contains('file-manager__refresh-btn') || target.closest('.file-manager__refresh-btn')) {
+      this.handleRefresh(event);
+      return;
+    }
+    
     // ファイルアクションボタン
     if (target.classList.contains('file-action-btn') || target.closest('.file-action-btn')) {
       
@@ -204,6 +210,40 @@ export class FileManagerEvents {
     
     if (viewMode) {
       this.core.setViewMode(viewMode);
+    }
+  }
+
+  /**
+   * リフレッシュ処理
+   */
+  private async handleRefresh(event: Event): Promise<void> {
+    event.preventDefault();
+    // 連打防止: すでにリフレッシュ中なら無視
+    if (this.core.isRefreshing()) {
+      return;
+    }
+    // ボタン参照（見た目で無効化）
+    const button = (event.target as HTMLElement).closest('.file-manager__refresh-btn') as HTMLButtonElement | null;
+    if (button) {
+      button.disabled = true;
+      button.classList.add('disabled');
+    }
+    try {
+      if (window.folderManager && typeof window.folderManager.refreshAll === 'function') {
+        await window.folderManager.refreshAll();
+      } else if (window.fileManagerInstance && typeof window.fileManagerInstance.refreshFromServer === 'function') {
+        await window.fileManagerInstance.refreshFromServer();
+      } else {
+        // どちらも存在しない場合はフォールバック
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error('手動更新に失敗:', e);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.classList.remove('disabled');
+      }
     }
   }
 

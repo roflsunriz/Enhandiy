@@ -54,6 +54,9 @@ export class FileManagerRenderer {
             <button class="file-manager__view-btn" data-view="list" title="リスト表示">
               リスト
             </button>
+            <button class="file-manager__refresh-btn" title="最新の状態に更新">
+              🔄 更新
+            </button>
           </div>
         </div>
         <div class="file-manager__stats">
