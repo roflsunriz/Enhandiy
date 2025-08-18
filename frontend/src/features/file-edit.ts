@@ -140,6 +140,9 @@ export function editComment(fileId: string, fileName: string, currentComment: st
   // 差し替えキーフィールドをクリア（新しい編集セッション用）
   const editReplaceKeyInput = $('#editReplaceKeyInput') as HTMLInputElement;
   if (editReplaceKeyInput) editReplaceKeyInput.value = '';
+  // マスターキーフィールドをクリア
+  const editMasterKeyInput = $('#editMasterKeyInput') as HTMLInputElement;
+  if (editMasterKeyInput) editMasterKeyInput.value = '';
   
   // コメントタブを表示
   activateTab('comment-tab', 'commentTab');
@@ -240,6 +243,7 @@ async function handleSaveComment(): Promise<void> {
   const editFileIdInput = $('#editFileId') as HTMLInputElement;
   const editCommentInput = $('#editComment') as HTMLInputElement;
   const editReplaceKeyInput = $('#editReplaceKeyInput') as HTMLInputElement;
+  const editMasterKeyInput = $('#editMasterKeyInput') as HTMLInputElement;
   
   if (!editFileIdInput || !editCommentInput) {
     showError('必要な入力項目が見つかりません。');
@@ -249,15 +253,16 @@ async function handleSaveComment(): Promise<void> {
   const fileId = editFileIdInput.value;
   const comment = editCommentInput.value;
   const replaceKey = editReplaceKeyInput?.value || '';
+  const masterKey = editMasterKeyInput?.value || '';
   
   if (!fileId) {
     showError('ファイルIDが指定されていません。');
     return;
   }
   
-  // 差し替えキーのバリデーション（全ファイル必須）
-  if (!replaceKey.trim()) {
-    showError('差し替えキーが必要です。');
+  // 認証入力のバリデーション（マスターキー または 差し替えキーのいずれか必須）
+  if (!masterKey.trim() && !replaceKey.trim()) {
+    showError('マスターキーまたは差し替えキーのいずれかを入力してください。');
     return;
   }
   
@@ -265,7 +270,9 @@ async function handleSaveComment(): Promise<void> {
     const formData = new FormData();
     formData.append('file_id', fileId);
     formData.append('comment', comment);
-    formData.append('replace_key', replaceKey);
+    // 両方常に送る（サーバー側でどちらかを判定）
+    formData.append('master_key', masterKey.trim());
+    formData.append('replace_key', replaceKey.trim());
     formData.append('csrf_token', getCsrfToken());
     
     const response = await post('/api/edit-comment.php', formData);
@@ -297,6 +304,8 @@ async function handleSaveComment(): Promise<void> {
 async function handleReplaceFile(): Promise<void> {
   const replaceFileIdInput = $('#replaceFileId') as HTMLInputElement;
   const replaceFileInput = $('#replaceFileInput') as HTMLInputElement;
+  const replaceMasterKeyInput = $('#replaceMasterKeyInput') as HTMLInputElement;
+  const modalReplaceKeyInput = $('#modalReplaceKeyInput') as HTMLInputElement;
   
   if (!replaceFileIdInput || !replaceFileInput) {
     showError('必要な入力項目が見つかりません。');
@@ -317,9 +326,19 @@ async function handleReplaceFile(): Promise<void> {
   }
   
   const file = files[0];
+  const masterKey = replaceMasterKeyInput?.value || '';
+  const replaceKey = modalReplaceKeyInput?.value || '';
+
+  // 認証入力チェック（どちらか必須）
+  if (!masterKey.trim() && !replaceKey.trim()) {
+    showError('マスターキーまたは差し替えキーのいずれかを入力してください。');
+    return;
+  }
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('replacekey', (document.getElementById('modalReplaceKeyInput') as HTMLInputElement)?.value || '');
+  // 両方常に送る（サーバー側でどちらかを判定）
+  formData.append('master_key', masterKey.trim());
+  formData.append('replacekey', replaceKey.trim());
   formData.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
   
   try {

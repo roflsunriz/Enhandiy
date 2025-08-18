@@ -45,11 +45,20 @@
                 <input type="text" class="form-control" id="editComment" placeholder="コメントを入力...">
                 <p class="help-block"><?php echo isset($max_comment) ? $max_comment : 80; ?>字まで入力できます。</p>
               </div>
+              <div class="form-group">
+                <label for="editMasterKeyInput">マスターキー</label>
+                <input type="password" class="form-control" id="editMasterKeyInput"
+                       name="master_key" placeholder="管理者用マスターキー（任意）">
+                <p class="help-block">管理者用のマスターキーです。入力すると差し替えキーは不要です。</p>
+              </div>
+
+              <div class="text-center"><strong>または</strong></div>
+
               <div class="form-group" id="editReplaceKeyGroup">
-                <label for="editReplaceKeyInput">差し替えキー <span class="text-danger">*必須</span></label>
+                <label for="editReplaceKeyInput">差し替えキー</label>
                 <input type="password" class="form-control" id="editReplaceKeyInput"
-                       name="replace_key" placeholder="差し替えキーを入力してください" required>
-                <p class="help-block">コメント編集には、アップロード時に設定した差し替えキーが必要です。</p>
+                       name="replace_key" placeholder="差し替えキーを入力してください">
+                <p class="help-block">アップロード時に設定した差し替えキーです。マスターキー未入力時は必要です。</p>
               </div>
               <input type="hidden" id="editFileId">
             </form>
@@ -94,10 +103,19 @@
                 </p>
               </div>
               <div class="form-group">
+                <label for="replaceMasterKeyInput">マスターキー</label>
+                <input type="password" class="form-control" id="replaceMasterKeyInput"
+                       name="master_key" placeholder="管理者用マスターキー（任意）">
+                <p class="help-block">管理者用のマスターキーです。入力すると差し替えキーは不要です。</p>
+              </div>
+
+              <div class="text-center"><strong>または</strong></div>
+
+              <div class="form-group">
                 <label for="modalReplaceKeyInput">差し替えキー</label>
                 <input type="password" class="form-control" id="modalReplaceKeyInput"
-                       name="replacekey" placeholder="差し替えキーを入力してください" required>
-                <p class="help-block">アップロード時に設定した差し替えキーを入力してください。</p>
+                       name="replacekey" placeholder="差し替えキーを入力してください">
+                <p class="help-block">アップロード時に設定した差し替えキーです。マスターキー未入力時は必要です。</p>
               </div>
               <input type="hidden" id="replaceFileId">
               <div class="alert alert-warning">

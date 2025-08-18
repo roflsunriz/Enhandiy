@@ -60,6 +60,7 @@ try {
     $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;
     $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
     $replaceKey = isset($_POST['replace_key']) ? trim($_POST['replace_key']) : '';
+    $masterKey = isset($_POST['master_key']) ? trim($_POST['master_key']) : '';
 
     if (!$fileId) {
         http_response_code(400);
@@ -137,57 +138,63 @@ try {
         exit;
     }
 
-    // 差し替えキー照合（全ファイル必須）
-    if (empty($replaceKey)) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => '差し替えキーが必要です',
-            'error_code' => 'REPLACE_KEY_REQUIRED',
-            'timestamp' => date('c')
-        ]);
-        exit;
+    // 認証方式: マスターキー または 差し替えキー
+    $isMasterAuthenticated = false;
+    if ($masterKey !== '' && hash_equals($config['master'], $masterKey)) {
+        $isMasterAuthenticated = true;
     }
 
-    // 差し替えキー検証
-
-    // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
-    try {
-        // まず新しいGCM形式で試行
-        $storedKey = SecurityUtils::decryptSecure($existingFile['replace_key'], $config['key']);
-    } catch (Exception $e) {
-        try {
-            // レガシーのECB形式で試行（既存データとの互換性のため）
-            $storedKey = SecurityUtils::decryptLegacyECB($existingFile['replace_key'], $config['key']);
-        } catch (Exception $e2) {
-            $errorMsg = "Replace key decryption failed for file ID: " . $fileId;
-            $errorMsg .= " - GCM: " . $e->getMessage() . " - ECB: " . $e2->getMessage();
-            error_log($errorMsg);
-            http_response_code(500);
+    if (!$isMasterAuthenticated) {
+        // 差し替えキー照合（マスターキー未使用時は必須）
+        if ($replaceKey === '') {
+            http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => '差し替えキーの復号化に失敗しました',
-                'error_code' => 'DECRYPTION_FAILED',
+                'message' => '差し替えキーが必要です',
+                'error_code' => 'REPLACE_KEY_REQUIRED',
                 'timestamp' => date('c')
             ]);
             exit;
         }
-    }
 
-    if ($replaceKey !== $storedKey) {
-        http_response_code(403);
-        echo json_encode([
-            'success' => false,
-            'message' => '差し替えキーが正しくありません',
-            'error_code' => 'INVALID_REPLACE_KEY',
-            'debug' => [
-                'input_length' => mb_strlen($replaceKey),
-                'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen($storedKey),
-                'decryption_success' => $storedKey !== false
-            ],
-            'timestamp' => date('c')
-        ]);
-        exit;
+        // 差し替えキー検証（レガシー形式と新形式の両方をサポート）
+        try {
+            // まず新しいGCM形式で試行
+            $storedKey = SecurityUtils::decryptSecure($existingFile['replace_key'], $config['key']);
+        } catch (Exception $e) {
+            try {
+                // レガシーのECB形式で試行（既存データとの互換性のため）
+                $storedKey = SecurityUtils::decryptLegacyECB($existingFile['replace_key'], $config['key']);
+            } catch (Exception $e2) {
+                $errorMsg = "Replace key decryption failed for file ID: " . $fileId;
+                $errorMsg .= " - GCM: " . $e->getMessage() . " - ECB: " . $e2->getMessage();
+                error_log($errorMsg);
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => '差し替えキーの復号化に失敗しました',
+                    'error_code' => 'DECRYPTION_FAILED',
+                    'timestamp' => date('c')
+                ]);
+                exit;
+            }
+        }
+
+        if (!hash_equals((string)$storedKey, $replaceKey)) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'message' => '差し替えキーが正しくありません',
+                'error_code' => 'INVALID_REPLACE_KEY',
+                'debug' => [
+                    'input_length' => mb_strlen($replaceKey),
+                    'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen((string)$storedKey),
+                    'decryption_success' => $storedKey !== false
+                ],
+                'timestamp' => date('c')
+            ]);
+            exit;
+        }
     }
 
     // コメント更新
@@ -226,8 +233,8 @@ try {
                 'old_comment' => $existingFile['comment'],
                 'new_comment' => $sanitizedComment,
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-                'replace_key_required' => true,
-                'auth_method' => 'csrf_and_replace_key',
+                'replace_key_required' => !$isMasterAuthenticated,
+                'auth_method' => $isMasterAuthenticated ? 'csrf_and_master' : 'csrf_and_replace_key',
                 'history_recorded' => ($existingFile['comment'] !== $sanitizedComment)
             ]);
         } catch (Exception $logError) {

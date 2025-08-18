@@ -60,9 +60,17 @@ if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
 }
 
 $replaceKeyInput = $_POST['replacekey'] ?? '';
-if (trim($replaceKeyInput) === '') {
+$masterKeyInput = $_POST['master_key'] ?? '';
+
+// 認証方式: マスターキー または 差し替えキー
+$isMasterAuthenticated = false;
+if (trim($masterKeyInput) !== '' && hash_equals($config['master'], trim($masterKeyInput))) {
+    $isMasterAuthenticated = true;
+}
+
+if (!$isMasterAuthenticated && trim($replaceKeyInput) === '') {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => '差し替えキーが必要です']);
+    echo json_encode(['success' => false, 'message' => 'マスターキーまたは差し替えキーが必要です']);
     exit;
 }
 
@@ -87,42 +95,43 @@ try {
         exit;
     }
 
-    // キー検証
-
-    // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
-    try {
-        // まず新しいGCM形式で試行
-        $storedKey = SecurityUtils::decryptSecure($existing['replace_key'], $config['key']);
-    } catch (Exception $e) {
+    // キー検証（マスターキー未使用時のみ）
+    if (!$isMasterAuthenticated) {
+        // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
         try {
-            // レガシーのECB形式で試行（既存データとの互換性のため）
-            $storedKey = SecurityUtils::decryptLegacyECB($existing['replace_key'], $config['key']);
-        } catch (Exception $e2) {
-            $errorMsg = "Replace key decryption failed for file ID: " . $fileId;
-            $errorMsg .= " - GCM: " . $e->getMessage() . " - ECB: " . $e2->getMessage();
-            error_log($errorMsg);
-            http_response_code(500);
+            // まず新しいGCM形式で試行
+            $storedKey = SecurityUtils::decryptSecure($existing['replace_key'], $config['key']);
+        } catch (Exception $e) {
+            try {
+                // レガシーのECB形式で試行（既存データとの互換性のため）
+                $storedKey = SecurityUtils::decryptLegacyECB($existing['replace_key'], $config['key']);
+            } catch (Exception $e2) {
+                $errorMsg = "Replace key decryption failed for file ID: " . $fileId;
+                $errorMsg .= " - GCM: " . $e->getMessage() . " - ECB: " . $e2->getMessage();
+                error_log($errorMsg);
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => '差し替えキーの復号化に失敗しました',
+                    'error_code' => 'DECRYPTION_FAILED'
+                ]);
+                exit;
+            }
+        }
+
+        if (!hash_equals((string)$storedKey, (string)$replaceKeyInput)) {
+            http_response_code(403);
             echo json_encode([
                 'success' => false,
-                'message' => '差し替えキーの復号化に失敗しました',
-                'error_code' => 'DECRYPTION_FAILED'
+                'message' => '差し替えキーが正しくありません',
+                'debug' => [
+                    'input_length' => mb_strlen($replaceKeyInput),
+                    'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen((string)$storedKey),
+                    'decryption_success' => $storedKey !== false
+                ]
             ]);
             exit;
         }
-    }
-
-    if ($replaceKeyInput !== $storedKey) {
-        http_response_code(403);
-        echo json_encode([
-            'success' => false,
-            'message' => '差し替えキーが正しくありません',
-            'debug' => [
-                'input_length' => mb_strlen($replaceKeyInput),
-                'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen($storedKey),
-                'decryption_success' => $storedKey !== false
-            ]
-        ]);
-        exit;
     }
 
     // 保存
