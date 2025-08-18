@@ -19,13 +19,11 @@ phpUploader v4.0.4-roflsunriz は、オリジナルのphpUploaderをベースに
 ### 📁 **フォルダ管理システム**
 - **階層フォルダ**: ネストしたフォルダ構造の作成・管理
 - **フォルダナビゲーション**: パンくずナビゲーションによる直感的なフォルダブラウジング
-- **ドラッグ＆ドロップ整理**: フォルダ間でのファイル移動が簡単
 - **設定可能な深度**: カスタマイズ可能な最大フォルダ深度と制限
 
 ### 🚀 **高度なアップロード機能**
 - **ドラッグ＆ドロップアップロード**: 複数ファイル対応のモダンなドラッグ＆ドロップインターフェース
 - **再開可能アップロード**: Tus.ioプロトコルによる大容量ファイルの一時停止・再開機能
-- **フォルダアップロード**: フォルダ階層を保持したままフォルダ全体をアップロード
 - **進捗追跡**: 速度表示付きのリアルタイムアップロード進捗
 - **フォールバック対応**: 再開可能アップロードが失敗した場合の従来アップロードへの自動切り替え
 
@@ -34,13 +32,11 @@ phpUploader v4.0.4-roflsunriz は、オリジナルのphpUploaderをベースに
 - **DLキー未設定対応**: ダウンロードキーが設定されていないファイルにも対応
 - **カスタマイズ可能な有効期限**: 共有ファイルの有効期限をカスタム設定
 - **ダウンロード制限**: 共有リンクごとの最大ダウンロード回数制御
-- **リンク管理**: 生成された全共有リンクの追跡・管理
 - **動的更新**: モーダル内でのリアルタイム設定反映とクリップボード連携
 
 ### 📋 **一括選択・操作機能**
 - **ファイル一括選択**: チェックボックスによる複数ファイルの効率的な選択
 - **全選択機能**: ワンクリックで表示中の全ファイルを選択
-- **一括削除**: 選択した複数ファイルを一度にまとめて削除
 - **マスターキー認証**: 管理者による安全で確実な一括削除機能
 - **選択状態表示**: 選択されたファイル数の視覚的フィードバック
 
@@ -54,7 +50,7 @@ phpUploader v4.0.4-roflsunriz は、オリジナルのphpUploaderをベースに
 - **パスワード強度チェック**: リアルタイムなパスワード強度評価と視覚的フィードバック
 - **削除キー必須化**: アップロード時の削除キー設定必須による安全性向上
 - **統一暗号化**: AES-GCM方式による強化されたセキュリティ（旧方式との互換性保持）
-- **柔軟なDL/DELキー**: ダウンロード・削除キーの必須/任意を設定で切り替え
+- **柔軟なDLキー**: ダウンロードキーの必須/任意を設定で切り替え
 - **差し替えキーシステム**: 暗号化キー検証による安全なファイル差し替え
 - **CSRF保護**: CSRFトークン検証による強化されたセキュリティ
 - **レート制限**: 悪用防止のためのAPIレート制限
@@ -247,7 +243,7 @@ cp backend/config/config.php.example backend/config/config.php
 **セキュリティ設定例（Apache）:**
 
 ```apache
-# config/.htaccess
+# backend/config/.htaccess
 <Files "*">
     Deny from all
 </Files>
@@ -257,7 +253,7 @@ cp backend/config/config.php.example backend/config/config.php
     Deny from all
 </Files>
 
-# logs/.htaccess
+# storage/logs/.htaccess
 <Files "*">
     Deny from all
 </Files>
@@ -302,8 +298,8 @@ cd phpUploader
 # 2. 設定ファイルを作成
 cp backend/config/config.php.example backend/config/config.php
 
-# 3. 設定ファイルを編集（master, keyを変更）
-# エディタで config/config.php を開いて編集
+# 3. 設定ファイルを編集（master, key, session_saltを変更）
+# エディタで backend/config/config.php を開いて編集
 
 # 4. カレントディレクトリをinfrastructureディレクトリに変更
 cd infrastructure
@@ -325,8 +321,8 @@ docker-compose build --no-cache
 **設定ファイルのセキュリティ**:
 
 - `backend/config/config.php`は機密情報を含むため、必ず外部アクセスを遮断してください
-- `master`と`key`には推測困難なランダムな値を設定してください
-- 本番環境では`config`と`db`、`logs`ディレクトリへの直接アクセスを禁止してください
+- `master`と`key`,`session_salt`には推測困難なランダムな値を設定してください
+- 本番環境では`backend/config`と`db`、`storage/logs`ディレクトリへの直接アクセスを禁止してください
 
 **推奨セキュリティ設定**:
 
@@ -345,20 +341,18 @@ docker-compose build --no-cache
 
 ```bash
 # 設定ファイルのテンプレートをコピー
-cp config/config.php.example config/config.php
+cp backend/config/config.php.example backend/config/config.php
 
 # 設定ファイルを編集（開発用の値に変更）
-# master, key などをローカル開発用の値に設定
+# master, key, session_salt などをローカル開発用の値に設定
 ```
 
-**注意**: `config/config.php`は`.gitignore`に含まれており、リポジトリにはコミットされません。
+**注意**: `backend/config/config.php`は`.gitignore`に含まれており、リポジトリにはコミットされません。
 
 ### バージョン管理
 
-このプロジェクトでは`composer.json`でバージョンを一元管理しています。
+このプロジェクトでは`config.php`でバージョンを一元管理しています。
 
-- **composer.json**: マスターバージョン情報
-- **config.php**: composer.jsonから自動的にバージョンを読み取り
 
 バージョン確認テスト:
 
