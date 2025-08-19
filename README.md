@@ -6,6 +6,8 @@ phpUploader v4.2.3-roflsunriz は、オリジナルのphpUploaderをベースに
 
 ![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
 
+![upload-form](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/upload-form.png)
+
 ## ✨ 主要機能
 
 ### 🎯 **モダンファイルマネージャー**
