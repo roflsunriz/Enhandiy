@@ -579,14 +579,15 @@ function completeUpload($uploadId, $upload)
             error_log('File history recording failed: ' . $historyError->getMessage());
         }
 
-        // 最終ファイルパスを決定
+        // 最終ファイルパスと stored_file_name を決定（常に stored_file_name を設定する）
         if ($encrypt_filename) {
             // セキュアなファイル名の生成（ハッシュ化）
             $hashedFileName = SecurityUtils::generateSecureFileName($fileId, $originalFileName);
             $storedFileName = SecurityUtils::generateStoredFileName($hashedFileName, $ext);
             $finalPath = $data_directory . '/' . $storedFileName;
         } else {
-            $finalPath = $data_directory . '/file_' . $fileId . '.' . $ext;
+            $storedFileName = 'file_' . $fileId . '.' . $ext;
+            $finalPath = $data_directory . '/' . $storedFileName;
         }
 
         // チャンクファイルを最終的な場所に移動
@@ -594,10 +595,19 @@ function completeUpload($uploadId, $upload)
             throw new Exception('Failed to move file');
         }
 
-        // encrypt_filenameが有効な場合は、データベースにハッシュ化されたファイル名を記録
-        if ($encrypt_filename && isset($storedFileName)) {
-            $updateStmt = $db->prepare("UPDATE uploaded SET stored_file_name = ? WHERE id = ?");
-            $updateStmt->execute([$storedFileName, $fileId]);
+        // ファイルハッシュを計算
+        $fileHash = null;
+        if (file_exists($finalPath)) {
+            $fileHash = hash_file('sha256', $finalPath);
+        }
+
+        // IPアドレス（tus_uploads の client_ip があれば優先）
+        $ipForRecord = $upload['client_ip'] ?? ($_SERVER['REMOTE_ADDR'] ?? null);
+
+        // データベースに stored_file_name と file_hash, ip_address を記録
+        if (isset($storedFileName)) {
+            $updateStmt = $db->prepare("UPDATE uploaded SET stored_file_name = ?, file_hash = ?, ip_address = ? WHERE id = ?");
+            $updateStmt->execute([$storedFileName, $fileHash, $ipForRecord, $fileId]);
         }
 
         // tus_uploadsテーブルを更新

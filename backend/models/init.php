@@ -227,6 +227,9 @@ class AppInitializer
 
             // 新スキーマのデフォルトユーザーバージョンを設定（存在しない場合）
             $this->initializeUserVersion();
+
+            // stored_file_name の自動バックフィル（必要時のみ）
+            $this->backfillStoredFileNameIfNeeded();
         } catch (PDOException $e) {
             $this->throwError('データベースの初期化に失敗しました: ' . $e->getMessage());
         }
@@ -370,6 +373,46 @@ class AppInitializer
             }
         } catch (PDOException $e) {
             error_log('Auto migration check failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * stored_file_name が NULL の既存行を、旧形式の命名規則に基づき補完
+     * - 実ファイルが存在する場合のみ更新
+     */
+    private function backfillStoredFileNameIfNeeded(): void
+    {
+        try {
+            $stmt = $this->db->query("SELECT COUNT(1) FROM uploaded WHERE stored_file_name IS NULL");
+            $need = (int)$stmt->fetchColumn();
+            if ($need === 0) {
+                return;
+            }
+
+            $dataDir = rtrim($this->config['data_directory'], DIRECTORY_SEPARATOR);
+
+            $select = $this->db->prepare("SELECT id, origin_file_name FROM uploaded WHERE stored_file_name IS NULL");
+            $select->execute();
+            $rows = $select->fetchAll();
+
+            foreach ($rows as $row) {
+                $id = (int)$row['id'];
+                $origin = (string)$row['origin_file_name'];
+                $ext = pathinfo($origin, PATHINFO_EXTENSION);
+                if ($ext === '') {
+                    continue;
+                }
+                $guess = 'file_' . $id . '.' . $ext;
+                $path = $dataDir . DIRECTORY_SEPARATOR . $guess;
+                if (!file_exists($path)) {
+                    continue;
+                }
+                $upd = $this->db->prepare("UPDATE uploaded SET stored_file_name = :name WHERE id = :id");
+                $upd->execute([':name' => $guess, ':id' => $id]);
+            }
+        } catch (Throwable $e) {
+            // バックフィルはベストエフォート: 失敗しても致命的にしない
+            error_log('Backfill stored_file_name failed: ' . $e->getMessage());
         }
     }
 
