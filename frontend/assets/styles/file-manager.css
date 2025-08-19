@@ -949,6 +949,106 @@
   color: white;
 }
 
+/* ===== アクセシビリティ強化: 色だけに依存しない識別 ===== */
+/* 視認性向上のため、枠線スタイルやパターン背景を付加（色覚多様性対応） */
+/* ダウンロード: 青系 + 斜線パターン */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--download,
+.file-manager-v2 .file-list__actions .file-action-btn--download {
+  border-style: solid;
+  background-image: repeating-linear-gradient(45deg, rgba(0, 123, 255, 0.15) 0 10px, transparent 10px 20px);
+}
+
+/* 共有: シアン系 + 点線枠 */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--share,
+.file-manager-v2 .file-list__actions .file-action-btn--share {
+  border-style: dotted;
+}
+
+/* 編集: オレンジ系 + 破線枠 */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--edit,
+.file-manager-v2 .file-list__actions .file-action-btn--edit {
+  border-style: dashed;
+}
+
+/* 移動: 紫系 + 二重枠（既存色を維持しつつ差異を強調） */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--move,
+.file-manager-v2 .file-list__actions .file-action-btn--move {
+  border-style: double;
+}
+
+/* 差し替え: 緑系 + 点線+背景パターンで差別化 */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--replace,
+.file-manager-v2 .file-list__actions .file-action-btn--replace {
+  border-style: dotted;
+  background-image: repeating-linear-gradient(-45deg, rgba(32, 201, 151, 0.12) 0 8px, transparent 8px 16px);
+}
+
+/* 削除: 赤系 + 太枠 + 内側シャドウで強調 */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--delete,
+.file-manager-v2 .file-list__actions .file-action-btn--delete {
+  border-width: 3px;
+  box-shadow: inset 0 0 0 2px rgba(220, 53, 69, 0.15);
+}
+
+/* グリッド表示のみ: シンボルを付与して色以外の手掛かりを追加 */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--download::before { content: '⬇'; margin-right: 4px; }
+.file-manager-v2 .file-grid-item__actions .file-action-btn--share::before    { content: '⤴'; margin-right: 4px; }
+.file-manager-v2 .file-grid-item__actions .file-action-btn--edit::before     { content: '✎'; margin-right: 4px; }
+.file-manager-v2 .file-grid-item__actions .file-action-btn--move::before     { content: '⇄'; margin-right: 4px; }
+.file-manager-v2 .file-grid-item__actions .file-action-btn--replace::before  { content: '⟳'; margin-right: 4px; }
+.file-manager-v2 .file-grid-item__actions .file-action-btn--delete::before   { content: '✖'; margin-right: 4px; }
+
+/* ===== アクションボタンの色競合を解消（warning一色問題の修正） ===== */
+/* グリッドビュー: 移動/差し替えボタンを固有色で上書き（.btn-warning の黄色より優先） */
+.file-manager-v2 .file-grid-item__actions .file-action-btn--move {
+  border-color: #6f42c1;
+  background: rgba(111, 66, 193, 0.1);
+  color: #6f42c1;
+}
+
+.file-manager-v2 .file-grid-item__actions .file-action-btn--move:hover {
+  background: #6f42c1;
+  color: #fff;
+  border-color: #6f42c1;
+}
+
+.file-manager-v2 .file-grid-item__actions .file-action-btn--replace {
+  border-color: #20c997;
+  background: rgba(32, 201, 151, 0.1);
+  color: #20c997;
+}
+
+.file-manager-v2 .file-grid-item__actions .file-action-btn--replace:hover {
+  background: #20c997;
+  color: #fff;
+  border-color: #20c997;
+}
+
+/* リストビュー: 移動/差し替えボタンを固有色で上書き（.btn-warning の黄色より優先） */
+.file-manager-v2 .file-list__actions .file-action-btn--move {
+  border-color: #6f42c1;
+  background: rgba(111, 66, 193, 0.1);
+  color: #6f42c1;
+}
+
+.file-manager-v2 .file-list__actions .file-action-btn--move:hover {
+  background: #6f42c1;
+  color: #fff;
+  border-color: #6f42c1;
+}
+
+.file-manager-v2 .file-list__actions .file-action-btn--replace {
+  border-color: #20c997;
+  background: rgba(32, 201, 151, 0.1);
+  color: #20c997;
+}
+
+.file-manager-v2 .file-list__actions .file-action-btn--replace:hover {
+  background: #20c997;
+  color: #fff;
+  border-color: #20c997;
+}
+
 /* DataTablesスタイルの上書き */
 .dataTables_wrapper {
   display: none;

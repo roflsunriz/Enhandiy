@@ -278,7 +278,7 @@ export class FileManagerRenderer {
         <div class="file-grid-item__actions">
           <div class="file-grid-item__actions-row">
             <button class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
-              ダウンロード
+              DL
             </button>
             <button class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
               共有

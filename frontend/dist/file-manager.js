@@ -118,7 +118,7 @@ import{a as h,f as v,s as b,h as p}from"./bootstrap.js";import{A as _,F as y}fro
         <div class="file-grid-item__actions">
           <div class="file-grid-item__actions-row">
             <button class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${e.id}" title="ダウンロード">
-              ダウンロード
+              DL
             </button>
             <button class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${e.id}" title="共有">
               共有

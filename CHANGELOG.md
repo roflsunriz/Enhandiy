@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0-roflsunriz] - 2025-08-19
+
+### Added
+
+- **マスターキーの追加**: コメント編集とファイル差し替えでもマスターキーを使用できるようにしました。
+
+### Changed
+
+- **絵文字の完全なマテリアルアイコンへの置き換え**: 絵文字を完全にマテリアルアイコンに置き換えてプロフェッショナルなデザインにしました。
+
+### Fixed
+
+- **一括選択時の「全解除ボタン」と「選択状態」ボタンの重複を削除し、「選択解除」に統一**: 一括選択時の「全解除ボタン」と「選択状態」ボタンの重複を削除し、「選択解除」に統一しました。
+
+
 ## [4.1.0-roflsunriz] - 2025-08-18
 
 ### Added
