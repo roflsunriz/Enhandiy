@@ -205,8 +205,8 @@ export class FileManagerEvents {
    */
   private handleViewToggle(event: Event): void {
     event.preventDefault();
-    const button = event.target as HTMLElement;
-    const viewMode = button.dataset.view as ViewMode;
+    const button = (event.target as HTMLElement).closest('.file-manager__view-btn') as HTMLElement | null;
+    const viewMode = button?.dataset.view as ViewMode;
     
     if (viewMode) {
       this.core.setViewMode(viewMode);
@@ -278,9 +278,9 @@ export class FileManagerEvents {
     event.stopPropagation();
     event.stopImmediatePropagation(); // 他のリスナーを停止
     
-    const button = event.target as HTMLElement;
-    const action = button.dataset.action;
-    const fileId = button.dataset.fileId;
+    const button = (event.target as HTMLElement).closest('.file-action-btn') as HTMLElement | null;
+    const action = button?.dataset.action;
+    const fileId = button?.dataset.fileId;
     
     
     
@@ -394,8 +394,8 @@ export class FileManagerEvents {
   private handleBulkAction(event: Event): void {
     event.preventDefault();
     
-    const button = event.target as HTMLElement;
-    const action = button.dataset.action;
+    const button = (event.target as HTMLElement).closest('.bulk-action-btn') as HTMLElement | null;
+    const action = button?.dataset.action;
     
     switch (action) {
       case 'select-all':
@@ -419,8 +419,8 @@ export class FileManagerEvents {
   private handlePagination(event: Event): void {
     event.preventDefault();
     
-    const button = event.target as HTMLElement;
-    const page = parseInt(button.dataset.page || '1');
+    const button = (event.target as HTMLElement).closest('.pagination-btn') as HTMLElement | null;
+    const page = parseInt(button?.dataset.page || '1');
     
     if (!isNaN(page)) {
       this.core.setPage(page);
@@ -433,8 +433,8 @@ export class FileManagerEvents {
   private handleSort(event: Event): void {
     event.preventDefault();
     
-    const header = event.target as HTMLElement;
-    const sortField = header.dataset.sort;
+    const header = (event.target as HTMLElement).closest('[data-sort]') as HTMLElement | null;
+    const sortField = header?.dataset.sort;
     
     if (!sortField) return;
     
@@ -461,7 +461,8 @@ export class FileManagerEvents {
       return;
     }
     
-    const item = (event.currentTarget as HTMLElement);
+    const item = target.closest('.file-grid-item, .file-list-item') as HTMLElement | null;
+    if (!item) return;
     
     // ダブルクリック処理中は除外
     if (item.dataset.doubleClickProcessing === 'true') {
@@ -497,7 +498,8 @@ export class FileManagerEvents {
     event.stopPropagation();
     event.stopImmediatePropagation(); // 他のリスナーを停止
     
-    const item = (event.currentTarget as HTMLElement);
+    const item = (event.target as HTMLElement).closest('.file-grid-item, .file-list-item') as HTMLElement | null;
+    if (!item) return;
     const fileId = item.dataset.fileId;
     
     // ダブルクリック処理中フラグをチェック
