@@ -23,6 +23,37 @@
   <!-- アップロード起動ボタン（モーダル） -->
   <div class="row">
     <div class="col-sm-12 text-center my-15">
+      <?php
+        // config.php で設定可能なアップローダ説明（タイトル/説明/URL）。空の場合は非表示。
+        if (isset($uploader_info) && is_array($uploader_info)) {
+            $infoTitle = trim($uploader_info['title'] ?? '');
+            $infoDesc = trim($uploader_info['description'] ?? '');
+            $infoUrl  = trim($uploader_info['url'] ?? '');
+            if ($infoTitle !== '' || $infoDesc !== '' || $infoUrl !== '') {
+                echo '<div class="alert alert-info text-start" role="alert" '
+                   . 'style="max-width:860px;margin:0 auto 15px;">';
+                if ($infoTitle !== '') {
+                    $safeTitle = htmlspecialchars($infoTitle, ENT_QUOTES, 'UTF-8');
+                    echo '<h4 class="alert-heading" style="margin-top:0;">'
+                        . $safeTitle
+                        . '</h4>';
+                }
+                if ($infoDesc !== '') {
+                    $safeDesc = htmlspecialchars($infoDesc, ENT_QUOTES, 'UTF-8');
+                    echo '<p style="margin-bottom:8px;">' . nl2br($safeDesc) . '</p>';
+                }
+                if ($infoUrl !== '') {
+                    $safeUrl = htmlspecialchars($infoUrl, ENT_QUOTES, 'UTF-8');
+                    echo '<p style="margin:0;">'
+                        . '<a href="' . $safeUrl . '" target="_blank" rel="noopener noreferrer">'
+                        . $safeUrl
+                        . '</a>'
+                        . '</p>';
+                }
+                echo '</div>';
+            }
+        }
+        ?>
       <?php require_once __DIR__ . '/icons.php'; ?>
       <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#uploadModal">
         <?php echo render_icon('folder', 18, 'icon'); ?> ファイルをアップロード
