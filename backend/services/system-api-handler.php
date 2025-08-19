@@ -49,10 +49,10 @@ class SystemApiHandler
                 $statusInfo = array_merge($statusInfo, $this->getSystemInfo());
             }
 
-            $this->response->success('システム状態を取得しました', $statusInfo);
+            $this->response->success('System status retrieved', $statusInfo);
         } catch (Exception $e) {
             error_log('System status error: ' . $e->getMessage());
-            $this->response->error('システム状態の取得に失敗しました', [], 500, 'SYSTEM_ERROR');
+            $this->response->error('Failed to retrieve system status', [], 500, 'SYSTEM_ERROR');
         }
     }
 
@@ -93,7 +93,7 @@ class SystemApiHandler
             ];
         } catch (PDOException $e) {
             error_log('Database stats error: ' . $e->getMessage());
-            return ['database' => ['error' => 'データベース統計の取得に失敗しました']];
+            return ['database' => ['error' => 'Failed to retrieve database statistics']];
         }
     }
 
@@ -121,7 +121,7 @@ class SystemApiHandler
             ];
         } catch (Exception $e) {
             error_log('System info error: ' . $e->getMessage());
-            return ['system' => ['error' => 'システム情報の取得に失敗しました']];
+            return ['system' => ['error' => 'Failed to retrieve system information']];
         }
     }
 
@@ -155,16 +155,16 @@ class SystemApiHandler
 
         $parts = [];
         if ($days > 0) {
-            $parts[] = $days . '日';
+            $parts[] = $days . ' days';
         }
         if ($hours > 0) {
-            $parts[] = $hours . '時間';
+            $parts[] = $hours . ' hours';
         }
         if ($minutes > 0) {
-            $parts[] = $minutes . '分';
+            $parts[] = $minutes . ' minutes';
         }
 
-        return empty($parts) ? '1分未満' : implode(' ', $parts);
+        return empty($parts) ? 'less than 1 minute' : implode(' ', $parts);
     }
 
     /**
@@ -200,13 +200,13 @@ class SystemApiHandler
             $health['timestamp'] = date('c');
 
             if ($allHealthy) {
-                $this->response->success('システムは正常です', $health);
+                $this->response->success('System is healthy', $health);
             } else {
-                $this->response->error('システムに問題があります', $health, 503, 'SYSTEM_UNHEALTHY');
+                $this->response->error('System has issues', $health, 503, 'SYSTEM_UNHEALTHY');
             }
         } catch (Exception $e) {
             error_log('Health check error: ' . $e->getMessage());
-            $this->response->error('ヘルスチェックに失敗しました', [], 500, 'HEALTH_CHECK_ERROR');
+            $this->response->error('Health check failed', [], 500, 'HEALTH_CHECK_ERROR');
         }
     }
 
@@ -226,9 +226,9 @@ class SystemApiHandler
             $stmt->execute();
             $stmt->fetchColumn();
 
-            return ['status' => 'ok', 'message' => 'データベース接続正常'];
+            return ['status' => 'ok', 'message' => 'Database connection OK'];
         } catch (Exception $e) {
-            return ['status' => 'error', 'message' => 'データベース接続エラー: ' . $e->getMessage()];
+            return ['status' => 'error', 'message' => 'Database connection error: ' . $e->getMessage()];
         }
     }
 
@@ -243,18 +243,18 @@ class SystemApiHandler
 
             $checks = [];
 
-            // データディレクトリの存在・書き込み権限チェック
+            // Data directory existence and permissions check
             if (!is_dir($dataDir)) {
-                $checks[] = 'データディレクトリが存在しません';
+                $checks[] = 'Data directory does not exist';
             } elseif (!is_writable($dataDir)) {
-                $checks[] = 'データディレクトリに書き込み権限がありません';
+                $checks[] = 'Data directory is not writable';
             }
 
-            // データベースディレクトリの存在・書き込み権限チェック
+            // Database directory existence and permissions check
             if (!is_dir($dbDir)) {
-                $checks[] = 'データベースディレクトリが存在しません';
+                $checks[] = 'Database directory does not exist';
             } elseif (!is_writable($dbDir)) {
-                $checks[] = 'データベースディレクトリに書き込み権限がありません';
+                $checks[] = 'Database directory is not writable';
             }
 
             // ディスク容量チェック
@@ -262,18 +262,18 @@ class SystemApiHandler
             $totalSpace = disk_total_space('.');
             if ($freeSpace && $totalSpace) {
                 $usage = ($totalSpace - $freeSpace) / $totalSpace;
-                if ($usage > 0.95) { // 95%以上使用
-                    $checks[] = 'ディスク使用量が95%を超えています';
+                if ($usage > 0.95) { // more than 95% used
+                    $checks[] = 'Disk usage exceeds 95%';
                 }
             }
 
             if (empty($checks)) {
-                return ['status' => 'ok', 'message' => 'ファイルシステム正常'];
+                return ['status' => 'ok', 'message' => 'Filesystem OK'];
             } else {
                 return ['status' => 'error', 'message' => implode(', ', $checks)];
             }
         } catch (Exception $e) {
-            return ['status' => 'error', 'message' => 'ファイルシステムチェックエラー: ' . $e->getMessage()];
+            return ['status' => 'error', 'message' => 'Filesystem check error: ' . $e->getMessage()];
         }
     }
 
@@ -285,26 +285,26 @@ class SystemApiHandler
         try {
             $issues = [];
 
-            // 必要な設定項目のチェック
+            // Required configuration checks
             $requiredConfigs = ['key', 'extension', 'max_file_size'];
             foreach ($requiredConfigs as $key) {
                 if (!isset($this->config[$key])) {
-                    $issues[] = "設定項目 '{$key}' が未定義です";
+                    $issues[] = "Config key '{$key}' is not defined";
                 }
             }
 
-            // セキュリティ設定のチェック
+            // Security-related configuration checks
             if (!isset($this->config['key']) || strlen($this->config['key']) < 32) {
-                $issues[] = '暗号化キーが短すぎます（32文字以上推奨）';
+                $issues[] = 'Encryption key is too short (32+ characters recommended)';
             }
 
             if (empty($issues)) {
-                return ['status' => 'ok', 'message' => '設定正常'];
+                return ['status' => 'ok', 'message' => 'Configuration OK'];
             } else {
                 return ['status' => 'warning', 'message' => implode(', ', $issues)];
             }
         } catch (Exception $e) {
-            return ['status' => 'error', 'message' => '設定チェックエラー: ' . $e->getMessage()];
+            return ['status' => 'error', 'message' => 'Configuration check error: ' . $e->getMessage()];
         }
     }
 }

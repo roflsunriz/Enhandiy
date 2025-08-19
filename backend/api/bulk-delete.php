@@ -36,12 +36,12 @@ try {
 
     // POSTメソッドのみ許可
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        $responseHandler->error('POSTリクエストが必要です。', [], 405);
+        $responseHandler->error('POST request required.', [], 405);
     }
 
     // 一括削除機能の有効性チェック
     if (!($config['deletion_security']['bulk_delete_enabled'] ?? true)) {
-        $responseHandler->error('一括削除機能が無効です。', [], 403, 'BULK_DELETE_DISABLED');
+        $responseHandler->error('Bulk delete feature is disabled.', [], 403, 'BULK_DELETE_DISABLED');
     }
 
     // 入力データの取得
@@ -50,23 +50,23 @@ try {
 
     // 基本バリデーション
     if (empty($fileIds) || !is_array($fileIds)) {
-        $responseHandler->error('削除するファイルが指定されていません。', [], 400);
+        $responseHandler->error('No files specified for deletion.', [], 400);
     }
 
     if (empty($masterKey)) {
-        $responseHandler->error('マスターキーが入力されていません。', [], 400, 'MASTER_KEY_REQUIRED');
+        $responseHandler->error('Master key is required.', [], 400, 'MASTER_KEY_REQUIRED');
     }
 
     // ファイル数制限チェック
     $maxBulkFiles = $config['deletion_security']['max_bulk_delete_files'] ?? 100;
     if (count($fileIds) > $maxBulkFiles) {
-        $responseHandler->error("一度に削除できるファイル数は{$maxBulkFiles}件までです。", [], 400);
+        $responseHandler->error("Up to {$maxBulkFiles} files can be deleted at once.", [], 400);
     }
 
     // CSRFトークンの検証
     if (!SecurityUtils::validateCSRFToken($_POST['csrf_token'] ?? '')) {
         $logger->warning('CSRF token validation failed in bulk delete', ['file_count' => count($fileIds)]);
-        $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
+        $responseHandler->error('Invalid request. Please reload the page.', [], 403);
     }
 
     // マスターキー認証
@@ -75,7 +75,7 @@ try {
             'file_count' => count($fileIds),
             'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
         ]);
-        $responseHandler->error('マスターキーが正しくありません。', [], 403, 'INVALID_MASTER_KEY');
+        $responseHandler->error('Invalid master key.', [], 403, 'INVALID_MASTER_KEY');
     }
 
     // ファイルIDの数値変換とバリデーション
@@ -88,7 +88,7 @@ try {
     }
 
     if (empty($validFileIds)) {
-        $responseHandler->error('有効なファイルIDが指定されていません。', [], 400);
+        $responseHandler->error('No valid file IDs were specified.', [], 400);
     }
 
     // トランザクション開始
@@ -117,7 +117,7 @@ try {
         foreach ($notFoundIds as $notFoundId) {
             $results['not_found_files'][] = [
                 'id' => $notFoundId,
-                'reason' => 'ファイルが見つかりません'
+                'reason' => 'File not found'
             ];
         }
 
@@ -153,7 +153,7 @@ try {
                             'path' => $filePath
                         ]);
                     } else {
-                        throw new Exception("物理ファイルの削除に失敗しました: {$filePath}");
+                        throw new Exception("Failed to delete physical file: {$filePath}");
                     }
                 } else {
                     $physicalDeleted = true; // ファイルが存在しない場合は削除済みとみなす
@@ -166,7 +166,7 @@ try {
                 // データベースからファイル情報を削除
                 $deleteStmt = $db->prepare("DELETE FROM uploaded WHERE id = ?");
                 if (!$deleteStmt->execute([$fileId])) {
-                    throw new Exception("データベースからの削除に失敗しました");
+                    throw new Exception("Failed to delete from database");
                 }
 
                 // 関連するアクセストークンを削除
@@ -203,7 +203,7 @@ try {
             $rollbackOnPartialFailure = $config['deletion_security']['rollback_on_partial_failure'] ?? false;
 
             if ($rollbackOnPartialFailure) {
-                throw new Exception('一部のファイル削除に失敗したため、全体をロールバックしました。');
+                throw new Exception('Partial delete failed; rolled back all changes.');
             }
         }
 
@@ -211,7 +211,7 @@ try {
         $db->commit();
 
         // 成功レスポンス
-        $responseHandler->success('一括削除が完了しました。', [
+        $responseHandler->success('Bulk deletion completed.', [
             'summary' => [
                 'total_requested' => count($validFileIds),
                 'deleted_count' => count($results['deleted_files']),
@@ -236,14 +236,14 @@ try {
     }
 
     if (isset($responseHandler)) {
-        $responseHandler->error('一括削除でシステムエラーが発生しました。', [], 500);
+        $responseHandler->error('A system error occurred during bulk deletion.', [], 500);
     } else {
         // 最低限のエラーレスポンス
         header('Content-Type: application/json; charset=utf-8');
         http_response_code(500);
         echo json_encode([
             'status' => 'error',
-            'message' => 'システムエラーが発生しました。'
+            'message' => 'A system error has occurred.'
         ], JSON_UNESCAPED_UNICODE);
     }
 }

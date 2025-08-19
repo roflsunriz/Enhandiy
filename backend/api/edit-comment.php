@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
         'success' => false,
-        'message' => 'POSTリクエストのみ許可されています',
+        'message' => 'Only POST requests are allowed',
         'timestamp' => date('c')
     ]);
     exit;
@@ -28,7 +28,7 @@ if (!file_exists($utilsPath)) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'システムファイルが見つかりません',
+        'message' => 'System file not found',
         'error_code' => 'SYSTEM_FILE_MISSING',
         'debug' => 'Utils.php not found',
         'timestamp' => date('c')
@@ -49,7 +49,7 @@ try {
         http_response_code(403);
         echo json_encode([
             'success' => false,
-            'message' => 'セキュリティトークンが無効です',
+            'message' => 'Invalid security token',
             'error_code' => 'CSRF_TOKEN_INVALID',
             'timestamp' => date('c')
         ]);
@@ -66,7 +66,7 @@ try {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'ファイルIDが必要です',
+            'message' => 'File ID is required',
             'error_code' => 'FILE_ID_REQUIRED',
             'timestamp' => date('c')
         ]);
@@ -80,7 +80,7 @@ try {
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'message' => '設定ファイルが見つかりません',
+            'message' => 'Configuration file not found',
             'error_code' => 'CONFIG_FILE_MISSING',
             'debug' => 'config.php not found',
             'timestamp' => date('c')
@@ -96,7 +96,7 @@ try {
         http_response_code(403);
         echo json_encode([
             'success' => false,
-            'message' => 'コメント編集機能が無効です',
+            'message' => 'Comment edit feature is disabled',
             'error_code' => 'COMMENT_EDIT_DISABLED',
             'timestamp' => date('c')
         ]);
@@ -109,7 +109,7 @@ try {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => "コメントが長すぎます（最大{$maxComment}文字）",
+            'message' => "Comment is too long (max {$maxComment} characters)",
             'error_code' => 'COMMENT_TOO_LONG',
             'timestamp' => date('c')
         ]);
@@ -131,7 +131,7 @@ try {
         http_response_code(404);
         echo json_encode([
             'success' => false,
-            'message' => 'ファイルが見つかりません',
+            'message' => 'File not found',
             'error_code' => 'FILE_NOT_FOUND',
             'timestamp' => date('c')
         ]);
@@ -150,7 +150,7 @@ try {
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => '差し替えキーが必要です',
+                'message' => 'Replace key is required',
                 'error_code' => 'REPLACE_KEY_REQUIRED',
                 'timestamp' => date('c')
             ]);
@@ -172,7 +172,7 @@ try {
                 http_response_code(500);
                 echo json_encode([
                     'success' => false,
-                    'message' => '差し替えキーの復号化に失敗しました',
+                    'message' => 'Failed to decrypt replace key',
                     'error_code' => 'DECRYPTION_FAILED',
                     'timestamp' => date('c')
                 ]);
@@ -184,7 +184,7 @@ try {
             http_response_code(403);
             echo json_encode([
                 'success' => false,
-                'message' => '差し替えキーが正しくありません',
+                'message' => 'Invalid replace key',
                 'error_code' => 'INVALID_REPLACE_KEY',
                 'debug' => [
                     'input_length' => mb_strlen($replaceKey),
@@ -244,7 +244,7 @@ try {
 
         echo json_encode([
             'success' => true,
-            'message' => 'コメントを更新しました',
+            'message' => 'Comment updated',
             'data' => [
                 'file_id' => $fileId,
                 'new_comment' => $sanitizedComment
@@ -255,7 +255,7 @@ try {
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'message' => 'コメントの更新に失敗しました',
+            'message' => 'Failed to update comment',
             'error_code' => 'DATABASE_UPDATE_FAILED',
             'timestamp' => date('c')
         ]);
@@ -265,7 +265,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'データベースエラーが発生しました',
+        'message' => 'Database error occurred',
         'error_code' => 'DATABASE_ERROR',
         'timestamp' => date('c')
     ]);
@@ -274,7 +274,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'サーバー内部エラーが発生しました',
+        'message' => 'Internal server error occurred',
         'error_code' => 'INTERNAL_ERROR',
         'timestamp' => date('c')
     ]);

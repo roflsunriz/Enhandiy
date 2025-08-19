@@ -16,14 +16,14 @@ if (!is_null($ret)) {
 // フォルダ機能が無効な場合はエラーを返す
 if (!isset($folders_enabled) || !$folders_enabled) {
     http_response_code(403);
-    echo json_encode(['error' => 'フォルダ機能が無効です'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Folder feature is disabled'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 // POSTメソッドのみ許可
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['error' => 'メソッドが許可されていません'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Method not allowed'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -34,7 +34,7 @@ try {
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'データベース接続エラー'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Database connection error'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -44,7 +44,7 @@ $data = json_decode($json, true);
 
 if (!$data) {
     http_response_code(400);
-    echo json_encode(['error' => '不正なJSONデータです'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Invalid JSON payload'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -54,7 +54,7 @@ $folderId = isset($data['folder_id']) && $data['folder_id'] !== '' ? (int)$data[
 // ファイルIDの検証
 if ($fileId <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => '有効なファイルIDが必要です'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Valid file ID is required'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -65,7 +65,7 @@ $file = $stmt->fetch();
 
 if (!$file) {
     http_response_code(404);
-    echo json_encode(['error' => 'ファイルが見つかりません'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'File not found'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -75,7 +75,7 @@ if ($folderId !== null) {
     $stmt->execute([$folderId]);
     if (!$stmt->fetch()) {
         http_response_code(404);
-        echo json_encode(['error' => '移動先フォルダが見つかりません'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Destination folder not found'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
@@ -85,10 +85,10 @@ try {
     $stmt = $db->prepare("UPDATE uploaded SET folder_id = ? WHERE id = ?");
     $stmt->execute([$folderId, $fileId]);
 
-    $targetFolder = $folderId ? "フォルダID: $folderId" : "ルートフォルダ";
+    $targetFolder = $folderId ? "Folder ID: $folderId" : "Root folder";
 
     echo json_encode([
-        'message' => 'ファイルを移動しました',
+        'message' => 'File moved',
         'file_id' => $fileId,
         'file_name' => $file['origin_file_name'],
         'old_folder_id' => $file['folder_id'],
@@ -97,5 +97,5 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'ファイル移動に失敗しました: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Failed to move file: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
 }

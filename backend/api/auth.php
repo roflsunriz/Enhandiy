@@ -24,26 +24,26 @@ class ApiAuth
     {
         // API機能が無効の場合は認証失敗
         if (!$this->config['api_enabled']) {
-            $this->sendError(503, 'API_DISABLED', 'RESTful API機能が無効です');
+            $this->sendError(503, 'API_DISABLED', 'RESTful API feature is disabled');
             return false;
         }
 
         // AuthorizationヘッダーまたはクエリパラメータからAPIキーを取得
         $apiKey = $this->extractApiKey();
         if (!$apiKey) {
-            $this->sendError(401, 'API_KEY_MISSING', 'APIキーが必要です');
+            $this->sendError(401, 'API_KEY_MISSING', 'API key is required');
             return false;
         }
 
         // APIキーの検証
         if (!$this->validateApiKey($apiKey)) {
-            $this->sendError(401, 'API_KEY_INVALID', '無効なAPIキーです');
+            $this->sendError(401, 'API_KEY_INVALID', 'Invalid API key');
             return false;
         }
 
         // レート制限チェック
         if (!$this->checkRateLimit($apiKey)) {
-            $this->sendError(429, 'RATE_LIMIT_EXCEEDED', 'リクエスト制限を超過しました');
+            $this->sendError(429, 'RATE_LIMIT_EXCEEDED', 'Request limit exceeded');
             return false;
         }
 

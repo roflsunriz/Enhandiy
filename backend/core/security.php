@@ -1060,20 +1060,20 @@ class SecurityUtils
             return $message; // デバッグモードでは詳細情報を表示
         }
 
-        // 機密情報を含む可能性のあるパターンを除去
+        // Remove potentially sensitive patterns and convert to safe, English messages
         $patterns = [
-            '/\/[a-zA-Z0-9\/_\-\.]+\/[a-zA-Z0-9\/_\-\.]+\.php/' => '[PATH_HIDDEN]', // ファイルパス
-            '/\/[a-zA-Z0-9\/_\-\.]+\/db\/[a-zA-Z0-9\/_\-\.]+/' => '[DB_PATH_HIDDEN]', // DBパス
-            '/\/[a-zA-Z0-9\/_\-\.]+\/data\/[a-zA-Z0-9\/_\-\.]+/' => '[DATA_PATH_HIDDEN]', // データパス
-            '/\/[a-zA-Z0-9\/_\-\.]+\/config\/[a-zA-Z0-9\/_\-\.]+/' => '[CONFIG_PATH_HIDDEN]', // 設定パス
-            '/Connection failed: .+/' => 'データベース接続エラーが発生しました', // DB接続エラー
-            '/SQL error: .+/' => 'データベースエラーが発生しました', // SQLエラー
-            '/file_get_contents\(.+\)/' => 'ファイル読み込みエラーが発生しました', // ファイル読み込みエラー
-            '/openssl_.+failed/' => '暗号化処理でエラーが発生しました', // OpenSSLエラー
-            '/[0-9a-fA-F]{32,}/' => '[HASH_HIDDEN]', // ハッシュ値
-            '/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/' => '[IP_HIDDEN]', // IPアドレス
-            '/on line \d+/' => '', // 行番号
-            '/in \/[^\s]+/' => '', // ファイルパス（in文）
+            '/\/[a-zA-Z0-9\/_\-\.]+\/[a-zA-Z0-9\/_\-\.]+\.php/' => '[PATH_HIDDEN]',
+            '/\/[a-zA-Z0-9\/_\-\.]+\/db\/[a-zA-Z0-9\/_\-\.]+/' => '[DB_PATH_HIDDEN]',
+            '/\/[a-zA-Z0-9\/_\-\.]+\/data\/[a-zA-Z0-9\/_\-\.]+/' => '[DATA_PATH_HIDDEN]',
+            '/\/[a-zA-Z0-9\/_\-\.]+\/config\/[a-zA-Z0-9\/_\-\.]+/' => '[CONFIG_PATH_HIDDEN]',
+            '/Connection failed: .+/' => 'Database connection error occurred',
+            '/SQL error: .+/' => 'Database error occurred',
+            '/file_get_contents\(.+\)/' => 'File read error occurred',
+            '/openssl_.+failed/' => 'Cryptography error occurred',
+            '/[0-9a-fA-F]{32,}/' => '[HASH_HIDDEN]',
+            '/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/' => '[IP_HIDDEN]',
+            '/on line \d+/' => '',
+            '/in \/[^\s]+/' => '',
         ];
 
         $sanitizedMessage = $message;
@@ -1101,11 +1101,11 @@ class SecurityUtils
         error_log("Security Error [{$errorId}]: " . $e->getMessage()
             . " in " . $e->getFile() . " on line " . $e->getLine());
 
-        // ユーザーには安全なメッセージのみ表示
+        // Show only safe, English message to the user
         if ($isDebugMode) {
             echo "Error [{$errorId}]: " . $sanitizedMessage;
         } else {
-            echo "システムエラーが発生しました。エラーID: {$errorId}";
+            echo "A system error occurred. Error ID: {$errorId}";
         }
     }
 

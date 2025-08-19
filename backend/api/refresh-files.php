@@ -31,7 +31,7 @@ SecurityUtils::startSecureSession();
 try {
     // 設定ファイルの読み込み
     if (!file_exists('../config/config.php')) {
-        throw new Exception('設定ファイルが見つかりません。');
+        throw new Exception('Configuration file not found.');
     }
 
     require_once __DIR__ . '/../config/config.php';
@@ -58,7 +58,7 @@ try {
         $fileData = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$fileData) {
-            throw new Exception('指定されたファイルが見つかりません。');
+            throw new Exception('Specified file not found.');
         }
 
         // 単一ファイル情報をレスポンス
@@ -120,31 +120,31 @@ try {
     $countStmt = $db->prepare($countSql);
     $countStmt->execute();
     $totalFiles = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
-    error_log("refresh-files.php: データベース内総ファイル数: $totalFiles");
+    error_log("refresh-files.php: Total files in database: $totalFiles");
 
     // ルートフォルダのファイル数をチェック
     $rootCountSql = "SELECT COUNT(*) as root_total FROM uploaded WHERE folder_id IS NULL";
     $rootCountStmt = $db->prepare($rootCountSql);
     $rootCountStmt->execute();
     $rootTotalFiles = $rootCountStmt->fetch(PDO::FETCH_ASSOC)['root_total'];
-    error_log("refresh-files.php: ルートフォルダのファイル数: $rootTotalFiles");
+    error_log("refresh-files.php: Root folder file count: $rootTotalFiles");
 
     // ファイル一覧取得（全ファイル表示版）
     if ($folderId) {
         $sql = "SELECT * FROM uploaded WHERE folder_id = ? ORDER BY input_date DESC";
         $stmt = $db->prepare($sql);
         $stmt->execute([$folderId]);
-        error_log("refresh-files.php: フォルダ指定でのファイル取得 - folder_id: $folderId");
+        error_log("refresh-files.php: Folder-specific fetch - folder_id: $folderId");
     } else {
         // ルートフォルダ表示時は全てのファイルを表示（初期表示と一致させる）
         $sql = "SELECT * FROM uploaded ORDER BY input_date DESC";
         $stmt = $db->prepare($sql);
         $stmt->execute();
-        error_log("refresh-files.php: ルートフォルダでの全ファイル取得 - SQL: $sql");
+        error_log("refresh-files.php: Root folder fetch all - SQL: $sql");
     }
 
     $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    error_log("refresh-files.php: 実際に取得したファイル数: " . count($files));
+    error_log("refresh-files.php: Fetched file count: " . count($files));
 
     // 各ファイルのIDをログ出力
     $fileIds = array_map(
@@ -153,7 +153,7 @@ try {
         },
         $files
     );
-    error_log("refresh-files.php: 取得したファイルID: " . implode(', ', $fileIds));
+    error_log("refresh-files.php: File IDs: " . implode(', ', $fileIds));
 
     // ファイルデータの正規化
     $normalizedFiles = [];

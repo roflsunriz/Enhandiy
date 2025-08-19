@@ -19,7 +19,7 @@ if (!$authHeader || !preg_match('/Bearer\s+(.+)/', $authHeader, $matches)) {
     http_response_code(401);
     echo json_encode([
         'success' => false,
-        'error' => ['code' => 'API_KEY_MISSING', 'message' => 'APIキーが必要です'],
+        'error' => ['code' => 'API_KEY_MISSING', 'message' => 'API key is required'],
         'timestamp' => date('c')
     ]);
     exit;
@@ -37,7 +37,7 @@ if (!isset($config['api_keys'][$apiKey])) {
     http_response_code(401);
     echo json_encode([
         'success' => false,
-        'error' => ['code' => 'API_KEY_INVALID', 'message' => '無効なAPIキーです'],
+        'error' => ['code' => 'API_KEY_INVALID', 'message' => 'Invalid API key'],
         'timestamp' => date('c')
     ]);
     exit;

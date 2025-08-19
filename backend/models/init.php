@@ -39,24 +39,24 @@ class AppInitializer
      */
     private function validateConfig(): void
     {
-        // セキュリティ設定の検証
+        // Validate security-related settings
         if ($this->config['master'] === 'CHANGE_THIS_MASTER_KEY') {
-            $this->throwError('マスターキーが設定されていません。config.phpを確認してください。');
+            $this->throwError('Master key is not configured. Please check config.php.');
         }
 
         if ($this->config['key'] === 'CHANGE_THIS_ENCRYPTION_KEY') {
-            $this->throwError('暗号化キーが設定されていません。config.phpを確認してください。');
+            $this->throwError('Encryption key is not configured. Please check config.php.');
         }
 
         if ($this->config['session_salt'] === 'CHANGE_THIS_SESSION_SALT') {
-            $this->throwError('セッションソルトが設定されていません。config.phpを確認してください。');
+            $this->throwError('Session salt is not configured. Please check config.php.');
         }
 
         // 必要な拡張モジュールの確認
         $required_extensions = ['pdo', 'sqlite3', 'openssl', 'json'];
         foreach ($required_extensions as $ext) {
             if (!extension_loaded($ext)) {
-                $this->throwError("必要なPHP拡張モジュール '{$ext}' がロードされていません。");
+                $this->throwError("Required PHP extension '{$ext}' is not loaded.");
             }
         }
     }
@@ -75,13 +75,13 @@ class AppInitializer
         foreach ($directories as $dir) {
             if (!file_exists($dir)) {
                 if (!mkdir($dir, 0755, true)) {
-                    $this->throwError("ディレクトリ '{$dir}' の作成に失敗しました。");
+                    $this->throwError("Failed to create directory '{$dir}'.");
                 }
             }
 
             // 書き込み権限の確認
             if (!is_writable($dir)) {
-                $this->throwError("ディレクトリ '{$dir}' に書き込み権限がありません。");
+                $this->throwError("Directory '{$dir}' is not writable.");
             }
         }
     }
@@ -101,7 +101,7 @@ class AppInitializer
             // デフォルトのフェッチモードを連想配列形式に設定
             $this->db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->throwError('データベースの接続に失敗しました: ' . $e->getMessage());
+            $this->throwError('Failed to connect to the database: ' . $e->getMessage());
         }
     }
 
@@ -231,7 +231,7 @@ class AppInitializer
             // stored_file_name の自動バックフィル（必要時のみ）
             $this->backfillStoredFileNameIfNeeded();
         } catch (PDOException $e) {
-            $this->throwError('データベースの初期化に失敗しました: ' . $e->getMessage());
+            $this->throwError('Failed to initialize the database: ' . $e->getMessage());
         }
     }
 

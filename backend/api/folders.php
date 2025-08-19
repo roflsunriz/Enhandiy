@@ -19,7 +19,7 @@ if (!is_null($ret)) {
 // フォルダ機能が無効な場合はエラーを返す
 if (!isset($folders_enabled) || !$folders_enabled) {
     http_response_code(403);
-    echo json_encode(['error' => 'フォルダ機能が無効です'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Folder feature is disabled'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -30,7 +30,7 @@ try {
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'データベース接続エラー'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Database connection error'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -51,7 +51,7 @@ switch ($method) {
         break;
     default:
         http_response_code(405);
-        echo json_encode(['error' => 'メソッドが許可されていません'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Method not allowed'], JSON_UNESCAPED_UNICODE);
         break;
 }
 
@@ -78,7 +78,7 @@ function handleGetFolders($db)
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'error' => 'フォルダ一覧の取得に失敗しました'
+            'error' => 'Failed to retrieve folder list'
         ], JSON_UNESCAPED_UNICODE);
     }
 }
@@ -101,7 +101,7 @@ function handlePostRequest($db, $max_depth, $max_per_level, $allow_creation)
             break;
         default:
             http_response_code(400);
-            echo json_encode(['error' => '無効なアクションです'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'Invalid action'], JSON_UNESCAPED_UNICODE);
             break;
     }
 }
@@ -113,7 +113,7 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
 {
     if (!$allow_creation) {
         http_response_code(403);
-        echo json_encode(['error' => 'フォルダ作成が許可されていません'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder creation is not allowed'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -123,7 +123,7 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
 
     if (!isset($input['name']) || trim($input['name']) === '') {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダ名が必要です'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder name is required'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -132,14 +132,14 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
     // フォルダ名のバリデーション
     if (strlen($name) > 50) {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダ名は50文字以内で入力してください'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder name must be 50 characters or fewer'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
     // 不正な文字のチェック
     if (preg_match('/[\\\\\/\:*?"<>|]/', $name)) {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダ名に使用できない文字が含まれています'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder name contains invalid characters'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -150,7 +150,7 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
             $stmt->execute([$parent_id]);
             if (!$stmt->fetch()) {
                 http_response_code(400);
-                echo json_encode(['error' => '親フォルダが存在しません'], JSON_UNESCAPED_UNICODE);
+                echo json_encode(['error' => 'Parent folder does not exist'], JSON_UNESCAPED_UNICODE);
                 return;
             }
 
@@ -158,7 +158,9 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
             $depth = getFolderDepth($db, $parent_id) + 1;
             if ($depth > $max_depth) {
                 http_response_code(400);
-                echo json_encode(['error' => "フォルダの階層深さが最大値({$max_depth})を超えています"], JSON_UNESCAPED_UNICODE);
+                echo json_encode([
+                    'error' => "Folder depth exceeds the maximum ({$max_depth})"
+                ], JSON_UNESCAPED_UNICODE);
                 return;
             }
         }
@@ -177,7 +179,7 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
 
         if ($result['count'] > 0) {
             http_response_code(400);
-            echo json_encode(['error' => '同じ名前のフォルダが既に存在します'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'A folder with the same name already exists'], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -192,7 +194,7 @@ function handleCreateFolder($db, $max_depth, $max_per_level, $allow_creation, $i
 
         if ($result['count'] >= $max_per_level) {
             http_response_code(400);
-            $message = "1つの階層に作成できるフォルダ数は最大{$max_per_level}個です";
+            $message = "Max folders per level exceeded (limit: {$max_per_level})";
             echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
             return;
         }
@@ -225,7 +227,7 @@ function handleMoveFolderViaPost($db, $input)
 {
     if (!isset($input['id']) || !array_key_exists('new_parent_id', $input)) {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダIDと移動先の親IDが必要です'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder ID and destination parent ID are required'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -243,7 +245,7 @@ function handleUpdateFolder($db)
 
     if (!isset($input['id'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダIDが必要です'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder ID is required'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -262,7 +264,7 @@ function handleUpdateFolder($db)
     }
 
     http_response_code(400);
-    echo json_encode(['error' => '名前または移動先の指定が必要です'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Name or destination must be specified'], JSON_UNESCAPED_UNICODE);
 }
 
 /**
@@ -273,13 +275,13 @@ function handleRenameFolder($db, $id, $name)
     // フォルダ名のバリデーション（createと同じ）
     if (strlen($name) > 50) {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダ名は50文字以内で入力してください'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder name must be 50 characters or fewer'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
     if (preg_match('/[\\\\\/\:*?"<>|]/', $name)) {
         http_response_code(400);
-        echo json_encode(['error' => 'フォルダ名に使用できない文字が含まれています'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Folder name contains invalid characters'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -291,7 +293,7 @@ function handleRenameFolder($db, $id, $name)
 
         if (!$folder) {
             http_response_code(404);
-            echo json_encode(['error' => 'フォルダが見つかりません'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'Folder not found'], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -310,7 +312,7 @@ function handleRenameFolder($db, $id, $name)
 
         if ($result['count'] > 0) {
             http_response_code(400);
-            echo json_encode(['error' => '同じ名前のフォルダが既に存在します'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'A folder with the same name already exists'], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -345,7 +347,7 @@ function handleMoveFolder($db, $id, $new_parent_id)
 
         if (!$folder) {
             http_response_code(404);
-            echo json_encode(['error' => 'フォルダが見つかりません'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'Folder not found'], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -355,7 +357,7 @@ function handleMoveFolder($db, $id, $new_parent_id)
             $stmt->execute([$new_parent_id]);
             if (!$stmt->fetch()) {
                 http_response_code(404);
-                echo json_encode(['error' => '移動先フォルダが見つかりません'], JSON_UNESCAPED_UNICODE);
+                echo json_encode(['error' => 'Destination folder not found'], JSON_UNESCAPED_UNICODE);
                 return;
             }
         }
@@ -382,7 +384,9 @@ function handleMoveFolder($db, $id, $new_parent_id)
 
         if ($result['count'] > 0) {
             http_response_code(400);
-            echo json_encode(['error' => '移動先に同じ名前のフォルダが既に存在します'], JSON_UNESCAPED_UNICODE);
+            echo json_encode([
+                'error' => 'A folder with the same name already exists in destination'
+            ], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -439,7 +443,7 @@ function handleDeleteFolder($db, $allow_deletion)
 
     if ($id <= 0) {
         http_response_code(400);
-        echo json_encode(['error' => '有効なフォルダIDが必要です'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Valid folder ID is required'], JSON_UNESCAPED_UNICODE);
         return;
     }
 
@@ -451,7 +455,7 @@ function handleDeleteFolder($db, $allow_deletion)
 
         if (!$folder) {
             http_response_code(404);
-            echo json_encode(['error' => 'フォルダが見つかりません'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'Folder not found'], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -459,7 +463,7 @@ function handleDeleteFolder($db, $allow_deletion)
         // parent_idがnullで、名前が「ルート」のフォルダのみ削除禁止
         if ($folder['parent_id'] === null && $folder['name'] === 'ルート') {
             http_response_code(400);
-            echo json_encode(['error' => 'システムのルートフォルダは削除できません'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'System root folder cannot be deleted'], JSON_UNESCAPED_UNICODE);
             return;
         }
 
@@ -489,7 +493,7 @@ function handleDeleteFolder($db, $allow_deletion)
         if (($childCount > 0 || $fileCount > 0) && !$moveFiles) {
             http_response_code(400);
             echo json_encode([
-                'error' => 'フォルダが空でないため削除できません',
+                'error' => 'Folder is not empty; cannot delete',
                 'details' => [
                     'child_folders' => $childCount,
                     'files' => $fileCount
@@ -517,13 +521,13 @@ function handleDeleteFolder($db, $allow_deletion)
 
         echo json_encode([
             'success' => true,
-            'message' => 'フォルダを削除しました',
+            'message' => 'Folder deleted',
             'moved_files' => $movedFiles,
             'moved_folders' => $moveFiles ? $childCount : 0
         ], JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'フォルダの削除に失敗しました'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Failed to delete folder'], JSON_UNESCAPED_UNICODE);
     }
 }
 

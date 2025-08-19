@@ -29,7 +29,7 @@ class FolderApiHandler
     public function handleGetFolders(): void
     {
         if (!$this->config['folders_enabled']) {
-            $this->response->error('フォルダ機能が無効です', [], 503, 'FOLDERS_DISABLED');
+            $this->response->error('Folder feature is disabled', [], 503, 'FOLDERS_DISABLED');
             return;
         }
 
@@ -44,10 +44,10 @@ class FolderApiHandler
             $stmt->execute();
             $folders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $this->response->success('フォルダ一覧を取得しました', ['folders' => $folders]);
+            $this->response->success('Folder list retrieved', ['folders' => $folders]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラーが発生しました', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error occurred', [], 500, 'DATABASE_ERROR');
         }
     }
 
@@ -57,7 +57,7 @@ class FolderApiHandler
     public function handlePostFolder(): void
     {
         if (!$this->config['folders_enabled'] || !$this->config['allow_folder_creation']) {
-            $this->response->error('フォルダ作成が無効です', [], 403, 'FOLDER_CREATION_DISABLED');
+            $this->response->error('Folder creation is disabled', [], 403, 'FOLDER_CREATION_DISABLED');
             return;
         }
 
@@ -66,14 +66,14 @@ class FolderApiHandler
         $parentId = isset($input['parent_id']) ? intval($input['parent_id']) : null;
 
         if (empty($name)) {
-            $this->response->error('フォルダ名が必要です', [], 400, 'FOLDER_NAME_REQUIRED');
+            $this->response->error('Folder name is required', [], 400, 'FOLDER_NAME_REQUIRED');
             return;
         }
 
         // フォルダ名のサニタイズ
         $name = SecurityUtils::sanitizeFilename($name);
         if (empty($name)) {
-            $this->response->error('有効なフォルダ名を入力してください', [], 400, 'INVALID_FOLDER_NAME');
+            $this->response->error('Please enter a valid folder name', [], 400, 'INVALID_FOLDER_NAME');
             return;
         }
 
@@ -90,7 +90,7 @@ class FolderApiHandler
             $exists = $stmt->fetchColumn();
 
             if ($exists > 0) {
-                $this->response->error('同名のフォルダが既に存在します', [], 409, 'FOLDER_ALREADY_EXISTS');
+                $this->response->error('A folder with the same name already exists', [], 409, 'FOLDER_ALREADY_EXISTS');
                 return;
             }
 
@@ -100,14 +100,14 @@ class FolderApiHandler
 
             $folderId = $pdo->lastInsertId();
 
-            $this->response->success('フォルダを作成しました', [
+            $this->response->success('Folder created', [
                 'folder_id' => $folderId,
                 'name' => $name,
                 'parent_id' => $parentId
             ]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラーが発生しました', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error occurred', [], 500, 'DATABASE_ERROR');
         }
     }
 
@@ -117,7 +117,7 @@ class FolderApiHandler
     public function handleDeleteFolder(int $folderId): void
     {
         if (!$this->config['folders_enabled'] || !$this->config['allow_folder_deletion']) {
-            $this->response->error('フォルダ削除が無効です', [], 403, 'FOLDER_DELETION_DISABLED');
+            $this->response->error('Folder deletion is disabled', [], 403, 'FOLDER_DELETION_DISABLED');
             return;
         }
 
@@ -134,7 +134,7 @@ class FolderApiHandler
             $folder = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$folder) {
-                $this->response->error('フォルダが見つかりません', [], 404, 'FOLDER_NOT_FOUND');
+                $this->response->error('Folder not found', [], 404, 'FOLDER_NOT_FOUND');
                 return;
             }
 
@@ -144,7 +144,7 @@ class FolderApiHandler
             $fileCount = $stmt->fetchColumn();
 
             if ($fileCount > 0) {
-                $this->response->error('フォルダが空ではありません', [], 409, 'FOLDER_NOT_EMPTY');
+                $this->response->error('Folder is not empty', [], 409, 'FOLDER_NOT_EMPTY');
                 return;
             }
 
@@ -154,7 +154,7 @@ class FolderApiHandler
             $childCount = $stmt->fetchColumn();
 
             if ($childCount > 0) {
-                $this->response->error('フォルダに子フォルダが存在します', [], 409, 'FOLDER_HAS_CHILDREN');
+                $this->response->error('Folder has child folders', [], 409, 'FOLDER_HAS_CHILDREN');
                 return;
             }
 
@@ -162,13 +162,13 @@ class FolderApiHandler
             $stmt = $pdo->prepare("DELETE FROM folders WHERE id = ?");
             $stmt->execute(array($folderId));
 
-            $this->response->success('フォルダを削除しました', [
+            $this->response->success('Folder deleted', [
                 'folder_id' => $folderId,
                 'name' => $folder['name']
             ]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラーが発生しました', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error occurred', [], 500, 'DATABASE_ERROR');
         }
     }
 
@@ -178,14 +178,14 @@ class FolderApiHandler
     public function handleUpdateFolder(int $folderId): void
     {
         if (!$this->config['folders_enabled']) {
-            $this->response->error('フォルダ機能が無効です', [], 503, 'FOLDERS_DISABLED');
+            $this->response->error('Folder feature is disabled', [], 503, 'FOLDERS_DISABLED');
             return;
         }
 
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!isset($input['name'])) {
-            $this->response->error('フォルダ名が必要です', [], 400, 'FOLDER_NAME_REQUIRED');
+            $this->response->error('Folder name is required', [], 400, 'FOLDER_NAME_REQUIRED');
             return;
         }
 
@@ -193,7 +193,7 @@ class FolderApiHandler
         $newName = SecurityUtils::sanitizeFilename($newName);
 
         if (empty($newName)) {
-            $this->response->error('有効なフォルダ名を入力してください', [], 400, 'INVALID_FOLDER_NAME');
+            $this->response->error('Please enter a valid folder name', [], 400, 'INVALID_FOLDER_NAME');
             return;
         }
 
@@ -210,7 +210,7 @@ class FolderApiHandler
             $existingFolder = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$existingFolder) {
-                $this->response->error('フォルダが見つかりません', [], 404, 'FOLDER_NOT_FOUND');
+                $this->response->error('Folder not found', [], 404, 'FOLDER_NOT_FOUND');
                 return;
             }
 
@@ -220,7 +220,7 @@ class FolderApiHandler
             $exists = $stmt->fetchColumn();
 
             if ($exists > 0) {
-                $this->response->error('同名のフォルダが既に存在します', [], 409, 'FOLDER_ALREADY_EXISTS');
+                $this->response->error('A folder with the same name already exists', [], 409, 'FOLDER_ALREADY_EXISTS');
                 return;
             }
 
@@ -228,14 +228,14 @@ class FolderApiHandler
             $stmt = $pdo->prepare("UPDATE folders SET name = ? WHERE id = ?");
             $stmt->execute(array($newName, $folderId));
 
-            $this->response->success('フォルダ名を更新しました', [
+            $this->response->success('Folder name updated', [
                 'folder_id' => $folderId,
                 'old_name' => $existingFolder['name'],
                 'new_name' => $newName
             ]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラーが発生しました', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error occurred', [], 500, 'DATABASE_ERROR');
         }
     }
 }

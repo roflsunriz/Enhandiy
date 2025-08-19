@@ -95,7 +95,7 @@ class FileApiHandler
             exit;
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         }
     }
 
@@ -118,7 +118,7 @@ class FileApiHandler
             echo $output;
         } else {
             // HTMLまたは他の形式の場合はJSONでラップ
-            $this->response->success('ファイルアップロード処理完了', ['output' => $output]);
+            $this->response->success('File upload completed', ['output' => $output]);
         }
     }
 
@@ -145,14 +145,14 @@ class FileApiHandler
             }
 
             if (!$file) {
-                $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
+                $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
                 return;
             }
 
-            $this->response->success('ファイル情報を取得しました', ['file' => $file]);
+            $this->response->success('File information retrieved', ['file' => $file]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         }
     }
 
@@ -171,11 +171,11 @@ class FileApiHandler
         // 3. delete.php でトークンを使用して削除実行
 
         $this->response->error(
-            'このAPIエンドポイントは削除キー検証のためご利用いただけません。適切な削除手順を使用してください。',
+            'This API endpoint cannot be used due to delete-key verification. Please follow the proper deletion flow.',
             [
                 'recommended_flow' => [
-                    'step1' => 'POST ../api/verifydelete.php で削除キー検証',
-                    'step2' => 'GET ../api/delete.php?id={fileId}&key={token} で削除実行'
+                    'step1' => 'POST ../api/verifydelete.php to verify delete key',
+                    'step2' => 'GET ../api/delete.php?id={fileId}&key={token} to perform deletion'
                 ]
             ],
             403,
@@ -192,21 +192,21 @@ class FileApiHandler
         $csrfToken = $_POST['csrf_token'] ?? null;
         if ($csrfToken) {
             if (!SecurityUtils::validateCSRFToken($csrfToken)) {
-                $this->response->error('セキュリティトークンが無効です', [], 403, 'CSRF_TOKEN_INVALID');
+                $this->response->error('Invalid security token', [], 403, 'CSRF_TOKEN_INVALID');
                 return;
             }
         }
 
         // 機能の有効性チェック
         if (!isset($this->config['allow_file_replace']) || !$this->config['allow_file_replace']) {
-            $this->response->error('ファイル差し替え機能が無効です', [], 403, 'FILE_REPLACE_DISABLED');
+            $this->response->error('File replace feature is disabled', [], 403, 'FILE_REPLACE_DISABLED');
             return;
         }
 
         // 管理者のみ許可設定のチェック
         if (isset($this->config['file_edit_admin_only']) && $this->config['file_edit_admin_only']) {
             if (!$this->auth->hasPermission('admin')) {
-                $this->response->error('管理者権限が必要です', [], 403, 'ADMIN_REQUIRED');
+                $this->response->error('Admin privilege required', [], 403, 'ADMIN_REQUIRED');
                 return;
             }
         }
@@ -215,13 +215,13 @@ class FileApiHandler
         // セキュリティ：機密情報のログ出力を削除（$_FILES, $_POSTには機密情報が含まれる可能性）
 
         if (!isset($_FILES['file'])) {
-            $this->response->error('ファイルが送信されていません', [], 400, 'FILE_UPLOAD_ERROR');
+            $this->response->error('No file was sent', [], 400, 'FILE_UPLOAD_ERROR');
             return;
         }
 
         if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             $this->response->error(
-                'ファイルのアップロードに失敗しました: エラーコード ' . $_FILES['file']['error'],
+                'File upload failed: Error code ' . $_FILES['file']['error'],
                 [],
                 400,
                 'FILE_UPLOAD_ERROR'
@@ -241,19 +241,19 @@ class FileApiHandler
             $existingFile = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$existingFile) {
-                $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
+                $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
                 return;
             }
 
             // 差し替えキー認証
             $inputReplaceKey = $_POST['replacekey'] ?? '';
             if (empty($inputReplaceKey)) {
-                $this->response->error('差し替えキーが必要です', [], 400, 'REPLACE_KEY_REQUIRED');
+                $this->response->error('Replace key is required', [], 400, 'REPLACE_KEY_REQUIRED');
                 return;
             }
 
             if (empty($existingFile['replace_key'])) {
-                $this->response->error('このファイルには差し替えキーが設定されていません', [], 400, 'NO_REPLACE_KEY');
+                $this->response->error('This file does not have a replace key configured', [], 400, 'NO_REPLACE_KEY');
                 return;
             }
 
@@ -269,13 +269,13 @@ class FileApiHandler
                         $this->config['key']
                     );
                 } catch (Exception $e2) {
-                    $this->response->error('差し替えキーの復号化に失敗しました', [], 500, 'DECRYPTION_FAILED');
+                    $this->response->error('Failed to decrypt replace key', [], 500, 'DECRYPTION_FAILED');
                     return;
                 }
             }
 
             if ($inputReplaceKey !== $storedReplaceKey) {
-                $this->response->error('差し替えキーが正しくありません', [], 403, 'INVALID_REPLACE_KEY');
+                $this->response->error('Invalid replace key', [], 403, 'INVALID_REPLACE_KEY');
                 return;
             }
 
@@ -290,27 +290,27 @@ class FileApiHandler
             if (!SecurityUtils::isExtensionAllowed($ext, $policy)) {
                 if ($policy['mode'] === 'whitelist') {
                     $this->response->error(
-                        '許可されていない拡張子です',
+                        'File extension is not allowed',
                         ['allowed' => $policy['whitelist']],
                         400,
                         'INVALID_EXTENSION'
                     );
                 } elseif ($policy['mode'] === 'blacklist') {
                     $this->response->error(
-                        '禁止されている拡張子です',
+                        'File extension is blocked',
                         ['blocked' => $policy['blacklist']],
                         400,
                         'INVALID_EXTENSION'
                     );
                 } else {
-                    $this->response->error('許可されていない拡張子です', [], 400, 'INVALID_EXTENSION');
+                    $this->response->error('File extension is not allowed', [], 400, 'INVALID_EXTENSION');
                 }
                 return;
             }
 
             // ファイルサイズチェック
             if ($fileSize > $this->config['max_file_size'] * 1024 * 1024) {
-                $this->response->error('ファイルサイズが制限を超えています', [], 400, 'FILE_TOO_LARGE');
+                $this->response->error('File size exceeds the limit', [], 400, 'FILE_TOO_LARGE');
                 return;
             }
 
@@ -320,7 +320,7 @@ class FileApiHandler
             // パストラバーサル攻撃対策：絶対パスに正規化
             $data_directory = realpath($data_directory);
             if ($data_directory === false) {
-                $this->response->error('データディレクトリが見つかりません', [], 500, 'DATA_DIR_NOT_FOUND');
+                $this->response->error('Data directory not found', [], 500, 'DATA_DIR_NOT_FOUND');
                 return;
             }
 
@@ -337,7 +337,7 @@ class FileApiHandler
             // 生成されたパスがデータディレクトリ内にあることを確認
             $realNewPath = realpath(dirname($newFilePath));
             if ($realNewPath === false || strpos($realNewPath, $data_directory) !== 0) {
-                $this->response->error('不正なファイルパスが検出されました', [], 500, 'INVALID_FILE_PATH');
+                $this->response->error('Invalid file path detected', [], 500, 'INVALID_FILE_PATH');
                 return;
             }
 
@@ -359,7 +359,7 @@ class FileApiHandler
 
             // 新しいファイルを移動
             if (!move_uploaded_file($tmpPath, $newFilePath)) {
-                $this->response->error('ファイルの保存に失敗しました', [], 500, 'FILE_SAVE_ERROR');
+                $this->response->error('Failed to save file', [], 500, 'FILE_SAVE_ERROR');
                 return;
             }
 
@@ -367,17 +367,17 @@ class FileApiHandler
             $stmt = $pdo->prepare("UPDATE uploaded SET origin_file_name = ?, size = ? WHERE id = ?");
             $stmt->execute(array(basename($newFilePath), $fileSize, $fileId));
 
-            $this->response->success('ファイルを差し替えました', [
+            $this->response->success('File replaced', [
                 'file_id' => $fileId,
                 'new_filename' => $newFileName,
                 'size' => $fileSize
             ]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         } catch (Exception $e) {
             error_log('File replace error: ' . $e->getMessage());
-            $this->response->error('サーバー内部エラーが発生しました', [], 500, 'INTERNAL_ERROR');
+            $this->response->error('Internal server error occurred', [], 500, 'INTERNAL_ERROR');
         }
     }
 
@@ -399,7 +399,7 @@ class FileApiHandler
             $fileData = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$fileData) {
-                $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
+                $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
                 return;
             }
 
@@ -408,7 +408,7 @@ class FileApiHandler
             $data_directory = realpath($data_directory);
 
             if ($data_directory === false) {
-                $this->response->error('データディレクトリが見つかりません', [], 500, 'DATA_DIR_NOT_FOUND');
+                $this->response->error('Data directory not found', [], 500, 'DATA_DIR_NOT_FOUND');
                 return;
             }
 
@@ -425,20 +425,20 @@ class FileApiHandler
             // セキュリティ：パストラバーサル攻撃対策
             $realFilePath = realpath($filePath);
             if ($realFilePath === false || strpos($realFilePath, $data_directory) !== 0) {
-                $this->response->error('不正なファイルパスが検出されました', [], 500, 'INVALID_FILE_PATH');
+                $this->response->error('Invalid file path detected', [], 500, 'INVALID_FILE_PATH');
                 return;
             }
 
             // ファイル存在確認
             if (!file_exists($filePath)) {
-                $this->response->error('ファイルが存在しません', [], 404, 'PHYSICAL_FILE_NOT_FOUND');
+                $this->response->error('File does not exist', [], 404, 'PHYSICAL_FILE_NOT_FOUND');
                 return;
             }
 
             // ファイルサイズ取得
             $fileSize = filesize($filePath);
             if ($fileSize === false) {
-                $this->response->error('ファイルサイズの取得に失敗しました', [], 500, 'FILE_SIZE_ERROR');
+                $this->response->error('Failed to get file size', [], 500, 'FILE_SIZE_ERROR');
                 return;
             }
 
@@ -481,15 +481,15 @@ class FileApiHandler
                 }
                 fclose($handle);
             } else {
-                $this->response->error('ファイルの読み込みに失敗しました', [], 500, 'FILE_READ_ERROR');
+                $this->response->error('Failed to read file', [], 500, 'FILE_READ_ERROR');
                 return;
             }
         } catch (PDOException $e) {
             error_log('Database error in download: ' . $e->getMessage());
-            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         } catch (Exception $e) {
             error_log('Download error: ' . $e->getMessage());
-            $this->response->error('ダウンロード処理でエラーが発生しました', [], 500, 'DOWNLOAD_ERROR');
+            $this->response->error('An error occurred during download processing', [], 500, 'DOWNLOAD_ERROR');
         }
     }
 
@@ -500,14 +500,14 @@ class FileApiHandler
     {
         // 機能の有効性チェック
         if (!isset($this->config['allow_comment_edit']) || !$this->config['allow_comment_edit']) {
-            $this->response->error('コメント編集機能が無効です', [], 403, 'COMMENT_EDIT_DISABLED');
+            $this->response->error('Comment edit feature is disabled', [], 403, 'COMMENT_EDIT_DISABLED');
             return;
         }
 
         // 管理者のみ許可設定のチェック
         if (isset($this->config['file_edit_admin_only']) && $this->config['file_edit_admin_only']) {
             if (!$this->auth->hasPermission('admin')) {
-                $this->response->error('管理者権限が必要です', [], 403, 'ADMIN_REQUIRED');
+                $this->response->error('Admin privilege required', [], 403, 'ADMIN_REQUIRED');
                 return;
             }
         }
@@ -515,7 +515,7 @@ class FileApiHandler
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!isset($input['comment'])) {
-            $this->response->error('コメントが必要です', [], 400, 'COMMENT_REQUIRED');
+            $this->response->error('Comment is required', [], 400, 'COMMENT_REQUIRED');
             return;
         }
 
@@ -523,7 +523,7 @@ class FileApiHandler
 
         // コメント文字数チェック
         if (mb_strlen($newComment) > $this->config['max_comment']) {
-            $this->response->error('コメントが長すぎます', [], 400, 'COMMENT_TOO_LONG');
+            $this->response->error('Comment is too long', [], 400, 'COMMENT_TOO_LONG');
             return;
         }
 
@@ -539,7 +539,7 @@ class FileApiHandler
             $existingFile = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$existingFile) {
-                $this->response->error('ファイルが見つかりません', [], 404, 'FILE_NOT_FOUND');
+                $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
                 return;
             }
 
@@ -564,16 +564,16 @@ class FileApiHandler
                 ));
             }
 
-            $this->response->success('コメントを更新しました', [
+            $this->response->success('Comment updated', [
                 'file_id' => $fileId,
                 'new_comment' => $newComment
             ]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
-            $this->response->error('データベースエラー', [], 500, 'DATABASE_ERROR');
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         } catch (Exception $e) {
             error_log('Comment update error: ' . $e->getMessage());
-            $this->response->error('サーバー内部エラーが発生しました', [], 500, 'INTERNAL_ERROR');
+            $this->response->error('Internal server error occurred', [], 500, 'INTERNAL_ERROR');
         }
     }
 }

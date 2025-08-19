@@ -50,12 +50,12 @@ try {
 
     // リクエストメソッドの確認
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        $responseHandler->error('無効なリクエストメソッドです。', [], 405);
+        $responseHandler->error('Invalid request method.', [], 405);
     }
 
     // ファイルがアップロードされているかチェック
     if (!isset($_FILES['file'])) {
-        $responseHandler->error('ファイルが選択されていません。', [], 400);
+        $responseHandler->error('No file selected.', [], 400);
     }
 
     // CSRFトークンの検証
@@ -65,7 +65,7 @@ try {
 
     if (!SecurityUtils::validateCSRFToken($receivedToken)) {
         $logger->warning('CSRF token validation failed', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
-        $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
+        $responseHandler->error('Invalid request. Please reload the page.', [], 403);
     }
 
     // アップロードレート制限チェック
@@ -93,39 +93,39 @@ try {
     // ファイルアップロードエラーチェック
     $uploadErrors = [];
     if (!isset($_FILES['file'])) {
-        $uploadErrors[] = 'ファイルが選択されていません。';
+        $uploadErrors[] = 'No file selected.';
     } else {
         switch ($_FILES['file']['error']) {
             case UPLOAD_ERR_OK:
                 break;
             case UPLOAD_ERR_INI_SIZE:
-                $uploadErrors[] = 'アップロードされたファイルが大きすぎます。(' . ini_get('upload_max_filesize') . '以下)';
+                $uploadErrors[] = 'Uploaded file is too large. (max ' . ini_get('upload_max_filesize') . ')';
                 break;
             case UPLOAD_ERR_FORM_SIZE:
-                $uploadErrors[] = 'アップロードされたファイルが大きすぎます。(' . ($_POST['MAX_FILE_SIZE'] / 1024) . 'KB以下)';
+                $uploadErrors[] = 'Uploaded file is too large. (max ' . ($_POST['MAX_FILE_SIZE'] / 1024) . 'KB)';
                 break;
             case UPLOAD_ERR_PARTIAL:
-                $uploadErrors[] = 'アップロードが途中で中断されました。もう一度お試しください。';
+                $uploadErrors[] = 'Upload was interrupted. Please try again.';
                 break;
             case UPLOAD_ERR_NO_FILE:
-                $uploadErrors[] = 'ファイルが選択されていません。';
+                $uploadErrors[] = 'No file selected.';
                 break;
             case UPLOAD_ERR_NO_TMP_DIR:
-                $uploadErrors[] = 'サーバーエラーが発生しました。管理者にお問い合わせください。';
+                $uploadErrors[] = 'Server error occurred. Please contact the administrator.';
                 break;
             default:
-                $uploadErrors[] = 'アップロードに失敗しました。';
+                $uploadErrors[] = 'Upload failed.';
                 break;
         }
     }
 
     if (!empty($uploadErrors)) {
-        $responseHandler->error('アップロードエラー', $uploadErrors, 400);
+        $responseHandler->error('Upload error', $uploadErrors, 400);
     }
 
     // アップロードファイルの検証
     if (!is_uploaded_file($_FILES['file']['tmp_name'])) {
-        $responseHandler->error('不正なファイルアップロードです。', [], 400);
+        $responseHandler->error('Invalid file upload.', [], 400);
     }
 
     // 入力データの取得とサニタイズ
@@ -147,7 +147,7 @@ try {
 
     // ファイルサイズチェック
     if ($fileSize > $config['max_file_size'] * 1024 * 1024) {
-        $validationErrors[] = "ファイルサイズが上限({$config['max_file_size']}MB)を超えています。";
+        $validationErrors[] = "File size exceeds the limit ({$config['max_file_size']}MB).";
     }
 
     // 拡張子チェック（ポリシー対応）
@@ -155,11 +155,13 @@ try {
     $policy = SecurityUtils::getUploadExtensionPolicy($config);
     if (!SecurityUtils::isExtensionAllowed($fileExtension, $policy)) {
         if ($policy['mode'] === 'whitelist') {
-            $validationErrors[] = "許可されていない拡張子です。(" . implode(', ', $policy['whitelist']) . "のみ)";
+            $allowedList = implode(', ', $policy['whitelist']);
+            $validationErrors[] = "File extension is not allowed (allowed: {$allowedList})";
         } elseif ($policy['mode'] === 'blacklist') {
-            $validationErrors[] = "禁止されている拡張子です。(" . implode(', ', $policy['blacklist']) . ")";
+            $blockedList = implode(', ', $policy['blacklist']);
+            $validationErrors[] = "File extension is blocked (blocked: {$blockedList})";
         } else {
-            $validationErrors[] = "許可されていない拡張子です。";
+            $validationErrors[] = "File extension is not allowed.";
         }
     }
 
@@ -168,30 +170,30 @@ try {
         $folderCheck = $db->prepare("SELECT id FROM folders WHERE id = ?");
         $folderCheck->execute([$folder_id]);
         if (!$folderCheck->fetch()) {
-            $responseHandler->error('指定されたフォルダが見つかりません。', [], 404);
+            $responseHandler->error('Specified folder not found.', [], 404);
         }
     }
 
     // コメント文字数チェック
     if (mb_strlen($comment) > $config['max_comment']) {
-        $validationErrors[] = "コメントが長すぎます。({$config['max_comment']}文字以下)";
+        $validationErrors[] = "Comment is too long (max {$config['max_comment']} characters).";
     }
 
     // キーの長さチェック
     if (!empty($dlKey) && mb_strlen($dlKey) < $config['security']['min_key_length']) {
-        $validationErrors[] = "ダウンロードキーは{$config['security']['min_key_length']}文字以上で設定してください。";
+        $validationErrors[] = "Download key must be at least {$config['security']['min_key_length']} characters.";
     }
 
     // 削除キー必須＆長さチェック（常時強制）
     if (empty($delKey)) {
-        $responseHandler->error('削除キーは必須入力です。', [], 400, 'delkey_required');
+        $responseHandler->error('Delete key is required.', [], 400, 'delkey_required');
     }
     if (!empty($delKey) && mb_strlen($delKey) < $config['security']['min_key_length']) {
-        $validationErrors[] = "削除キーは{$config['security']['min_key_length']}文字以上で設定してください。";
+        $validationErrors[] = "Delete key must be at least {$config['security']['min_key_length']} characters.";
     }
 
     if (!empty($validationErrors)) {
-        $responseHandler->error('バリデーションエラー', $validationErrors, 400);
+        $responseHandler->error('Validation error', $validationErrors, 400);
     }
 
     // ファイル数制限チェックと古いファイルの削除
@@ -273,7 +275,7 @@ try {
     if (!$insertStmt->execute($insertData)) {
         $errorInfo = $insertStmt->errorInfo();
         error_log('Database insert failed - Error code: ' . $errorInfo[0]);
-        $responseHandler->error('データベースへの保存に失敗しました。', [], 500);
+        $responseHandler->error('Failed to save to database.', [], 500);
     }
 
     $fileId = (int)$db->lastInsertId();
@@ -287,7 +289,7 @@ try {
     if (!move_uploaded_file($fileTmpPath, $saveFilePath)) {
         // データベースからも削除
         $db->prepare("DELETE FROM uploaded WHERE id = :id")->execute(['id' => $fileId]);
-        $responseHandler->error('ファイルの保存に失敗しました。', [], 500);
+        $responseHandler->error('Failed to save file.', [], 500);
     }
 
     // データベースにハッシュ化されたファイル名を記録
@@ -298,7 +300,7 @@ try {
             unlink($saveFilePath);
         }
         $db->prepare("DELETE FROM uploaded WHERE id = :id")->execute(['id' => $fileId]);
-        $responseHandler->error('ファイル情報の更新に失敗しました。', [], 500);
+        $responseHandler->error('Failed to update file info.', [], 500);
     }
 
     // ファイル履歴の記録（新規アップロード）
@@ -327,7 +329,7 @@ try {
     SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
 
     // 成功レスポンス
-    $responseHandler->success('ファイルのアップロードが完了しました。', [
+    $responseHandler->success('File upload completed.', [
         'file_id' => $fileId,
         'file_name' => $fileName,
         'file_size' => $fileSize
@@ -347,14 +349,14 @@ try {
     }
 
     if (isset($responseHandler)) {
-        $responseHandler->error('システムエラーが発生しました。', [], 500);
+        $responseHandler->error('A system error has occurred.', [], 500);
     } else {
         // 最低限のエラーレスポンス
         header('Content-Type: application/json; charset=utf-8');
         http_response_code(500);
         echo json_encode([
             'status' => 'error',
-            'message' => 'システムエラーが発生しました。'
+            'message' => 'A system error has occurred.'
         ], JSON_UNESCAPED_UNICODE);
     }
 }

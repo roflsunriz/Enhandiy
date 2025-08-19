@@ -38,13 +38,13 @@ try {
     $inputKey = $_POST['key'] ?? '';
 
     if ($fileId <= 0) {
-        $responseHandler->error('ファイルIDが指定されていません。', [], 400);
+        $responseHandler->error('File ID is not specified.', [], 400);
     }
 
     // CSRFトークンの検証
     if (!SecurityUtils::validateCSRFToken($_POST['csrf_token'] ?? '')) {
         $logger->warning('CSRF token validation failed in download verify', ['file_id' => $fileId]);
-        $responseHandler->error('無効なリクエストです。ページを再読み込みしてください。', [], 403);
+        $responseHandler->error('Invalid request. Please reload the page.', [], 403);
     }
 
     // ファイル情報の取得
@@ -54,7 +54,7 @@ try {
 
     if (!$fileData) {
         $logger->warning('File not found for download', ['file_id' => $fileId]);
-        $responseHandler->error('ファイルが見つかりません。', [], 404);
+        $responseHandler->error('File not found.', [], 404);
     }
 
     // マスターキーチェック
@@ -81,11 +81,11 @@ try {
         // ダウンロードキーが設定されているが、入力されていない場合
         if (!empty($fileData['dl_key_hash']) && empty($inputKey)) {
             $logger->info('Download key required', ['file_id' => $fileId]);
-            $responseHandler->error('ダウンロードキーの入力が必要です。', [], 200, 'AUTH_REQUIRED');
+            $responseHandler->error('Download key is required.', [], 200, 'AUTH_REQUIRED');
         } else {
             // キーが間違っている場合
             $logger->warning('Invalid download key', ['file_id' => $fileId]);
-            $responseHandler->error('ダウンロードキーが正しくありません。', [], 200, 'INVALID_KEY');
+            $responseHandler->error('Invalid download key.', [], 200, 'INVALID_KEY');
         }
     }
 
@@ -112,14 +112,14 @@ try {
     ];
 
     if (!$tokenStmt->execute($tokenData)) {
-        $responseHandler->error('ダウンロードトークンの生成に失敗しました。', [], 500);
+        $responseHandler->error('Failed to generate download token.', [], 500);
     }
 
     // アクセスログの記録
     $logger->access($fileId, 'download_verify', 'success');
 
     // 成功レスポンス
-    $responseHandler->success('ダウンロード準備が完了しました。', [
+    $responseHandler->success('Download preparation completed.', [
         'id' => $fileId,
         'token' => $token,
         'expires_at' => $expiresAt,
@@ -136,14 +136,14 @@ try {
     }
 
     if (isset($responseHandler)) {
-        $responseHandler->error('システムエラーが発生しました。', [], 500);
+        $responseHandler->error('A system error has occurred.', [], 500);
     } else {
         // 最低限のエラーレスポンス
         header('Content-Type: application/json; charset=utf-8');
         http_response_code(500);
         echo json_encode([
             'status' => 'error',
-            'message' => 'システムエラーが発生しました。'
+            'message' => 'A system error has occurred.'
         ], JSON_UNESCAPED_UNICODE);
     }
 }

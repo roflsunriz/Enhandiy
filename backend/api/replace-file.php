@@ -34,7 +34,7 @@ if (!SecurityUtils::validateCSRFToken($csrfToken)) {
     http_response_code(403);
     echo json_encode([
         'success' => false,
-        'message' => 'CSRFトークンが無効です'
+        'message' => 'Invalid CSRF token'
     ]);
     exit;
 }
@@ -42,20 +42,20 @@ if (!SecurityUtils::validateCSRFToken($csrfToken)) {
 // 機能チェック
 if (!($config['allow_file_replace'] ?? false)) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'ファイル差し替え機能が無効です']);
+    echo json_encode(['success' => false, 'message' => 'File replace feature is disabled']);
     exit;
 }
 
 $fileId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($fileId <= 0) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'file_id が不正です']);
+    echo json_encode(['success' => false, 'message' => 'Invalid file_id']);
     exit;
 }
 
 if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'ファイルが送信されていないかアップロードに失敗しました']);
+    echo json_encode(['success' => false, 'message' => 'No file was sent or upload failed']);
     exit;
 }
 
@@ -70,7 +70,7 @@ if (trim($masterKeyInput) !== '' && hash_equals($config['master'], trim($masterK
 
 if (!$isMasterAuthenticated && trim($replaceKeyInput) === '') {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'マスターキーまたは差し替えキーが必要です']);
+    echo json_encode(['success' => false, 'message' => 'Master key or replace key is required']);
     exit;
 }
 
@@ -85,7 +85,7 @@ try {
     $existing = $stmt->fetch();
     if (!$existing) {
         http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'ファイルIDが見つかりません']);
+        echo json_encode(['success' => false, 'message' => 'File ID not found']);
         exit;
     }
 
@@ -123,7 +123,7 @@ try {
             http_response_code(403);
             echo json_encode([
                 'success' => false,
-                'message' => '差し替えキーが正しくありません',
+                'message' => 'Invalid replace key',
                 'debug' => [
                     'input_length' => mb_strlen($replaceKeyInput),
                     'stored_length' => $storedKey === false ? 'DECRYPTION_FAILED' : mb_strlen((string)$storedKey),
@@ -141,9 +141,9 @@ try {
     $policy = SecurityUtils::getUploadExtensionPolicy($config);
     if (!SecurityUtils::isExtensionAllowed($ext, $policy)) {
         http_response_code(400);
-        $message = '許可されていない拡張子です';
+        $message = 'File extension is not allowed';
         if ($policy['mode'] === 'blacklist') {
-            $message = '禁止されている拡張子です';
+            $message = 'File extension is blocked';
         }
         echo json_encode(['success' => false, 'message' => $message]);
         exit;
@@ -152,7 +152,7 @@ try {
     $fileSize = $_FILES['file']['size'];
     if ($fileSize > ($config['max_file_size'] * 1024 * 1024)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'ファイルサイズが制限を超えています']);
+        echo json_encode(['success' => false, 'message' => 'File size exceeds the limit']);
         exit;
     }
 
@@ -160,7 +160,7 @@ try {
     $dest = $dataDir . '/file_' . $fileId . '.' . $ext;
     if (!move_uploaded_file($tmp, $dest)) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'ファイルの保存に失敗しました']);
+        echo json_encode(['success' => false, 'message' => 'Failed to save file']);
         exit;
     }
 
@@ -192,7 +192,7 @@ try {
 
     echo json_encode([
         'success' => true,
-        'message' => 'ファイルを差し替えました',
+        'message' => 'File replaced',
         'file_id' => $fileId,
         'old_filename' => $existing['origin_file_name'],
         'new_original_name' => $originalName,
@@ -202,5 +202,5 @@ try {
     ]);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'サーバー内部エラー']);
+    echo json_encode(['success' => false, 'message' => 'Internal server error']);
 }

@@ -35,7 +35,7 @@ if (!is_null($ret) && is_array($ret)) {
 // フォルダ機能が無効な場合はエラー
 if (!isset($folders_enabled) || !$folders_enabled) {
     http_response_code(400);
-    echo json_encode(['error' => 'フォルダ機能が無効です'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Folder feature is disabled'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -44,7 +44,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input || !isset($input['file_ids']) || !is_array($input['file_ids'])) {
     http_response_code(400);
-    echo json_encode(['error' => '無効なリクエストデータです'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Invalid request payload'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -53,7 +53,7 @@ $folderId = isset($input['folder_id']) ? $input['folder_id'] : null;
 
 if (empty($fileIds)) {
     http_response_code(400);
-    echo json_encode(['error' => '移動するファイルが指定されていません'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'No files specified to move'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -76,7 +76,7 @@ try {
         $stmt->execute([$folderId]);
         if (!$stmt->fetch()) {
             http_response_code(400);
-            echo json_encode(['error' => '指定されたフォルダが存在しません'], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['error' => 'Specified folder does not exist'], JSON_UNESCAPED_UNICODE);
             exit;
         }
     }
@@ -91,7 +91,7 @@ try {
     if (!empty($notFoundFiles)) {
         http_response_code(400);
         echo json_encode([
-            'error' => '一部のファイルが見つかりません',
+            'error' => 'Some files were not found',
             'not_found_ids' => $notFoundFiles
         ], JSON_UNESCAPED_UNICODE);
         exit;
@@ -106,12 +106,12 @@ try {
 
     echo json_encode([
         'success' => true,
-        'message' => "{$affectedRows}個のファイルを移動しました",
+        'message' => "Moved {$affectedRows} files",
         'moved_count' => $affectedRows,
         'target_folder_id' => $folderId
     ], JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     error_log('Bulk move error: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'ファイルの移動に失敗しました'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Failed to move files'], JSON_UNESCAPED_UNICODE);
 }

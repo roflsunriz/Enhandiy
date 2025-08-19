@@ -199,7 +199,7 @@ function handleCreate()
 
     // データベースに記録
     try {
-        // 差し替えキーの検証（システムレベルで必須）
+        // Replace key validation (required at system level)
         if (empty($metadata['replacekey'])) {
             // 差し替えキー不足でエラーの場合もトークンを解放
             if (isset($uploadToken)) {
@@ -207,28 +207,28 @@ function handleCreate()
             }
 
             http_response_code(400);
-            echo json_encode(['error' => '差し替えキーは必須です。']);
+            echo json_encode(['error' => 'Replace key is required.']);
             exit;
         }
 
-        // 削除キーの検証（システムレベルで必須）
+        // Delete key validation (required at system level)
         if (empty($metadata['delkey'])) {
             if (isset($uploadToken)) {
                 SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
             }
             http_response_code(400);
-            echo json_encode(['error' => '削除キーは必須です。', 'status' => 'delkey_required']);
+            echo json_encode(['error' => 'Delete key is required.', 'status' => 'delkey_required']);
             exit;
         }
 
-        // 削除キーの長さチェック
+        // Delete key length check
         if (!empty($metadata['delkey']) && mb_strlen($metadata['delkey']) < ($ret['security']['min_key_length'] ?? 8)) {
             if (isset($uploadToken)) {
                 SecurityUtils::releaseUploadToken($clientIP, $uploadToken);
             }
             http_response_code(400);
             echo json_encode([
-                'error' => '削除キーは十分な長さが必要です。',
+                'error' => 'Delete key must meet minimum length.',
                 'min_length' => ($ret['security']['min_key_length'] ?? 8)
             ]);
             exit;
@@ -606,8 +606,15 @@ function completeUpload($uploadId, $upload)
 
         // データベースに stored_file_name と file_hash, ip_address を記録
         if (isset($storedFileName)) {
-            $updateStmt = $db->prepare("UPDATE uploaded SET stored_file_name = ?, file_hash = ?, ip_address = ? WHERE id = ?");
-            $updateStmt->execute([$storedFileName, $fileHash, $ipForRecord, $fileId]);
+            $updateStmt = $db->prepare(
+                "UPDATE uploaded SET stored_file_name = ?, file_hash = ?, ip_address = ? WHERE id = ?"
+            );
+            $updateStmt->execute([
+                $storedFileName,
+                $fileHash,
+                $ipForRecord,
+                $fileId
+            ]);
         }
 
         // tus_uploadsテーブルを更新

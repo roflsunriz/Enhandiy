@@ -30,3 +30,7 @@ RUN a2enmod rewrite
 
 # カスタムApache設定をコピー
 COPY ./apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY ./apache/servername.conf /etc/apache2/conf-available/servername.conf
+
+# ServerName を有効化
+RUN a2enconf servername

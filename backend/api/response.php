@@ -62,7 +62,7 @@ class ApiResponse
      */
     public function sendValidationError($errors)
     {
-        $this->sendError(400, 'VALIDATION_ERROR', 'バリデーションエラーが発生しました', $errors);
+        $this->sendError(400, 'VALIDATION_ERROR', 'Validation error occurred', $errors);
     }
 
     /**
@@ -89,7 +89,7 @@ class ApiResponse
         if ($uploadResult['success']) {
             $this->sendSuccess($uploadResult, 201);
         } else {
-            $this->sendError(400, 'UPLOAD_ERROR', 'アップロードに失敗しました', $uploadResult);
+            $this->sendError(400, 'UPLOAD_ERROR', 'Upload failed', $uploadResult);
         }
     }
 }

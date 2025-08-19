@@ -120,7 +120,7 @@ class ApiRouter
                     // 権限チェック
                     foreach ($route['permissions'] as $permission) {
                         if (!$this->auth->hasPermission($permission)) {
-                            $this->response->error('権限が不足しています: ' . $permission, [], 403, 'PERMISSION_DENIED');
+                            $this->response->error('Permission denied: ' . $permission, [], 403, 'PERMISSION_DENIED');
                             return;
                         }
                     }
@@ -132,11 +132,11 @@ class ApiRouter
                 }
             }
 
-            // マッチするルートが見つからない場合
-            $this->response->error('APIエンドポイントが見つかりません', [], 404, 'ENDPOINT_NOT_FOUND');
+            // No matching route found
+            $this->response->error('API endpoint not found', [], 404, 'ENDPOINT_NOT_FOUND');
         } catch (Exception $e) {
             error_log('API Router Error: ' . $e->getMessage());
-            $this->response->error('サーバー内部エラーが発生しました', [], 500, 'INTERNAL_ERROR');
+            $this->response->error('Internal server error occurred', [], 500, 'INTERNAL_ERROR');
         }
     }
 
