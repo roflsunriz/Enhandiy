@@ -47,7 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **拡張子ポリシーの変更とフォルダ作成ボタンの追加を行った**
+- 拡張子ポリシーの変更とアップロードモーダル起動ボタンの追加を行った
+- 常にアップロードセクションが表示される代わりに起動ボタンでコンパクトにした
+
 
 
 ## [4.0.4-roflsunriz] - 2025-08-18
