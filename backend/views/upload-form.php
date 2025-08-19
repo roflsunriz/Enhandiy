@@ -44,7 +44,7 @@
       <input id="folderInput" type="file" webkitdirectory multiple class="d-none">
 
       <!-- 選択ファイル表示 -->
-      <div id="selectedFilesContainer" class="selected-files-container d-none">
+      <div id="selectedFilesContainer" class="selected-files-container" style="display:none">
         <h5>選択されたファイル:</h5>
         <div id="selectedFilesList" class="selected-files-list"></div>
         <button type="button" class="btn btn-sm btn-default" id="clearFilesBtn">クリア</button>
