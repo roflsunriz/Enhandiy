@@ -65,7 +65,23 @@
   transition: background-color 0.15s ease-in-out;
 }
 
+.file-manager__refresh-btn {
+  padding: 8px 12px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .file-manager__view-btn:hover {
+  background: #f8f9fa;
+}
+
+.file-manager__refresh-btn:hover {
   background: #f8f9fa;
 }
 
@@ -75,6 +91,13 @@
 }
 
 .file-manager__view-btn + .file-manager__view-btn {
+  border-left: 1px solid #ced4da;
+}
+
+/* 区切り線: リフレッシュボタンが隣接する場合も同様に */
+.file-manager__view-btn + .file-manager__refresh-btn,
+.file-manager__refresh-btn + .file-manager__view-btn,
+.file-manager__refresh-btn + .file-manager__refresh-btn {
   border-left: 1px solid #ced4da;
 }
 
