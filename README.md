@@ -163,9 +163,121 @@ phpUploader v4.2.0-roflsunriz は、オリジナルのphpUploaderをベースに
 ## Requirement
 
 - PHP Version 8.1+
-- SQLite (PHPにバンドルされたもので可、一部の環境によってはphp○-sqliteのインストールが必要です。)
+- SQLite（PHPには通常 `sqlite3` 拡張がバンドルされていますが、Linuxディストリビューションによってはデフォルトで有効化されていない場合があります。その場合、例えばUbuntuやDebian系では `php8.1-sqlite3` のようなパッケージを追加インストールする必要があります。Windowsの公式PHP配布版では多くの場合デフォルトで有効ですが、`php.ini` で `extension=sqlite3` の記述がコメントアウトされていないか確認してください。）
 - PHP拡張: `openssl`, `json`, `mbstring`, `hash`
 - Webサーバー: Apache もしくは Nginx + PHP-FPM
+## 🛠️ Requirementのインストール方法
+
+### 1. PHP 8.1 以上のインストール
+
+#### Windowsの場合
+1. [公式PHPダウンロードページ](https://windows.php.net/download/)から「Thread Safe」版のzipファイルをダウンロードします。
+2. zipを任意のディレクトリに展開します（例: `C:\php`）。
+3. `php.ini-development` を `php.ini` にリネームし、必要に応じて編集します。
+4. 環境変数 `PATH` にPHPのパス（例: `C:\php`）を追加します。
+5. コマンドプロンプトで `php -v` を実行し、バージョンが8.1以上であることを確認します。
+
+#### Linux (Ubuntu)の場合
+1. 端末を開き、以下のコマンドでリポジトリを追加します（必要に応じてsudoを付けてください）:
+   ```bash
+   sudo apt update
+   sudo apt install -y software-properties-common
+   sudo add-apt-repository ppa:ondrej/php
+   sudo apt update
+   ```
+2. PHP 8.1と必要な拡張モジュールをインストールします:
+   ```bash
+   sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-sqlite3 php8.1-mbstring php8.1-json php8.1-openssl php8.1-hash
+   ```
+3. バージョン確認:
+   ```bash
+   php -v
+   ```
+   8.1以上であることを確認してください。
+
+### 2. SQLite のインストール
+
+- PHPの `sqlite3` 拡張がインストールされていれば、追加のインストールは不要です。
+- コマンドラインツールとしてsqlite3を使いたい場合は以下を実行してください:
+  ```bash
+  sudo apt install -y sqlite3
+  ```
+- バージョン確認:
+  ```bash
+  sqlite3 --version
+  ```
+
+### 3. PHP拡張モジュールの確認
+
+- 必要な拡張（openssl, json, mbstring, hash, sqlite3）が有効か確認します:
+  ```bash
+  php -m | grep -E 'openssl|json|mbstring|hash|sqlite3'
+  ```
+  すべて表示されていればOKです。
+
+### 4. Webサーバーのインストール
+
+#### Apacheの場合
+1. Apacheをインストールします（Ubuntuの場合）:
+   ```bash
+   sudo apt update
+   sudo apt install -y apache2
+   ```
+2. Apacheのサービスを起動し、自動起動を有効にします:
+   ```bash
+   sudo systemctl start apache2
+   sudo systemctl enable apache2
+   ```
+3. ブラウザで `http://localhost/` にアクセスし、「Apache2 Ubuntu Default Page」が表示されることを確認してください。
+
+4. PHPとApacheの連携モジュールをインストールします:
+   ```bash
+   sudo apt install -y libapache2-mod-php8.1
+   sudo systemctl restart apache2
+   ```
+5. PHPが正しく動作するか確認するには、`/var/www/html` ディレクトリに `info.php` というファイルを作成し、以下の内容を記述します:
+   ```php
+   <?php phpinfo();
+   ```
+   その後、ブラウザで `http://localhost/info.php` にアクセスし、PHPの情報ページが表示されれば成功です。
+
+6. セキュリティのため、確認後は `info.php` を削除してください:
+   ```bash
+   sudo rm /var/www/html/info.php
+   ```
+
+※ Windowsの場合は [XAMPP](https://www.apachefriends.org/index.html) などのパッケージを利用すると簡単にApache+PHP環境を構築できます。
+#### PHP拡張モジュールとは？
+
+PHP拡張モジュール（エクステンション）は、PHPの標準機能を拡張する追加モジュールです。たとえば「sqlite3」や「mbstring」などがそれに当たります。これらの拡張は、特定の機能（データベース接続やマルチバイト文字列処理など）を使うために必要になります。
+
+- **有効化の確認方法**  
+  すでにインストールされている拡張が有効かどうかは、次のコマンドで確認できます。
+  ```bash
+  php -m
+  ```
+  このコマンドで表示されるリストに、必要な拡張（例: `sqlite3`, `mbstring`, `openssl`, `json`, `hash`）が含まれていればOKです。
+
+- **拡張の有効化・インストール方法（Ubuntu例）**  
+  拡張が無効・未インストールの場合は、以下のようにして追加できます。
+  ```bash
+  sudo apt install -y php-sqlite3 php-mbstring php-json php-openssl php-hash
+  sudo systemctl restart apache2 # Apache利用時
+  ```
+  ※ 利用しているPHPのバージョンによっては、`php8.1-sqlite3` のようにバージョン番号が付く場合もあります。
+
+- **php.iniでの有効化**  
+  インストール済みでも有効化されていない場合は、`php.ini` ファイルで該当拡張のコメントアウト（`;extension=xxx`）を外して `extension=xxx` とする必要があります。
+
+- **Windowsの場合**  
+  XAMPPなどのパッケージを使っている場合は、`php.ini` をエディタで開き、必要な拡張の行頭の「;」を削除して保存し、Apacheを再起動してください。
+
+- **トラブルシューティング**  
+  拡張が有効にならない場合は、`phpinfo();` を使って現在のPHP設定を確認し、拡張ディレクトリや有効化状況をチェックしてください。
+
+**まとめ**  
+本プロジェクトでは、`openssl`, `json`, `mbstring`, `hash`, `sqlite3` などの拡張が必須です。インストール・有効化を忘れずに確認しておいてください。
+
 
 ## 🎯 利用想定
 
@@ -224,7 +336,40 @@ cp backend/config/config.php.example backend/config/config.php
 'upload_method_priority' => 'resumable',                // 再開可能アップロード優先
 ```
 
-④ 設置したディレクトリにapacheまたはnginxの実行権限を付与して下さい。
+④ サーバーがファイルやディレクトリへ正しくアクセスできるよう、設置したディレクトリとその配下にWebサーバー（apacheまたはnginx）の実行ユーザーが書き込み・読み込みできる権限を付与してください。
+
+#### 具体的な手順（例: Linux環境の場合）
+
+1. Webサーバーの実行ユーザー（例: `www-data`や`apache`など）を確認します。
+   - Ubuntu系: `www-data`
+   - CentOS系: `apache`
+   - サーバーによって異なるため、`ps aux | grep apache`や`ps aux | grep nginx`で確認できます。
+
+2. ディレクトリの所有者をWebサーバーユーザーに変更します（例: `www-data`の場合）:
+   ```bash
+   sudo chown -R www-data:www-data /path/to/your/phpUploader
+   ```
+
+3. 必要に応じて、書き込み権限を付与します（セキュリティのため最小限に留めてください）:
+   ```bash
+   sudo chmod -R 750 /path/to/your/phpUploader
+   ```
+
+4. 特に以下のディレクトリはWebサーバーからの書き込みが必須です:
+   - `db/`
+   - `data/`
+   - `storage/logs/`
+   - `temp/`
+
+   これらのディレクトリに個別に権限を付与する場合の例:
+   ```bash
+   sudo chown -R www-data:www-data /path/to/your/phpUploader/db /path/to/your/phpUploader/data /path/to/your/phpUploader/storage/logs /path/to/your/phpUploader/temp
+   sudo chmod -R 770 /path/to/your/phpUploader/db /path/to/your/phpUploader/data /path/to/your/phpUploader/storage/logs /path/to/your/phpUploader/temp
+   ```
+
+> **注意:**  
+> サーバーのセキュリティポリシーや運用方針に応じて、権限設定は調整してください。  
+> 共有サーバーや本番環境では、不要な権限を与えすぎないよう十分ご注意ください。
 
 ④ この状態でサーバーに接続すると下記のディレクトリとファイルが自動作成されます。
 
@@ -235,11 +380,27 @@ cp backend/config/config.php.example backend/config/config.php
 
 **自動マイグレーション**: v1.xからアップグレードする場合、初回アクセス時にデータベースが自動的に新しいスキーマに更新されます。
 
-⑤ 以下のディレクトリには`.htaccess`などを用いて外部からの直接アクセスを遮断させて下さい：
+⑤ 以下のディレクトリには外部からの直接アクセスを遮断する対策を必ず施してください。  
+代表的な方法としては`.htaccess`による制御がありますが、他にも以下のような手段が有効です。
+
+- **Webサーバーの設定**  
+  - Apacheの場合: `httpd.conf`や`virtualhost`設定で該当ディレクトリへのアクセスを拒否する  
+  - nginxの場合: `location`ディレクティブで`deny all;`を指定する
+- **ディレクトリをドキュメントルートの外に配置する**  
+  - そもそもWebから直接アクセスできない場所に機密ディレクトリを置く
+- **.htaccessファイルによるアクセス制御**  
+  - 各ディレクトリに`Deny from all`や`Require all denied`を記述
+- **空のindex.htmlファイルを設置する**  
+  - ディレクトリリスト表示を防ぐ（ただし根本的な遮断にはならないので他の方法と併用推奨）
+
+サーバー環境や運用方針に応じて、これらの方法を組み合わせてご利用ください。
+
+```bash
 - `backend/config/` (設定ファイル)
 - `db/` (データベースファイル)
 - `storage/logs/` (ログファイル)
 - `temp/` (一時ファイル)
+```
 
 **セキュリティ設定例（Apache）:**
 
@@ -265,21 +426,54 @@ cp backend/config/config.php.example backend/config/config.php
 </Files>
 ```
 
-⑥ファイルがアップロードできるよう、PHPとapacheまたはnginxの設定を変更してください。
+⑥ ファイルアップロード機能を利用するには、PHPおよびWebサーバー（Apacheまたはnginx）の設定を正しく行う必要があります。  
+以下の手順に従って設定を確認・変更してください。
+
+**PHPの設定例（php.ini）:**
+- `file_uploads = On`  
+  ファイルアップロード機能を有効にします。
+- `upload_max_filesize = 100M`  
+  1ファイルあたりの最大アップロードサイズ（例：100MB。用途に応じて調整してください）。
+- `post_max_size = 100M`  
+  POSTリクエスト全体の最大サイズ（`upload_max_filesize`以上に設定してください）。
+- `max_file_uploads = 20`  
+  一度にアップロードできるファイル数の上限（必要に応じて調整）。
+
+**Apacheの設定例:**
+- `.htaccess`や`httpd.conf`で、アップロード先ディレクトリに書き込み権限があることを確認してください。
+- 必要に応じて`LimitRequestBody`ディレクティブでリクエストサイズ上限を調整します（例：`LimitRequestBody 104857600` で100MB）。
+
+**nginxの設定例:**
+- `nginx.conf`や該当サーバーブロックで、`client_max_body_size`ディレクティブを設定します（例：`client_max_body_size 100M;`）。
+- PHP-FPMを利用している場合は、アップロード先ディレクトリの書き込み権限も確認してください。
+
+**パーミッションの注意:**
+- アップロード先ディレクトリ（例：`temp/`や`storage/`）にWebサーバーのユーザー（例：`www-data`や`apache`）が書き込みできるようにしてください。
+- セキュリティのため、アップロードディレクトリには不要な実行権限を与えないようにしましょう。
+
+**例:**
+- Linux環境で`temp/`ディレクトリに書き込み権限を付与する場合  
+  ```bash
+  chmod 770 temp
+  chown www-data:www-data temp
+  ```
+  ※Webサーバーユーザー名は環境によって異なります。
+
+これらの設定を行うことで、ファイルアップロード機能が正しく動作します。  
+設定変更後はWebサーバーやPHPの再起動が必要な場合がありますのでご注意ください。
 
 ### **v1.xからのアップグレード**
 
 **重要**: 必ずバックアップを取ってからアップグレードしてください。
 
-① 既存のインストールをバックアップ
-```bash
-# ファイルとデータベースをバックアップ
-cp -r /path/to/phpUploader /path/to/phpUploader_backup
-```
-
-② 新しいバージョンのファイルで更新
-③ `backend/config/config.php`に新しい設定オプションを追加（上記の設定例を参照）
-④ アプリケーションにアクセス - データベースマイグレーションが自動実行されます
+1. 既存のインストールをバックアップ  
+   ```bash
+   # ファイルとデータベースをバックアップ
+   cp -r /path/to/phpUploader /path/to/phpUploader_backup
+   ```
+2. 新しいバージョンのファイルで更新する
+3. `backend/config/config.php` に新しい設定オプションを追加する（上記の設定例を参照）
+4. アプリケーションにアクセスする（データベースマイグレーションが自動実行されます）
 
 **マイグレーション確認**: 初回アクセス時にログファイルでマイグレーション状況を確認できます。
 
@@ -323,7 +517,7 @@ docker-compose build --no-cache
 
 - `backend/config/config.php`は機密情報を含むため、必ず外部アクセスを遮断してください
 - `master`と`key`,`session_salt`には推測困難なランダムな値を設定してください
-- 本番環境では`backend/config`と`db`、`storage/logs`ディレクトリへの直接アクセスを禁止してください
+- 本番環境では`backend/config`と`db`、`storage/logs`、`temp`ディレクトリへの直接アクセスを禁止してください
 
 **推奨セキュリティ設定**:
 
@@ -352,15 +546,19 @@ cp backend/config/config.php.example backend/config/config.php
 
 ### バージョン管理
 
-このプロジェクトでは`config.php`でバージョンを一元管理しています。
-
+- このプロジェクトでは`backend/config/config.php`でバージョンを一元管理しています。
+- バージョン情報はUI下部に表示されます。
+- `backend/routes/router.php`にAPIバージョンがあるので、バージョンを更新するたびに変更する必要があります。
+- また、`backend/services/system-api-handler.php`にもバージョンがあるので、バージョンを更新するたびに変更する必要があります。
+- `docs/RELEASE_NOTES_*.md`にバージョンごとの変更点が記載されています。
+- `CHANGELOG.md`と`README.md`もバージョンに合わせて適宜更新してください。
 
 バージョン確認テスト:
 
 ```bash
 # Docker環境で実行
 docker-compose --profile tools up -d php-cli
-docker-compose exec php-cli php scripts/test-version.php
+docker-compose exec php-cli php infrastructure/scripts/test-version.php
 
 # 終了するとき
 docker-compose down php-cli
@@ -375,27 +573,27 @@ PHPがローカルにインストールされていなくても、Dockerを使�
 docker-compose up -d web
 
 # リリース管理（Linux/Mac）
-./scripts/release.sh x.x.x
+./infrastructure/scripts/release.sh x.x.x
 
 # リリース管理（Windows）
-scripts\release.bat x.x.x
+infrastructure\scripts\release.bat x.x.x
 
 # 自動プッシュ付きリリース
-./scripts/release.sh x.x.x --push
+./infrastructure/scripts/release.sh x.x.x --push
 
 # Composer管理
-./scripts/composer.sh install
-./scripts/composer.sh update
+./infrastructure/scripts/composer.sh install
+./infrastructure/scripts/composer.sh update
 ```
 
 ### リリース手順
 
-1. **バージョン更新**: `./scripts/release.sh x.x.x`
-2. **変更確認**: 自動的に`composer.json`が更新され、`config.php`は動的に読み取ります
+1. **バージョン更新**: `./infrastructure/scripts/release.sh x.x.x`
+2. **変更確認**: `backend/config/config.php`のバージョン番号を手動で更新
 3. **Git操作**: 表示される手順に従ってコミット・タグ・プッシュ
 4. **自動リリース**: GitHub Actionsが自動でリリースを作成
 
-**重要**: リリース時は`config/config.php.example`テンプレートが配布され、エンドユーザーが自分で設定ファイルを作成する必要があります。
+**重要**: リリース時は`backend/config/config.php.example`テンプレートが配布され、エンドユーザーが自分で設定ファイルを作成する必要があります。
 
 ## 📄 License
 
