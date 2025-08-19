@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.3-roflsunriz] - 2025-08-20
+
+### Feature
+
+- TUSアップロード時にSQLiteデータベースにstored_file_name, file_hash, ip_addressが保存されるように改良。
+
+### Fixed
+
+- 更新ボタンのスタイルをグリッド・リスト切り替えボタンと同じにした。
+
 ## [4.2.2-roflsunriz] - 2025-08-19
 
 ### Fixed
