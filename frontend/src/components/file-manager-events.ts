@@ -401,9 +401,6 @@ export class FileManagerEvents {
       case 'select-all':
         this.selectAllFiles();
         break;
-      case 'select-none':
-        this.core.clearSelection();
-        break;
       case 'delete':
         this.deleteSelectedFiles();
         break;
