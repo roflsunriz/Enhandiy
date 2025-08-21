@@ -81,22 +81,38 @@ phpUploader v4.2.4-roflsunriz は、オリジナルのphpUploaderをベースに
 // フォルダ管理
 'folders_enabled' => true,
 'max_folder_depth' => 5,
+'max_folders_per_level' => 50,
 'allow_folder_creation' => true,
+'allow_folder_deletion' => true,
 
 // ファイル編集・管理
 'allow_comment_edit' => true,
 'allow_file_replace' => true,
+'file_edit_admin_only' => false,
 
-// 一括操作機能
-'bulk_operations_enabled' => true,      // v3.0.0: 一括操作機能
-'bulk_delete_limit' => 100,             // v3.0.0: 一括削除の最大件数
+// 一括操作機能（削除処理の新設定）
+'deletion_security' => [
+    'auth_mode' => 'key_or_master',
+    'bulk_delete_enabled' => true,    // 一括削除機能の有効/無効（マスターキーのみ）
+    'max_bulk_delete_files' => 100,   // 一括削除の最大ファイル数
+    'require_confirmation' => true,   // 削除確認ダイアログ必須
+    'individual_delete_enabled' => true // 個別削除キーサポート
+],
 
 // 再開可能アップロード
-'upload_method_priority' => 'resumable',
+'upload_method_priority' => 'resumable',                // 再開可能アップロード優先
+'upload_fallback_enabled' => true,
 
 // API設定
 'api_enabled' => true,
-'api_rate_limit' => 100
+'api_rate_limit' => 100,
+'api_keys' => [
+    'YOUR_API_KEY_HERE' => [
+        'name' => 'Default API Key',
+        'permissions' => ['read','write','delete','admin'],
+        'expires' => null
+    ]
+]
 ```
 
 ## 🗄️ データベース変更
@@ -326,16 +342,42 @@ cp backend/config/config.php.example backend/config/config.php
 
 ```php
 // 例：セキュリティのため必ず変更してください
-'master' => 'YOUR_SECURE_MASTER_KEY_HERE',              // マスターキー
-'key' => hash('sha256', 'YOUR_ENCRYPTION_SEED_HERE'),   // 暗号化キー
-'session_salt' => hash('sha256', 'YOUR_SESSION_SALT'),  // セッションソルト
+'master' => 'YOUR_SECURE_MASTER_KEY_HERE',              // マスターキー（16文字以上推奨）
+'key' => bin2hex(random_bytes(32)),                     // 暗号化キー（32バイトのランダム文字列を推奨）
+'session_salt' => hash('sha256', bin2hex(random_bytes(32))),  // セッションソルト（16文字以上推奨）
 
-// v4.0.0新機能の設定例
+// v4.0.0〜v4.x新機能の設定例
 'folders_enabled' => true,                              // フォルダ機能有効化
+'max_folder_depth' => 5,                                // 最大フォルダ階層深さ
+'max_folders_per_level' => 50,                          // 各階層での最大フォルダ数
+'allow_folder_creation' => true,                        // ユーザーによるフォルダ作成許可
+'allow_folder_deletion' => true,                        // ユーザーによるフォルダ削除許可
+
 'api_enabled' => true,                                  // API機能有効化
+'api_rate_limit' => 100,                                // 1時間あたりのAPIリクエスト制限
+'api_keys' => [
+    'YOUR_API_KEY_HERE' => [
+        'name' => 'Default API Key',
+        'permissions' => ['read','write','delete','admin'],
+        'expires' => null
+    ]
+],
+
 'allow_comment_edit' => true,                           // コメント編集許可
 'allow_file_replace' => true,                           // ファイル差し替え許可
+'file_edit_admin_only' => false,                        // 管理者のみ編集可にする場合はtrue
+
 'upload_method_priority' => 'resumable',                // 再開可能アップロード優先
+'upload_fallback_enabled' => true,                      // 再開可能アップロード失敗時のフォールバック
+
+// 削除・一括削除周りのセキュリティ（例）
+'deletion_security' => [
+    'auth_mode' => 'key_or_master',
+    'bulk_delete_enabled' => true,
+    'max_bulk_delete_files' => 100,
+    'require_confirmation' => true,
+    'individual_delete_enabled' => true
+],
 ```
 
 ④ サーバーがファイルやディレクトリへ正しくアクセスできるよう、設置したディレクトリとその配下にWebサーバー（apacheまたはnginx）の実行ユーザーが書き込み・読み込みできる権限を付与してください。
