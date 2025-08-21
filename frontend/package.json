@@ -8,13 +8,18 @@
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src/**/*.{ts,js} --max-warnings 0"
+    "lint": "eslint src/**/*.{ts,js} --max-warnings 0",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:headed": "cross-env PW_HEADED=1 PW_SLOWMO=300 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.47.2",
     "@types/node": "^24.1.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
+    "cross-env": "^10.0.0",
     "eslint": "^9.32.0",
     "typescript": "^5.3.3",
     "vite": "^7.0.6"

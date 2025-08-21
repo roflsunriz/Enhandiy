@@ -48,3 +48,7 @@ data/*.rar
 
 # Debug files
 docker-debug.md
+
+#playwright test reports
+frontend/playwright-report/
+frontend/test-results/

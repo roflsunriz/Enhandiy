@@ -1,0 +1,73 @@
+param(
+  [string]$ComposeFilePath = "infrastructure\docker-compose.yaml",
+  [string]$BaseUrl = "http://localhost",
+  [int]$TimeoutSec = 120,
+  [switch]$SkipUp = $false,
+  [switch]$LeaveUp = $false
+)
+
+$ErrorActionPreference = "Stop"
+
+function Wait-ForHttpOk {
+  param([string]$Url, [int]$Timeout)
+  $deadline = (Get-Date).AddSeconds($Timeout)
+  while ((Get-Date) -lt $deadline) {
+    try {
+      $resp = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5
+      if ($resp.StatusCode -eq 200) { return $true }
+    } catch { Start-Sleep -Seconds 2 }
+  }
+  return $false
+}
+
+if (-not $SkipUp) {
+  Write-Host "Docker起動中..."
+  docker compose -f $ComposeFilePath up -d
+}
+
+Write-Host "アプリ起動待ち: $BaseUrl"
+if (-not (Wait-ForHttpOk -Url $BaseUrl -Timeout $TimeoutSec)) {
+  Write-Error "起動待ちタイムアウト: $BaseUrl"
+  docker compose -f $ComposeFilePath logs | cat
+  docker compose -f $ComposeFilePath down
+  exit 1
+}
+
+Push-Location frontend
+try {
+  npm install
+  $env:PLAYWRIGHT_BASE_URL = $BaseUrl
+  # Docker内のconfig.phpからマスターキーを取得して環境変数に渡す
+  try {
+    # Here-String を使ってクォート崩れを防止し、bash -lc 経由で php を実行
+    $phpInline = @"
+php -r 'include "/var/www/html/backend/config/config.php"; $c=new config(); $cfg=$c->index(); echo $cfg["master"];'
+"@
+    $masterKey = (docker compose -f $ComposeFilePath exec -T php_apache bash -lc $phpInline) 2>$null
+    if ($LASTEXITCODE -eq 0) {
+      $masterKey = ($masterKey | Out-String).Trim()
+      if ($masterKey -and $masterKey.Length -gt 0) {
+        $env:PW_MASTER_KEY = $masterKey
+      } else {
+        Write-Warning "Master key not returned from container. Proceeding without PW_MASTER_KEY."
+      }
+    } else {
+      Write-Warning "Failed to fetch master key from container. Proceeding without PW_MASTER_KEY."
+    }
+  } catch {}
+  npx playwright install chromium
+  npx playwright test
+  $exitCode = $LASTEXITCODE
+} finally {
+  Pop-Location
+  if (-not $LeaveUp) {
+    Write-Host "Docker停止中..."
+    docker compose -f $ComposeFilePath down
+  } else {
+    Write-Host "コンテナは稼働状態のまま維持します (-LeaveUp 指定)"
+  }
+}
+
+exit $exitCode
+
+
