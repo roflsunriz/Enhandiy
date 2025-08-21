@@ -4,9 +4,9 @@
 
 phpUploader v4.2.4-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
-![cover](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/cover.png)
+![cover](./image/cover.png)
 
-![upload-form](https://raw.githubusercontent.com/roflsunriz/phpUploader/refs/heads/main/image/upload-form.png)
+![upload-form](./image/upload-form.png)
 
 ## ✨ 主要機能
 
