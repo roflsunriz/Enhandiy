@@ -55,6 +55,24 @@ php -r 'include "/var/www/html/backend/config/config.php"; $c=new config(); $cfg
       Write-Warning "Failed to fetch master key from container. Proceeding without PW_MASTER_KEY."
     }
   } catch {}
+
+  # フォールバック: ホストの backend/config/config.php から 'master' を正規表現で抽出
+  if (-not $env:PW_MASTER_KEY) {
+    try {
+      $cfgPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'backend\config\config.php'
+      if (Test-Path $cfgPath) {
+        $content = Get-Content -Raw -LiteralPath $cfgPath
+        $m = [regex]::Match($content, "'master'\s*=>\s*'([^']+)'")
+        if ($m.Success) {
+          $env:PW_MASTER_KEY = $m.Groups[1].Value
+        } else {
+          Write-Warning "Could not parse master key from $cfgPath"
+        }
+      }
+    } catch {
+      Write-Warning "Failed to read master key from host config.php"
+    }
+  }
   npx playwright install chromium
   npx playwright test
   $exitCode = $LASTEXITCODE

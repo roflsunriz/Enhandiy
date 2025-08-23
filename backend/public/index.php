@@ -164,7 +164,9 @@ try {
             'UTF-8'
         );
     } else {
-        $errorMessage = "システムエラーが発生しました。エラーID: {$errorId}";
+        // ユーザー向けの簡易ヒント
+        $basicHint = '時間をおいて再試行し、改善しない場合は管理者にこのエラーIDを伝えるのじゃ。';
+        $errorMessage = "システムエラーが発生しました。エラーID: {$errorId}<br>対処: {$basicHint}";
     }
 
     // シンプルなエラーページの表示

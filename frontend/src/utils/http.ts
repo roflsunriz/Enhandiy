@@ -113,6 +113,17 @@ export async function request<T = unknown>(
     // JSONレスポンスの場合
     if (contentType.includes('application/json')) {
       const data = await response.json();
+      // バックエンドのRawレスポンスをApiResponseに正規化
+      if (typeof data === 'object' && data !== null && 'status' in data) {
+        const raw = data as unknown as { status: string; message?: string; data?: T; error_code?: string; hint?: string; error_id?: string };
+        if (raw.status === 'success') {
+          return { success: true, data: raw.data as T, message: raw.message };
+        }
+        const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
+          .filter(Boolean)
+          .join(' ');
+        return { success: false, error: composed };
+      }
       return data as ApiResponse<T>;
     }
 

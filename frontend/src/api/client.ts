@@ -426,7 +426,10 @@ export class AuthApi {
     if (raw.status === 'success') {
       return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
     }
-    return { success: false, error: raw.error_code || raw.message };
+    const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
+      .filter(Boolean)
+      .join(' ');
+    return { success: false, error: composed };
   }
 
   /**
@@ -441,7 +444,10 @@ export class AuthApi {
     if (raw.status === 'success') {
       return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
     }
-    return { success: false, error: raw.error_code || raw.message };
+    const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
+      .filter(Boolean)
+      .join(' ');
+    return { success: false, error: composed };
   }
 
   /**

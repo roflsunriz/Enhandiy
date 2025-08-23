@@ -9,6 +9,8 @@ export interface RawApiResponse {
   data?: unknown;
   message?: string;
   error_code?: string;
+  hint?: string;
+  error_id?: string;
 }
 
 // APIエンドポイント定義

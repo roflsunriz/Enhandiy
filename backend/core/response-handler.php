@@ -14,10 +14,14 @@ require_once __DIR__ . '/logger.php';
 class ResponseHandler
 {
     private Logger $logger;
+    private array $hints;
 
     public function __construct(Logger $logger)
     {
         $this->logger = $logger;
+        // エラーヒントの読み込み（存在しない場合は空配列）
+        $hintsPath = __DIR__ . '/error-hints.php';
+        $this->hints = file_exists($hintsPath) ? (require $hintsPath) : [];
     }
 
     /**
@@ -44,10 +48,13 @@ class ResponseHandler
         int $httpCode = 400,
         ?string $errorCode = null
     ): void {
+        $errorId = uniqid('API_ERR_');
+
         $response = [
             'status' => 'error',
             'message' => $message,
-            'timestamp' => date('c')
+            'timestamp' => date('c'),
+            'error_id' => $errorId
         ];
 
         if (!empty($validationErrors)) {
@@ -56,7 +63,14 @@ class ResponseHandler
 
         if ($errorCode !== null) {
             $response['error_code'] = $errorCode;
+            // ユーザー向けヒントを付与
+            if (isset($this->hints[$errorCode])) {
+                $response['hint'] = $this->hints[$errorCode];
+            }
         }
+
+        // ログ出力にエラーIDを含める
+        $this->logger->error("API Error [{$errorId}]" . ($errorCode ? " {$errorCode}" : '') . ": {$message}");
 
         http_response_code($httpCode);
         $this->sendJson($response);
