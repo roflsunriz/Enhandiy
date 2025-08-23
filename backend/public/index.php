@@ -49,14 +49,11 @@ try {
     $configInstance = new config();
     $config = $configInstance->index();
 
-    // HTTPS強制リダイレクト（サーバーが対応している場合のみ）
-    $enforceHttps = $config['security']['enforce_https'] ?? false;
-    SecurityUtils::enforceHttpsIfSupported($enforceHttps);
+    // アプリケーション初期化（ディレクトリ自動作成など）
+    require_once __DIR__ . '/../models/init.php';
+    $db = initializeApp($config);
 
-    // セキュリティヘッダーの設定
-    SecurityUtils::setSecurityHeaders();
-
-    // 設定の検証
+    // 設定の検証（初期化後に実施し、存在チェックで落ちないようにする）
     $configValidation = $configInstance->validate();
     if (!empty($configValidation)) {
         $errorMessage = '⚠️ セキュリティ設定エラー：' . implode(', ', $configValidation);
@@ -67,13 +64,16 @@ try {
         throw new Exception('⚠️ 重要：デフォルトのセキュリティキーが使用されています。config.php で master、key、session_salt を変更してください。');
     }
 
+    // HTTPS強制リダイレクト（サーバーが対応している場合のみ）
+    $enforceHttps = $config['security']['enforce_https'] ?? false;
+    SecurityUtils::enforceHttpsIfSupported($enforceHttps);
+
+    // セキュリティヘッダーの設定
+    SecurityUtils::setSecurityHeaders();
+
     // ページパラメータの取得
     $page = $_GET['page'] ?? 'index';
     $page = preg_replace('/[^a-zA-Z0-9_]/', '', $page); // セキュリティ: 英数字とアンダースコアのみ許可
-
-    // アプリケーション初期化
-    require_once __DIR__ . '/../models/init.php';
-    $db = initializeApp($config);
 
     // ログ機能の初期化
     $logger = new Logger(

@@ -28,8 +28,8 @@ header('Content-Type: application/json; charset=utf-8');
 try {
     // 設定とユーティリティの読み込み（絶対パスで修正）
     $baseDir = dirname(dirname(__DIR__)); // アプリケーションルートディレクトリ
-    require_once $baseDir . 'backend/config/config.php';
-    require_once $baseDir . 'backend/core/utils.php';
+    require_once $baseDir . '/backend/config/config.php';
+    require_once $baseDir . '/backend/core/utils.php';
 
     // セキュアセッション開始（index.php と同設定を共有）
     SecurityUtils::startSecureSession();
@@ -41,7 +41,7 @@ try {
     $config = $configInstance->index();
 
     // アプリケーション初期化
-    require_once $baseDir . 'backend/models/init.php';
+    require_once $baseDir . '/backend/models/init.php';
     $db = initializeApp($config);
 
     // ログとレスポンスハンドラーの初期化

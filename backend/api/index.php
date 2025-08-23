@@ -37,8 +37,12 @@ try {
     }
 
     require_once __DIR__ . '/../config/config.php';
+    require_once __DIR__ . '/../core/utils.php';
+    require_once __DIR__ . '/../models/init.php';
     $configObj = new config();
     $config = $configObj->index();
+    // ディレクトリ作成・DB初期化
+    $db = initializeApp($config);
 } catch (Exception $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
