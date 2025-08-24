@@ -132,7 +132,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#editMasterKeyInput').fill('');
     await page.locator('#editReplaceKeyInput').fill('rep-key-edit');
     await Promise.all([
-      waitForApi(page, '/api/edit-comment.php'),
+      waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#saveCommentBtn').click(),
     ]);
     await closeAlertIfVisible(page);
@@ -153,7 +153,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#editReplaceKeyInput').fill('');
     await page.locator('#editMasterKeyInput').fill(process.env.PW_MASTER_KEY);
     await Promise.all([
-      waitForApi(page, '/api/edit-comment.php'),
+      waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#saveCommentBtn').click(),
     ]);
     await closeAlertIfVisible(page);
@@ -175,7 +175,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#replaceMasterKeyInput').fill('');
     await page.locator('#modalReplaceKeyInput').fill('rep-key-edit');
     await Promise.all([
-      waitForApi(page, '/api/replace-file.php'),
+      waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#replaceFileBtn').click(),
     ]);
     await closeAlertIfVisible(page);
@@ -198,7 +198,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#modalReplaceKeyInput').fill('');
     await page.locator('#replaceMasterKeyInput').fill(process.env.PW_MASTER_KEY);
     await Promise.all([
-      waitForApi(page, '/api/replace-file.php'),
+      waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#replaceFileBtn').click(),
     ]);
     await closeAlertIfVisible(page);

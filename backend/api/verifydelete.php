@@ -75,7 +75,8 @@ try {
         // 削除キー未入力または未設定（レガシーデータ）
         if (empty($inputKey)) {
             $logger->info('Delete key required', ['file_id' => $fileId]);
-            $responseHandler->error('Delete key is required.', [], 403, 'AUTH_REQUIRED');
+            // UIは200でエラーメッセージを読んでモーダル再入力フローに入る
+            $responseHandler->error('Delete key is required.', [], 200, 'AUTH_REQUIRED');
         }
 
         // ファイル側に削除キーが存在しない場合
@@ -94,7 +95,7 @@ try {
 
         // キーが間違っている場合
         $logger->warning('Invalid delete key', ['file_id' => $fileId]);
-        $responseHandler->error('Invalid delete key.', [], 403, 'INVALID_KEY');
+        $responseHandler->error('Invalid delete key.', [], 200, 'INVALID_KEY');
         exit;  // 追加: 認証失敗時は処理を中断してトークン生成を防止
     }
 

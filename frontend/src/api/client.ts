@@ -3,9 +3,9 @@
  * PHPUploaderのAPI操作を型安全に行うためのクライアント
  */
 
-import { post, get, del, put, getCsrfToken } from '../utils/http';
+import { post, get, getCsrfToken, request } from '../utils/http';
 import { ApiResponse, FileData, FolderData } from '../types/global';
-import { RawApiResponse } from '../types/api';
+// import { RawApiResponse } from '../types/api';
 
 /**
  * ファイル操作API
@@ -14,9 +14,15 @@ export class FileApi {
   /**
    * ファイル一覧を取得
    */
-  static async getFiles(folderId?: string): Promise<ApiResponse<FileData[]>> {
-    const params = folderId ? `?folder_id=${encodeURIComponent(folderId)}` : '';
-    return get<FileData[]>(`/api/simple-files.php${params}`);
+  static async getFiles(folderId?: string, options?: { includeFolders?: boolean; includeBreadcrumb?: boolean }): Promise<ApiResponse<FileData[]>> {
+    const parts: string[] = [];
+    if (folderId) parts.push(`folder=${encodeURIComponent(folderId)}`);
+    const include: string[] = [];
+    if (options?.includeFolders) include.push('folders');
+    if (options?.includeBreadcrumb) include.push('breadcrumb');
+    if (include.length) parts.push(`include=${include.join(',')}`);
+    const query = parts.length ? `&${parts.join('&')}` : '';
+    return get<FileData[]>(`/api/index.php?path=/api/files${query}`);
   }
 
   /**
@@ -24,7 +30,7 @@ export class FileApi {
    */
   static async downloadFile(fileId: string): Promise<void> {
     const link = document.createElement('a');
-    link.href = `/api/download.php?id=${encodeURIComponent(fileId)}`;
+    link.href = `/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/download`;
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
@@ -35,7 +41,11 @@ export class FileApi {
    * ファイルを削除（旧メソッド）
    */
   static async deleteFile(fileId: string): Promise<ApiResponse> {
-    return post('/api/verifydelete.php', { id: fileId });
+    // ルータ経由の検証エンドポイントへ統一
+    const fd = new FormData();
+    fd.append('id', fileId);
+    fd.append('csrf_token', getCsrfToken());
+    return post('/api/index.php?path=/api/auth/verify-delete', fd);
   }
 
   /**
@@ -43,10 +53,11 @@ export class FileApi {
    */
   static async deleteFileWithAuth(fileId: string, masterKey?: string, deleteKey?: string): Promise<ApiResponse> {
     const key = masterKey || deleteKey || '';
-    return post('/api/verifydelete.php', { 
-      id: fileId,
-      key: key 
-    });
+    const fd = new FormData();
+    fd.append('id', fileId);
+    if (key) fd.append('key', key);
+    fd.append('csrf_token', getCsrfToken());
+    return post('/api/index.php?path=/api/auth/verify-delete', fd);
   }
 
   /**
@@ -65,21 +76,22 @@ export class FileApi {
       not_found_files: Array<{ id: number; reason: string }>;
     };
   }>> {
+    // 既存サーバー実装はフォーム受け取りのためFormDataで送信
     const fd = new FormData();
     fileIds.forEach(id => fd.append('file_ids[]', id));
     fd.append('master_key', masterKey);
     fd.append('csrf_token', getCsrfToken());
-    
-    return post('/api/bulk-delete.php', fd);
+    return post('/api/index.php?path=/api/files/batch', fd);
   }
 
   /**
    * ファイルのコメントを更新
    */
   static async updateComment(fileId: string, comment: string): Promise<ApiResponse> {
-    return post('/api/edit-comment.php', {
-      file_id: fileId,
-      comment: comment
+    return request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: comment })
     });
   }
 
@@ -88,29 +100,30 @@ export class FileApi {
    */
   static async replaceFile(fileId: string, file: File): Promise<ApiResponse> {
     const formData = new FormData();
-    formData.append('file_id', fileId);
-    formData.append('files[]', file);
-    
-    return post('/api/replace-file.php', formData);
+    // ルーターの置換APIは単一ファイルを 'file' フィールドで受け取る
+    formData.append('file', file);
+    return post(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/replace`, formData);
   }
 
   /**
    * ファイルを移動
    */
-  static async moveFile(fileId: string, targetFolderId: string): Promise<ApiResponse> {
-    return post('/api/move-file.php', {
-      file_id: fileId,
-      folder_id: targetFolderId
+  static async moveFile(fileId: string, targetFolderId: string | null): Promise<ApiResponse> {
+    return request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder_id: targetFolderId })
     });
   }
 
   /**
    * 複数ファイルを移動
    */
-  static async moveFiles(fileIds: string[], targetFolderId: string): Promise<ApiResponse> {
-    return post('/api/move-files.php', {
-      file_ids: fileIds,
-      folder_id: targetFolderId
+  static async moveFiles(fileIds: string[], targetFolderId: string | null): Promise<ApiResponse> {
+    return request(`/api/index.php?path=/api/files/batch`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_ids: fileIds, folder_id: targetFolderId })
     });
   }
 
@@ -134,10 +147,13 @@ export class ShareApi {
     max_downloads?: number;
     expires_days?: number;
   }>> {
-    return post('/api/generatesharelink.php', {
-      id: params.fileId,
-      max_downloads: params.maxDownloads || null,
-      expires_days: params.expiresDays || null
+    return request(`/api/index.php?path=/api/files/${encodeURIComponent(params.fileId)}/share`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        max_downloads: params.maxDownloads || null,
+        expires_days: params.expiresDays || null
+      })
     });
   }
 }
@@ -150,17 +166,17 @@ export class FolderApi {
    * フォルダ一覧を取得
    */
   static async getFolders(): Promise<ApiResponse<{ folders: FolderData[] }>> {
-    return get<{ folders: FolderData[] }>('/api/folders.php');
+    return get<{ folders: FolderData[] }>(`/api/index.php?path=/api/folders`);
   }
 
   /**
    * フォルダを作成
    */
   static async createFolder(name: string, parentId?: string): Promise<ApiResponse<FolderData>> {
-    return post('/api/folders.php', {
-      action: 'create',
-      name: name,
-      parent_id: parentId || null
+    return request<FolderData>(`/api/index.php?path=/api/folders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, parent_id: parentId || null })
     });
   }
 
@@ -168,35 +184,40 @@ export class FolderApi {
    * フォルダを更新
    */
   static async updateFolder(folderId: string, name: string): Promise<ApiResponse> {
-    return put('/api/folders.php', {
-      action: 'update',
-      id: folderId,
-      name: name
+    return request(`/api/index.php?path=/api/folders/${encodeURIComponent(folderId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
     });
   }
 
   /**
    * フォルダを削除
    */
-  static async deleteFolder(folderId: string): Promise<ApiResponse> {
-    return del(`/api/folders.php?id=${encodeURIComponent(folderId)}`);
+  static async deleteFolder(folderId: string, options?: { moveFiles?: boolean }): Promise<ApiResponse> {
+    const move = options?.moveFiles ? '&move_files=true' : '';
+    return request(`/api/index.php?path=/api/folders/${encodeURIComponent(folderId)}${move}`, {
+      method: 'DELETE'
+    });
   }
 
   /**
    * フォルダ内のファイル数を取得
    */
-  static async getFolderFileCount(folderId: string): Promise<ApiResponse<{ count: number }>> {
-    return get(`/api/folders.php?id=${encodeURIComponent(folderId)}&check=true`);
+  static async getFolderFileCount(_folderId: string): Promise<ApiResponse<{ count: number }>> {
+    // ルーター側にcheckエンドポイントが無い場合の暫定: 一覧取得してクライアント側で集計は
+    // 呼び出し元で行う前提にする（ここはAPI形だけ維持）
+    return get(`/api/index.php?path=/api/folders`);
   }
 
   /**
    * フォルダを移動
    */
   static async moveFolder(folderId: string, newParentId: string | null): Promise<ApiResponse> {
-    return post('/api/folders.php', {
-      action: 'move',
-      id: folderId,
-      new_parent_id: newParentId
+    return request(`/api/index.php?path=/api/folders/${encodeURIComponent(folderId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent_id: newParentId })
     });
   }
 }
@@ -228,7 +249,7 @@ export class UploadApi {
       throw new Error('無効なアップロードオプションです');
     }
     const formData = new FormData();
-    formData.append('files[]', file);
+    formData.append('file', file);
     
     if (options.comment) formData.append('comment', options.comment);
     if (options.dlkey) formData.append('dlkey', options.dlkey);
@@ -238,7 +259,7 @@ export class UploadApi {
     if (options.expiresDays) formData.append('expiresDays', options.expiresDays.toString());
     if (options.folderId) formData.append('folderId', options.folderId);
     
-    return post('/api/upload.php', formData);
+    return post('/api/index.php?path=/api/files', formData);
   }
   
   /**
@@ -389,7 +410,7 @@ export class UploadApi {
     if (options.expiresDays) formData.append('expiresDays', options.expiresDays.toString());
     if (options.folderId) formData.append('folderId', options.folderId);
     
-    return post('/api/upload.php', formData);
+    return post('/api/index.php?path=/api/files', formData);
   }
 
   /**
@@ -399,7 +420,8 @@ export class UploadApi {
     comment?: string;
     folderId?: string;
   } = {}): Promise<ApiResponse<{ upload_url: string }>> {
-    return post('/api/tus-upload.php', {
+    // ルーター経由のTus初期化に変更（ApacheのAlias不要）
+    return post('/api/index.php?path=/api/tus-upload', {
       filename: file.name,
       filesize: file.size,
       filetype: file.type,
@@ -422,14 +444,8 @@ export class AuthApi {
     fd.append('id', id);
     if (key) fd.append('key', key);
     fd.append('csrf_token', getCsrfToken());
-    const raw = await post('/api/verifydownload.php', fd) as unknown as RawApiResponse;
-    if (raw.status === 'success') {
-      return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
-    }
-    const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
-      .filter(Boolean)
-      .join(' ');
-    return { success: false, error: composed };
+    const res = await post('/api/index.php?path=/api/auth/verify-download', fd);
+    return res as ApiResponse<{ token: string; expires_at: number }>;    
   }
 
   /**
@@ -440,21 +456,15 @@ export class AuthApi {
     fd.append('id', id);
     if (key) fd.append('key', key);
     fd.append('csrf_token', getCsrfToken());
-    const raw = await post('/api/verifydelete.php', fd) as unknown as RawApiResponse;
-    if (raw.status === 'success') {
-      return { success: true, data: raw.data as { token: string; expires_at: number }, message: raw.message };
-    }
-    const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
-      .filter(Boolean)
-      .join(' ');
-    return { success: false, error: composed };
+    const res = await post('/api/index.php?path=/api/auth/verify-delete', fd);
+    return res as ApiResponse<{ token: string; expires_at: number }>;    
   }
 
   /**
    * （旧API）汎用認証検証 - 互換用
    */
   static async verify(key: string, type: 'download' | 'delete'): Promise<ApiResponse> {
-    const endpoint = type === 'download' ? '/api/verifydownload.php' : '/api/verifydelete.php';
+    const endpoint = type === 'download' ? '/api/index.php?path=/api/auth/verify-download' : '/api/index.php?path=/api/auth/verify-delete';
     return post(endpoint, { key });
   }
 }

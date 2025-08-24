@@ -5,10 +5,10 @@
 
 import { ready } from '../utils/dom';
 import { actionIcons } from '../utils/icons';
-import { FolderApi } from '../api/client';
+import { FolderApi, FileApi } from '../api/client';
 import { FolderData } from '../types/global';
 import { initializeErrorHandling } from '../utils/error-handling';
-import { post } from '../utils/http';
+// import { post } from '../utils/http';
 import { showAlert, showConfirm, showPrompt } from '../utils/modal';
 
 // FolderApiを使用するため、個別インターフェースは不要
@@ -149,27 +149,20 @@ class SimpleFolderManager {
    * フォルダナビゲーション部分の更新
    */
   private async refreshFolderNavigation(): Promise<void> {
-    // 新しいAPIからデータを取得してナビゲーション部分を更新
+    // 新しいRESTエンドポイントから複合データを取得して更新
     try {
       const folderId = this.currentFolderId;
-      const url = folderId ? `/api/refresh-files.php?folder=${encodeURIComponent(folderId)}` : '/api/refresh-files.php';
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // フォルダナビゲーション（パンくずリスト）を更新
+      const res = await FileApi.getFiles(folderId || undefined, { includeFolders: true, includeBreadcrumb: true });
+      if (res.success && res.data) {
+        const data = res.data as unknown as { folders?: FolderData[]; breadcrumb?: Array<{ id: number; name: string }> };
         this.updateBreadcrumb(data.breadcrumb || []);
-        
-        // フォルダリスト表示を更新
-        this.updateFolderDisplay(data.folders || []);
+        this.updateFolderDisplay((data.folders as FolderData[]) || []);
+        // グローバルのフォルダデータも最新化しておく（フォルダ名解決用）
+        if (Array.isArray(data.folders)) {
+          (window as unknown as { folderData?: FolderData[] }).folderData = data.folders;
+        }
       } else {
-        console.error('フォルダデータの取得に失敗:', data);
+        console.error('フォルダデータの取得に失敗:', res.error || res.message);
       }
     } catch (error) {
       console.error('フォルダナビゲーション更新エラー:', error);
@@ -492,10 +485,10 @@ class SimpleFolderManager {
         // 動的更新
         await this.refreshAll();
         
-        // 少し遅延してからも更新（サーバー側の処理を確実に反映）
+        // FolderManagerの内部folderDataはサーバー値を採用するため、二重更新
         setTimeout(async () => {
           await this.refreshAll();
-        }, 500);
+        }, 700);
       } else {
         throw new Error(response.error || 'フォルダ移動に失敗しました');
       }
@@ -545,9 +538,9 @@ class SimpleFolderManager {
   }
   
   // フォルダ削除
-  private async deleteFolder(folderId: string, _moveFiles = false): Promise<void> {
+  private async deleteFolder(folderId: string, moveFiles = false): Promise<void> {
     try {
-      const response = await FolderApi.deleteFolder(folderId);
+      const response = await FolderApi.deleteFolder(folderId, { moveFiles });
       
       if (response.success) {
         // アラートを非同期で表示（待機しない）
@@ -615,11 +608,8 @@ export async function moveFile(fileId: string): Promise<void> {
     
     const folderId = targetId === '0' ? null : targetId;
     
-    // ファイル移動API呼び出し
-    await post('/api/move-file.php', {
-      file_id: fileId,
-      folder_id: folderId
-    });
+    // ルーター経由のファイル移動API呼び出し
+    await FileApi.moveFile(fileId, folderId as unknown as string);
     
     // アップロード完了処理と同じパターンで更新（showAlertの前に実行）
     setTimeout(async () => {

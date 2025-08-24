@@ -90,9 +90,9 @@ export async function request<T = unknown>(
     requestHeaders['Content-Type'] = 'application/json';
   }
 
-  // CSRFトークンを追加
+  // CSRFトークンを常時追加（UIリクエスト識別のためGETでも付与）
   const csrfToken = getCsrfToken();
-  if (csrfToken && method !== 'GET') {
+  if (csrfToken) {
     requestHeaders['X-CSRF-Token'] = csrfToken;
   }
 
@@ -122,7 +122,8 @@ export async function request<T = unknown>(
         const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
           .filter(Boolean)
           .join(' ');
-        return { success: false, error: composed };
+        // error_code（例: AUTH_REQUIRED, INVALID_KEY）が存在する場合はerrorに採用
+        return { success: false, error: (raw.error_code || composed) as unknown as string, message: raw.message } as unknown as ApiResponse<T>;
       }
       return data as ApiResponse<T>;
     }

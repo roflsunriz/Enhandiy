@@ -4,7 +4,7 @@ import { resolve } from 'path';
 export default defineConfig({
   root: '.',
   build: {
-    outDir: '../frontend/dist',
+    outDir: '../backend/public/assets',
     emptyOutDir: true,
     rollupOptions: {
       input: {

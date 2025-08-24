@@ -52,11 +52,20 @@ class ApiRouter
         $this->addRoute('GET', '/api/files', 'handleGetFiles', array('read'), 'file');
         $this->addRoute('POST', '/api/files', 'handlePostFile', array('write'), 'file');
         $this->addRoute('GET', '/api/files/(\d+)', 'handleGetFile', array('read'), 'file');
-        $this->addRoute('GET', '/api/files/(\d+)/download', 'handleDownloadFile', array('read'), 'file');
+        // ダウンロードは共有リンク前提でトークン検証を内部で行うため、ルーターの権限チェックは不要
+        $this->addRoute('GET', '/api/files/(\d+)/download', 'handleDownloadFile', array(), 'file');
         $this->addRoute('DELETE', '/api/files/(\d+)', 'handleDeleteFile', array('delete'), 'file');
         $this->addRoute('PUT', '/api/files/(\d+)', 'handleReplaceFile', array('write'), 'file');
         $this->addRoute('POST', '/api/files/(\d+)/replace', 'handleReplaceFile', array('write'), 'file');
         $this->addRoute('PATCH', '/api/files/(\d+)', 'handleUpdateFile', array('write'), 'file');
+        // バッチ操作
+        // UIはFormDataでPOSTするため、POSTも許可（DELETEはREST互換のため残す）
+        $this->addRoute('POST', '/api/files/batch', 'handleBatchDelete', array(), 'file');
+        $this->addRoute('DELETE', '/api/files/batch', 'handleBatchDelete', array(), 'file');
+        $this->addRoute('PATCH', '/api/files/batch', 'handleBatchMove', array('write'), 'file');
+        // 共有リンク
+        $this->addRoute('GET', '/api/files/(\d+)/share', 'handleGetShare', array('read'), 'file');
+        $this->addRoute('PATCH', '/api/files/(\d+)/share', 'handleUpdateShare', array('write'), 'file');
 
         // フォルダ操作エンドポイント
         $this->addRoute('GET', '/api/folders', 'handleGetFolders', array('read'), 'folder');
@@ -67,6 +76,17 @@ class ApiRouter
         // システム情報エンドポイント
         $this->addRoute('GET', '/api/status', 'handleGetStatus', array('read'), 'system');
         $this->addRoute('GET', '/api/health', 'handleHealthCheck', array('read'), 'system');
+
+        // 検証系エンドポイント（互換）
+        $this->addRoute('POST', '/api/auth/verify-download', 'handleVerifyDownload', array(), 'file');
+        $this->addRoute('POST', '/api/auth/verify-delete', 'handleVerifyDelete', array(), 'file');
+
+        // Tus.io アップロードエンドポイント（ルータ経由）
+        // 認証はtus-upload.php内でメタデータ等を用いて実施するため、ここでは権限チェックなし
+        $this->addRoute('OPTIONS', '/api/tus-upload', 'handleTusProxy', array(), 'file');
+        $this->addRoute('POST', '/api/tus-upload', 'handleTusProxy', array(), 'file');
+        $this->addRoute('PATCH', '/api/tus-upload/([A-Za-z0-9_\.-]+)', 'handleTusProxyWithId', array(), 'file');
+        $this->addRoute('HEAD', '/api/tus-upload/([A-Za-z0-9_\.-]+)', 'handleTusProxyWithId', array(), 'file');
     }
 
     /**
@@ -89,12 +109,7 @@ class ApiRouter
     public function handleRequest()
     {
         try {
-            // 認証
-            if (!$this->auth->authenticate()) {
-                return; // 認証失敗時はauth.phpでレスポンス済み
-            }
-
-            // ルートマッチング
+            // ルートマッチングに必要な情報を先に取得
             $method = $_SERVER['REQUEST_METHOD'];
             $requestUri = $_SERVER['REQUEST_URI'];
 
@@ -106,6 +121,22 @@ class ApiRouter
                 // /backend/api/index.php の場合は /api/status に変換
                 if (strpos($path, '/backend/api/index.php') !== false) {
                     $path = '/api/status'; // デフォルトでstatusエンドポイントをテスト
+                }
+            }
+
+            // Tus.io エンドポイントはtus側で検証するため、ここでの認証はスキップ
+            $isTusEndpoint = (preg_match('#^/api/tus-upload($|/)#', $path) === 1);
+
+            // ダウンロードはAPIキー不要（仕様）: GET /api/files/{id}/download を無認証で許可
+            $isPublicDownload = (
+                $_SERVER['REQUEST_METHOD'] === 'GET'
+                && preg_match('#^/api/files/\d+/download$#', $path) === 1
+            );
+
+            if (!$isTusEndpoint && !$isPublicDownload) {
+                // 通常のAPIはここで認証
+                if (!$this->auth->authenticate()) {
+                    return; // 認証失敗時はauth.phpでレスポンス済み
                 }
             }
 
@@ -211,7 +242,7 @@ class ApiRouter
             'file_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'file')),
             'folder_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'folder')),
             'system_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'system')),
-            'api_version' => '4.2.6'
+            'api_version' => '4.3.0'
         ];
     }
 }

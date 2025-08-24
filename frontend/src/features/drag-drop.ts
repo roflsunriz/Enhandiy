@@ -514,7 +514,7 @@ async function uploadSingleFile(file: File, options?: UploadOptions, progressBar
       } as UploadApiResponse);
     });
     
-    xhr.open('POST', '/api/upload.php');
+    xhr.open('POST', '/api/index.php?path=/api/files');
     xhr.send(formData);
   });
 }
@@ -560,7 +560,9 @@ function getUploadOptions(): UploadOptions {
 function handleUploadError(data: UploadApiResponse, filename: string): void {
   let errorMessage = '';
   
-  const status = (data as any).error_code ? (data as any).error_code : data.status;
+  const status = (data as unknown as { error_code?: string; status: string }).error_code
+    ? (data as unknown as { error_code?: string }).error_code as string
+    : (data as UploadApiResponse).status;
   switch (status) {
     case 'filesize_over':
       errorMessage = 'ファイル容量が大きすぎます: ' + filename;

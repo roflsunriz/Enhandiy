@@ -29,6 +29,7 @@ class FileApiHandler
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $limit = isset($_GET['limit']) ? min(100, max(1, intval($_GET['limit']))) : 20;
         $folder = isset($_GET['folder']) ? intval($_GET['folder']) : null;
+        $include = isset($_GET['include']) ? explode(',', (string)$_GET['include']) : array();
 
         $offset = ($page - 1) * $limit;
 
@@ -39,9 +40,16 @@ class FileApiHandler
             $pdo = new PDO($dsn);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-            $sql = "SELECT id, origin_file_name as original_name, origin_file_name as filename, 
-                           comment, size as file_size, 'application/octet-stream' as mime_type, 
-                           input_date as upload_date, \"count\" as count, folder_id 
+            $sql = "SELECT 
+                           id,
+                           origin_file_name AS origin_file_name,
+                           origin_file_name AS name,
+                           comment,
+                           size AS size,
+                           'application/octet-stream' AS mime_type,
+                           input_date AS upload_date,
+                           \"count\" AS count,
+                           folder_id 
                     FROM uploaded WHERE 1=1";
             $params = array();
 
@@ -76,27 +84,59 @@ class FileApiHandler
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
 
-            // 成功レスポンスを直接送信
-            http_response_code(200);
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(array(
-                'success' => true,
-                'data' => array(
-                    'files' => $files,
-                    'pagination' => array(
-                        'page' => $page,
-                        'limit' => $limit,
-                        'total' => $total,
-                        'pages' => ceil($total / $limit)
-                    )
-                ),
-                'timestamp' => date('c')
-            ), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            exit;
+            $responseData = array(
+                'files' => $files,
+                'pagination' => array(
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => (int)$total,
+                    'pages' => (int)ceil($total / $limit)
+                )
+            );
+
+            // 追加情報: folders, breadcrumb
+            if (!empty($include)) {
+                $foldersEnabled = $this->config['folders_enabled'] ?? false;
+                if ($foldersEnabled) {
+                    if (in_array('folders', $include)) {
+                        $fstmt = $pdo->prepare("SELECT id, name, parent_id FROM folders ORDER BY name");
+                        $fstmt->execute();
+                        $responseData['folders'] = $fstmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+                    if (in_array('breadcrumb', $include) && $folder !== null) {
+                        $responseData['breadcrumb'] = $this->buildBreadcrumb($pdo, $folder);
+                    }
+                }
+            }
+
+            $this->response->success('Files list', $responseData);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         }
+    }
+
+    /**
+     * パンくずを構築
+     */
+    private function buildBreadcrumb(PDO $pdo, int $folderId): array
+    {
+        $breadcrumb = array();
+        $current = $folderId;
+        $stmt = $pdo->prepare('SELECT id, name, parent_id FROM folders WHERE id = ?');
+        while ($current) {
+            $stmt->execute(array($current));
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                break;
+            }
+            array_unshift($breadcrumb, array(
+                'id' => (int)$row['id'],
+                'name' => $row['name']
+            ));
+            $current = $row['parent_id'] ? (int)$row['parent_id'] : 0;
+        }
+        return $breadcrumb;
     }
 
     /**
@@ -134,9 +174,16 @@ class FileApiHandler
             $pdo = new PDO($dsn);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-            $stmt = $pdo->prepare("SELECT id, origin_file_name as original_name, origin_file_name as filename, 
-                                          comment, size as file_size, 'application/octet-stream' as mime_type, 
-                                          input_date as upload_date, \"count\" as count, folder_id 
+            $stmt = $pdo->prepare("SELECT 
+                                          id,
+                                          origin_file_name AS origin_file_name,
+                                          origin_file_name AS name,
+                                          comment,
+                                          size AS size,
+                                          'application/octet-stream' AS mime_type,
+                                          input_date AS upload_date,
+                                          \"count\" AS count,
+                                          folder_id 
                                    FROM uploaded WHERE id = ?");
             $stmt->execute(array($fileId));
             $file = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -181,6 +228,104 @@ class FileApiHandler
             403,
             'DELETE_KEY_VALIDATION_REQUIRED'
         );
+    }
+
+    /** 一括削除（マスターキー認証） */
+    public function handleBatchDelete(): void
+    {
+        require __DIR__ . '/../api/bulk-delete.php';
+    }
+
+    /** 複数ファイル移動 */
+    public function handleBatchMove(): void
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input || !isset($input['file_ids']) || !is_array($input['file_ids'])) {
+            $this->response->error('Invalid request payload', [], 400, 'BAD_REQUEST');
+            return;
+        }
+        $fileIds = array_map('intval', $input['file_ids']);
+        $targetFolderId = array_key_exists('folder_id', $input) && $input['folder_id'] !== null
+            ? (int)$input['folder_id'] : null;
+
+        try {
+            $db_directory = '../../db';
+            $dsn = 'sqlite:' . $db_directory . '/uploader.db';
+            $pdo = new PDO($dsn);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+            // フォルダ存在検証
+            if ($targetFolderId !== null) {
+                $chk = $pdo->prepare('SELECT id FROM folders WHERE id = ?');
+                $chk->execute(array($targetFolderId));
+                if (!$chk->fetch()) {
+                    $this->response->error('Specified folder does not exist', [], 400, 'DESTINATION_NOT_FOUND');
+                    return;
+                }
+            }
+
+            if (empty($fileIds)) {
+                $this->response->error('No files specified to move', [], 400, 'BAD_REQUEST');
+                return;
+            }
+            $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
+            $stmt = $pdo->prepare("SELECT id FROM uploaded WHERE id IN ($placeholders)");
+            $stmt->execute($fileIds);
+            $existing = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $existingInt = array_map('intval', $existing);
+            $notFound = array_values(array_diff($fileIds, $existingInt));
+            if (!empty($notFound)) {
+                $this->response->error(
+                    'Some files were not found',
+                    ['not_found_ids' => $notFound],
+                    400,
+                    'FILES_NOT_FOUND'
+                );
+                return;
+            }
+
+            $upd = $pdo->prepare("UPDATE uploaded SET folder_id = ? WHERE id IN ($placeholders)");
+            $params = array_merge(array($targetFolderId), $fileIds);
+            $upd->execute($params);
+            $this->response->success('Files moved', [
+                'moved_count' => $upd->rowCount(),
+                'target_folder_id' => $targetFolderId
+            ]);
+        } catch (PDOException $e) {
+            error_log('Batch move error: ' . $e->getMessage());
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
+        }
+    }
+
+    /** ダウンロード検証 */
+    public function handleVerifyDownload(): void
+    {
+        require __DIR__ . '/../api/verifydownload.php';
+    }
+
+    /** 削除検証 */
+    public function handleVerifyDelete(): void
+    {
+        require __DIR__ . '/../api/verifydelete.php';
+    }
+
+    /**
+     * Tus.io プロキシ（IDなし: OPTIONS/POST）
+     */
+    public function handleTusProxy(): void
+    {
+        // 既存の tus-upload.php をそのまま呼び出す
+        require __DIR__ . '/../api/tus-upload.php';
+    }
+
+    /**
+     * Tus.io プロキシ（ID付き: HEAD/PATCH）
+     * ルータ側の正規表現でキャプチャしたID部分は、tus-upload.php が REQUEST_URI から読み取るため
+     * ここでは単にインクルードするだけでよい。
+     */
+    public function handleTusProxyWithId(string $_id): void
+    {
+        require __DIR__ . '/../api/tus-upload.php';
     }
 
     /**
@@ -245,38 +390,51 @@ class FileApiHandler
                 return;
             }
 
-            // 差し替えキー認証
+            // 差し替えキー認証（マスターキーでも許可）
+            $masterKey = $_POST['master_key'] ?? '';
             $inputReplaceKey = $_POST['replacekey'] ?? '';
-            if (empty($inputReplaceKey)) {
-                $this->response->error('Replace key is required', [], 400, 'REPLACE_KEY_REQUIRED');
+            if (empty($masterKey) && empty($inputReplaceKey)) {
+                $this->response->error('Replace key or master key is required', [], 400, 'REPLACE_KEY_REQUIRED');
                 return;
             }
 
-            if (empty($existingFile['replace_key'])) {
+            if (empty($existingFile['replace_key']) && empty($masterKey)) {
                 $this->response->error('This file does not have a replace key configured', [], 400, 'NO_REPLACE_KEY');
                 return;
             }
 
             // 差し替えキーの検証（レガシー形式と新形式の両方をサポート）
-            try {
-                // まず新しいGCM形式で試行
-                $storedReplaceKey = SecurityUtils::decryptSecure($existingFile['replace_key'], $this->config['key']);
-            } catch (Exception $e) {
+            if (empty($masterKey)) {
                 try {
-                    // レガシーのECB形式で試行（既存データとの互換性のため）
-                    $storedReplaceKey = SecurityUtils::decryptLegacyECB(
+                    // まず新しいGCM形式で試行
+                    $storedReplaceKey = SecurityUtils::decryptSecure(
                         $existingFile['replace_key'],
                         $this->config['key']
                     );
-                } catch (Exception $e2) {
-                    $this->response->error('Failed to decrypt replace key', [], 500, 'DECRYPTION_FAILED');
+                } catch (Exception $e) {
+                    try {
+                        // レガシーのECB形式で試行（既存データとの互換性のため）
+                        $storedReplaceKey = SecurityUtils::decryptLegacyECB(
+                            $existingFile['replace_key'],
+                            $this->config['key']
+                        );
+                    } catch (Exception $e2) {
+                        $this->response->error('Failed to decrypt replace key', [], 500, 'DECRYPTION_FAILED');
+                        return;
+                    }
+                }
+
+                if ($inputReplaceKey !== $storedReplaceKey) {
+                    $this->response->error('Invalid replace key', [], 403, 'INVALID_REPLACE_KEY');
                     return;
                 }
-            }
-
-            if ($inputReplaceKey !== $storedReplaceKey) {
-                $this->response->error('Invalid replace key', [], 403, 'INVALID_REPLACE_KEY');
-                return;
+            } else {
+                // マスターキーでの許可
+                $cfgMaster = $this->config['master'] ?? '';
+                if ($masterKey !== $cfgMaster) {
+                    $this->response->error('Invalid master key', [], 403, 'INVALID_MASTER_KEY');
+                    return;
+                }
             }
 
             // アップロードされたファイルの情報
@@ -331,6 +489,7 @@ class FileApiHandler
                 $newFilePath = $data_directory . DIRECTORY_SEPARATOR . $storedFileName;
             } else {
                 $safeFileName = 'file_' . $fileId . '.' . $ext;
+                $storedFileName = $safeFileName; // 明示的に保持
                 $newFilePath = $data_directory . DIRECTORY_SEPARATOR . $safeFileName;
             }
 
@@ -363,9 +522,17 @@ class FileApiHandler
                 return;
             }
 
-            // データベース更新
-            $stmt = $pdo->prepare("UPDATE uploaded SET origin_file_name = ?, size = ? WHERE id = ?");
-            $stmt->execute(array(basename($newFilePath), $fileSize, $fileId));
+            // データベース更新: 表示用はアップロード時のオリジナル名、保存用は実体ファイル名
+            $stmt = $pdo->prepare(
+                "UPDATE uploaded SET origin_file_name = ?, stored_file_name = ?, size = ?, updated_at = ? WHERE id = ?"
+            );
+            $stmt->execute(array(
+                $newFileName,
+                $storedFileName,
+                $fileSize,
+                time(),
+                $fileId
+            ));
 
             $this->response->success('File replaced', [
                 'file_id' => $fileId,
@@ -386,6 +553,15 @@ class FileApiHandler
      */
     public function handleDownloadFile(int $fileId): void
     {
+        // 共有リンクのダウンロード（キー付き）は既存の public/download.php に委譲
+        if (isset($_GET['key']) && $_GET['key'] !== '') {
+            if (!isset($_GET['id']) || (int)$_GET['id'] !== $fileId) {
+                $_GET['id'] = $fileId; // download.php は GET id を参照する
+            }
+            require __DIR__ . '/../public/download.php';
+            return;
+        }
+
         try {
             // データベース接続
             $db_directory = '../../db';
@@ -458,7 +634,7 @@ class FileApiHandler
                 ]);
             }
 
-            // レスポンスヘッダーの設定
+            // レスポンスヘッダーの設定（UI直ダウンロード用）
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename*=UTF-8\'\'' .
                 rawurlencode($fileData['origin_file_name']));
@@ -514,17 +690,20 @@ class FileApiHandler
 
         $input = json_decode(file_get_contents('php://input'), true);
 
-        if (!isset($input['comment'])) {
-            $this->response->error('Comment is required', [], 400, 'COMMENT_REQUIRED');
+        $isCommentUpdate = isset($input['comment']);
+        $isMoveFolder = array_key_exists('folder_id', $input);
+        if (!$isCommentUpdate && !$isMoveFolder) {
+            $this->response->error('No valid update fields provided', [], 400, 'BAD_REQUEST');
             return;
         }
 
-        $newComment = SecurityUtils::escapeHtml(trim($input['comment']));
-
-        // コメント文字数チェック
-        if (mb_strlen($newComment) > $this->config['max_comment']) {
-            $this->response->error('Comment is too long', [], 400, 'COMMENT_TOO_LONG');
-            return;
+        $newComment = null;
+        if ($isCommentUpdate) {
+            $newComment = SecurityUtils::escapeHtml(trim($input['comment']));
+            if (mb_strlen($newComment) > $this->config['max_comment']) {
+                $this->response->error('Comment is too long', [], 400, 'COMMENT_TOO_LONG');
+                return;
+            }
         }
 
         try {
@@ -543,12 +722,33 @@ class FileApiHandler
                 return;
             }
 
+            // フォルダ移動（folder_id 更新）
+            if ($isMoveFolder) {
+                $folderId = $input['folder_id'];
+                $newFolderId = $folderId === null || $folderId === '' ? null : (int)$folderId;
+
+                if ($newFolderId !== null) {
+                    // 存在チェック
+                    $check = $pdo->prepare('SELECT id FROM folders WHERE id = ?');
+                    $check->execute(array($newFolderId));
+                    if (!$check->fetch()) {
+                        $this->response->error('Destination folder not found', [], 404, 'DESTINATION_NOT_FOUND');
+                        return;
+                    }
+                }
+
+                $upd = $pdo->prepare('UPDATE uploaded SET folder_id = ? WHERE id = ?');
+                $upd->execute(array($newFolderId, $fileId));
+            }
+
             // コメント更新
-            $stmt = $pdo->prepare("UPDATE uploaded SET comment = ? WHERE id = ?");
-            $stmt->execute(array($newComment, $fileId));
+            if ($isCommentUpdate) {
+                $stmt = $pdo->prepare("UPDATE uploaded SET comment = ? WHERE id = ?");
+                $stmt->execute(array($newComment, $fileId));
+            }
 
             // 履歴記録（コメントが変更された場合のみ）
-            if ($existingFile['comment'] !== $newComment) {
+            if ($isCommentUpdate && $existingFile['comment'] !== $newComment) {
                 $stmt = $pdo->prepare(
                     "INSERT INTO file_history " .
                     "(file_id, old_comment, new_comment, change_type, changed_at, changed_by) " .
@@ -564,15 +764,135 @@ class FileApiHandler
                 ));
             }
 
-            $this->response->success('Comment updated', [
+            $this->response->success('File updated', [
                 'file_id' => $fileId,
-                'new_comment' => $newComment
+                'new_comment' => $newComment,
+                'new_folder_id' => $isMoveFolder ? ($newFolderId ?? null) : ($existingFile['folder_id'] ?? null)
             ]);
         } catch (PDOException $e) {
             error_log('Database error: ' . $e->getMessage());
             $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
         } catch (Exception $e) {
             error_log('Comment update error: ' . $e->getMessage());
+            $this->response->error('Internal server error occurred', [], 500, 'INTERNAL_ERROR');
+        }
+    }
+
+    /**
+     * 共有設定取得（max_downloads, expires_days）
+     */
+    public function handleGetShare(int $fileId): void
+    {
+        try {
+            $db_directory = '../../db';
+            $dsn = 'sqlite:' . $db_directory . '/uploader.db';
+            $pdo = new PDO($dsn);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+            $stmt = $pdo->prepare('SELECT max_downloads, expires_at FROM uploaded WHERE id = ?');
+            $stmt->execute(array($fileId));
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
+                return;
+            }
+            $expiresDays = null;
+            if ($row['expires_at'] !== null) {
+                $remaining = ((int)$row['expires_at']) - time();
+                $expiresDays = $remaining > 0 ? (int)ceil($remaining / (24 * 60 * 60)) : 0;
+            }
+            $this->response->success('Share settings', [
+                'max_downloads' => $row['max_downloads'],
+                'expires_days' => $expiresDays
+            ]);
+        } catch (PDOException $e) {
+            error_log('Database error: ' . $e->getMessage());
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
+        }
+    }
+
+    /**
+     * 共有設定更新（max_downloads, expires_days）＋共有URL生成
+     */
+    public function handleUpdateShare(int $fileId): void
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $maxDownloads = isset($input['max_downloads']) ? (int)$input['max_downloads'] : null;
+        $expiresDays = isset($input['expires_days']) ? (int)$input['expires_days'] : null;
+
+        try {
+            $db_directory = '../../db';
+            $dsn = 'sqlite:' . $db_directory . '/uploader.db';
+            $pdo = new PDO($dsn);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+            // 対象ファイル取得
+            $stmt = $pdo->prepare('SELECT * FROM uploaded WHERE id = ?');
+            $stmt->execute(array($fileId));
+            $file = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$file) {
+                $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
+                return;
+            }
+
+            // expires_at 計算
+            $expiresAt = null;
+            if ($expiresDays && $expiresDays > 0) {
+                $expiresAt = time() + ($expiresDays * 24 * 60 * 60);
+            }
+
+            // 更新（null指定時は無制限/無期限に）
+            $upd = $pdo->prepare('UPDATE uploaded SET max_downloads = :max, expires_at = :exp WHERE id = :id');
+            $upd->bindValue(':max', $maxDownloads, $maxDownloads === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            $upd->bindValue(':exp', $expiresAt, $expiresAt === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            $upd->bindValue(':id', $fileId, PDO::PARAM_INT);
+            $upd->execute();
+
+            // 共有キー生成
+            if (!class_exists('SecurityUtils')) {
+                require_once __DIR__ . '/../core/utils.php';
+            }
+
+            $shareKeySource = empty($file['dl_key_hash']) ? ('no_key_file_' . $fileId) : $file['dl_key_hash'];
+
+            // 設定から暗号化キー取得
+            $configObj = new Config();
+            $cfg = $configObj->index();
+
+            // 安定的な共有トークン生成（ダウンロード側と一致させる）
+            $shareKey = hash('sha256', $shareKeySource . '|' . $cfg['key']);
+
+            // ダウンロードURL（public/download.php 経由: 制限/有効期限を厳密に適用）
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+            $protocol = $isHttps ? 'https://' : 'http://';
+            $hostHeader = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+            // ポートが含まれていない場合はプロトコルに応じたデフォルト以外のポートを付与
+            $port = isset($_SERVER['SERVER_PORT']) ? (int)$_SERVER['SERVER_PORT'] : ($isHttps ? 443 : 80);
+            $defaultPort = $isHttps ? 443 : 80;
+            if (strpos($hostHeader, ':') === false && $port !== $defaultPort) {
+                $hostHeader .= ':' . $port;
+            }
+            $shareUrl = $protocol . $hostHeader . '/download.php?id=' . $fileId . '&key=' . urlencode($shareKey);
+
+            // 有効期限日数
+            $expiresDaysOut = null;
+            if ($expiresAt !== null) {
+                $remaining = $expiresAt - time();
+                $expiresDaysOut = $remaining > 0 ? (int)ceil($remaining / (24 * 60 * 60)) : 0;
+            }
+
+            $this->response->success('Share settings updated', [
+                'share_key' => $shareKey,
+                'share_url' => $shareUrl,
+                'share_url_with_comment' => ($file['comment'] ?? '') . "\n" . $shareUrl,
+                'max_downloads' => $maxDownloads,
+                'expires_days' => $expiresDaysOut
+            ]);
+        } catch (PDOException $e) {
+            error_log('Database error: ' . $e->getMessage());
+            $this->response->error('Database error', [], 500, 'DATABASE_ERROR');
+        } catch (Exception $e) {
+            error_log('Share update error: ' . $e->getMessage());
             $this->response->error('Internal server error occurred', [], 500, 'INTERNAL_ERROR');
         }
     }

@@ -574,7 +574,7 @@ export class FileManagerEvents {
         }
 
         // 認証要求 or キー不一致
-        const errCode = typeof res.error === 'object' && res.error ? (res.error as { code?: string }).code : res.error as string | undefined;
+        const errCode = (typeof res.error === 'string') ? res.error : undefined;
         if (errCode === 'AUTH_REQUIRED' || errCode === 'INVALID_KEY') {
           const modalResult = await this.showDownloadAuthModal(file.name || 'download', fileId);
           if (!modalResult) return; // キャンセル
@@ -583,7 +583,7 @@ export class FileManagerEvents {
           continue; // 再トライ
         }
 
-        await showAlert(res.message || 'ダウンロードエラー');
+        await showAlert(res.message || (typeof res.error === 'string' ? res.error : 'ダウンロードエラー'));
         return;
       } catch (e) {
         console.error('verifyDownload error', e);
@@ -623,7 +623,8 @@ export class FileManagerEvents {
 
         // どちらか一方の入力が必要
         if (!masterKey && !downloadKey) {
-          alert('マスターキーまたはダウンロードキーのどちらか一方を入力してください。');
+          // alertからUI統一のアラートへ
+          window.showError?.('マスターキーまたはダウンロードキーのどちらか一方を入力してください。');
           return;
         }
 

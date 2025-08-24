@@ -4,7 +4,7 @@
  */
 
 import { ready, $, attr } from '../utils/dom';
-import { post } from '../utils/http';
+import { request } from '../utils/http';
 import { showSuccess, showError } from '../utils/messages';
 import { initializeErrorHandling } from '../utils/error-handling';
 import { showConfirm } from '../utils/modal';
@@ -76,10 +76,10 @@ async function handleGenerateShareLink(): Promise<void> {
   }
   
   try {
-    const response = await post('/api/generatesharelink.php', {
-      id: fileId,
-      max_downloads: maxDownloads,
-      expires_days: expires
+    const response = await request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/share`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_downloads: maxDownloads, expires_days: expires })
     });
     
     if (response.success && response.data) {

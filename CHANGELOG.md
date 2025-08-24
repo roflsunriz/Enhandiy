@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.0-roflsunriz] - 2025-08-25
+
+### Fixed
+
+- 共有リンク経由でのダウンロード時、ダウンロードキーがバイパスされないよう修正
+- dockerからフロントエンドアセットとバックエンドアセットのエイリアスを削除
+- 本番環境でも動作するように修正(backend/public/index.php→backend/public/api/index.php→backend/routes/router.phpを経由するように修正, REST化)
+- フロントエンドアセットをfrontend/dist/からbackend/public/assets/に移動
+- その他変更に伴って発生したバグの修正
+
+### Feature
+- ダウンロードキー設定済みファイルを共有リンク経由でダウンロードするときにダウンロードキー認証フォームを表示するようにした
+
+
 ## [4.2.6-roflsunriz] - 2025-08-24
 
 ### Fixed

@@ -15,15 +15,15 @@
         crossorigin="anonymous"
     >
 
-    <!-- Viteビルド済みCSS -->
-    <link rel="stylesheet" href="/frontend/dist/common.css">
-    <link rel="stylesheet" href="/frontend/dist/responsive.css">
-    <link rel="stylesheet" href="/frontend/dist/responsive-extra.css">
-    <link rel="stylesheet" href="/frontend/dist/file-manager-css.css">
-    <link rel="stylesheet" href="/frontend/dist/share-css.css">
-    <link rel="stylesheet" href="/frontend/dist/dragdrop.css">
-    <link rel="stylesheet" href="/frontend/dist/folders.css">
-    <link rel="stylesheet" href="/frontend/dist/password-strength-css.css">
+    <!-- Viteビルド済みCSS (Apache Alias不要: backend/public/assets 配下) -->
+    <link rel="stylesheet" href="/assets/common.css">
+    <link rel="stylesheet" href="/assets/responsive.css">
+    <link rel="stylesheet" href="/assets/responsive-extra.css">
+    <link rel="stylesheet" href="/assets/file-manager-css.css">
+    <link rel="stylesheet" href="/assets/share-css.css">
+    <link rel="stylesheet" href="/assets/dragdrop.css">
+    <link rel="stylesheet" href="/assets/folders.css">
+    <link rel="stylesheet" href="/assets/password-strength-css.css">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->

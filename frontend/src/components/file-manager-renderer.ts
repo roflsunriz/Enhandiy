@@ -567,8 +567,9 @@ export class FileManagerRenderer {
     
     const findFolder = (folders: unknown[], id: string): { name?: string } | null => {
       for (const folder of folders) {
-        const f = folder as { id?: string; name?: string; children?: unknown[] };
-        if (f.id === id) return f;
+        const f = folder as { id?: string | number; name?: string; children?: unknown[] };
+        // 型不一致を吸収するため、IDは文字列比較
+        if (String(f.id) === String(id)) return f as { name?: string };
         if (f.children) {
           const found = findFolder(f.children, id);
           if (found) return found;
@@ -577,7 +578,7 @@ export class FileManagerRenderer {
       return null;
     };
     
-    const folder = findFolder(folderData, folderId);
+    const folder = findFolder(folderData, String(folderId));
     return folder?.name || '不明なフォルダ';
   }
 

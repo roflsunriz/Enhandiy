@@ -4,6 +4,7 @@
  */
 
 import { FileData, FileManagerOptions } from '../types/global';
+import { FileApi } from '../api/client';
 import { FileManagerState, ViewMode, SortField, SortDirection } from '../types/file-manager';
 
 export class FileManagerCore {
@@ -99,6 +100,11 @@ export class FileManagerCore {
     // name プロパティが存在しない場合は origin_file_name を使用
     if (!normalized.name && normalized.origin_file_name) {
       normalized.name = normalized.origin_file_name;
+    }
+    
+    // folder_id を文字列に正規化（比較時の型不一致を防止）
+    if (normalized.folder_id !== undefined && normalized.folder_id !== null) {
+      normalized.folder_id = String(normalized.folder_id);
     }
     
     // upload_date の検証と正規化
@@ -346,15 +352,17 @@ export class FileManagerCore {
       const urlParams = new URLSearchParams(window.location.search);
       const folderId = urlParams.get('folder') || '';
       
-      // 新しいAPIエンドポイントを使用
-      const url = folderId ? `/api/refresh-files.php?folder=${encodeURIComponent(folderId)}` : '/api/refresh-files.php';
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (data.success && Array.isArray(data.files)) {
+      // RESTエンドポイントから複合データを取得
+      const apiRes = await FileApi.getFiles(folderId || undefined, { includeFolders: true, includeBreadcrumb: true });
+      if (apiRes.success && apiRes.data) {
+        const data = apiRes.data as unknown as { files?: FileData[]; folders?: unknown[] };
         
+        this.state.files = (data.files || []).map((file: FileData) => this.normalizeFileData(file));
         
-        this.state.files = data.files.map((file: FileData) => this.normalizeFileData(file));
+        // グローバルのフォルダデータを最新化（フォルダ名解決に使用）
+        if (Array.isArray(data.folders)) {
+          (window as unknown as { folderData?: unknown[] }).folderData = data.folders;
+        }
         this.applyFiltersAndSort();
         
         
@@ -379,7 +387,7 @@ export class FileManagerCore {
         
         
       } else {
-        console.error('ファイルリスト更新エラー:', data.error || 'データが無効です');
+        console.error('ファイルリスト更新エラー:', apiRes.error || 'データが無効です');
       }
     } catch (error) {
       console.error('ファイルリストの更新に失敗:', error);

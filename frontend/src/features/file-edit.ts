@@ -4,7 +4,7 @@
  */
 
 import { ready, $, attr, addClass, removeClass } from '../utils/dom';
-import { get, post, getCsrfToken } from '../utils/http';
+import { get, post, request } from '../utils/http';
 import { showSuccess, showError } from '../utils/messages';
 import { initializeErrorHandling } from '../utils/error-handling';
 import { showModal, hideModal } from '../utils/bootstrap';
@@ -267,15 +267,15 @@ async function handleSaveComment(): Promise<void> {
   }
   
   try {
-    const formData = new FormData();
-    formData.append('file_id', fileId);
-    formData.append('comment', comment);
-    // 両方常に送る（サーバー側でどちらかを判定）
-    formData.append('master_key', masterKey.trim());
-    formData.append('replace_key', replaceKey.trim());
-    formData.append('csrf_token', getCsrfToken());
-    
-    const response = await post('/api/edit-comment.php', formData);
+    const response = await request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        comment: comment,
+        master_key: masterKey.trim(),
+        replace_key: replaceKey.trim()
+      })
+    });
     
     if (response.success) {
       showSuccess('コメントを保存しました。');
@@ -342,7 +342,7 @@ async function handleReplaceFile(): Promise<void> {
   formData.append('csrf_token', (window as unknown as { config?: { csrf_token?: string } }).config?.csrf_token || '');
   
   try {
-    const response = await post(`/api/replace-file.php?id=${encodeURIComponent(fileId)}`, formData);
+    const response = await post(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/replace`, formData);
     
     if (response.success) {
       showSuccess('ファイルを差し替えました。');
@@ -356,7 +356,9 @@ async function handleReplaceFile(): Promise<void> {
         window.location.reload();
       }
     } else {
-      throw new Error(response.error || 'ファイルの差し替えに失敗しました。');
+      // 詳細なエラー表示
+      const msg = response.message || response.error || 'ファイルの差し替えに失敗しました。';
+      throw new Error(msg);
     }
     
   } catch (error) {
@@ -426,10 +428,13 @@ async function handleGenerateShareLink(): Promise<void> {
   }
   
   try {
-    const response = await post('/api/generatesharelink.php', {
-      id: fileId,
-      max_downloads: maxDownloads,
-      expires_days: expiresDays
+    const response = await request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/share`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        max_downloads: maxDownloads,
+        expires_days: expiresDays
+      })
     });
     
     if (response.success && response.data) {
@@ -604,7 +609,7 @@ if (typeof window !== 'undefined') {
 // 共有設定取得
 async function fetchShareSettings(fileId: string): Promise<void> {
   try {
-    const res = await get(`/api/generatesharelink.php?id=${encodeURIComponent(fileId)}`);
+    const res = await get(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/share`);
     if (res.success && res.data) {
       const data = res.data as { max_downloads?: number; expires_days?: number };
       const maxInput = $('#shareMaxDownloads') as HTMLInputElement;
@@ -630,7 +635,11 @@ async function handleSaveShareSettings(): Promise<void> {
   const saveBtn = $('#saveShareSettingsBtn') as HTMLButtonElement;
   if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = '保存中...'; }
   try {
-    const res = await post('/api/generatesharelink.php', { action: 'updateSettings', id: fileId, max_downloads: maxVal, expires_days: expVal });
+    const res = await request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/share`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_downloads: maxVal ? parseInt(maxVal) : null, expires_days: expVal ? parseInt(expVal) : null })
+    });
     if (res.success) {
       showSuccess('設定を保存しました。');
       lastShareData = { ...lastShareData, max_downloads: maxVal ? parseInt(maxVal) : undefined, expires_days: expVal ? parseInt(expVal) : undefined } as typeof lastShareData;

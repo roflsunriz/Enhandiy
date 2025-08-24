@@ -52,15 +52,15 @@
     <!-- Modal処理 (TypeScript版に移行済み) -->
     <!-- <script src="./asset/js/modal.js"></script> -->
     
-    <!-- TypeScript版JavaScript (DataTables完全除去済み) -->
-    <script type="module" src="/frontend/dist/main.js"></script>
-    <script type="module" src="/frontend/dist/file-manager.js"></script>
-    <script type="module" src="/frontend/dist/share.js"></script>
-    <script type="module" src="/frontend/dist/file-edit.js"></script>
+    <!-- TypeScript版JavaScript (Apache Alias不要: backend/public/assets 配下) -->
+    <script type="module" src="/assets/main.js"></script>
+    <script type="module" src="/assets/file-manager.js"></script>
+    <script type="module" src="/assets/share.js"></script>
+    <script type="module" src="/assets/file-edit.js"></script>
     
-    <script type="module" src="/frontend/dist/drag-drop.js"></script>
-    <script type="module" src="/frontend/dist/folder-manager.js"></script>
-    <script type="module" src="/frontend/dist/resumable-upload.js"></script>
-    <script type="module" src="/frontend/dist/password-strength.js"></script>
+    <script type="module" src="/assets/drag-drop.js"></script>
+    <script type="module" src="/assets/folder-manager.js"></script>
+    <script type="module" src="/assets/resumable-upload.js"></script>
+    <script type="module" src="/assets/password-strength.js"></script>
   </body>
 </html>

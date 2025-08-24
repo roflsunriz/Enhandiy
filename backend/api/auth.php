@@ -28,7 +28,14 @@ class ApiAuth
             return false;
         }
 
-        // AuthorizationヘッダーまたはクエリパラメータからAPIキーを取得
+        // 1) UI経由のアクセスを許容: CSRFトークンが正しい場合はキーなしでも通す
+        //    （ブラウザUIからの操作を想定。既定はread/write。安全なUI操作としてDELETEも許可）
+        if ($this->isValidUiRequest()) {
+            $this->permissions = array('read', 'write', 'delete');
+            return true;
+        }
+
+        // 2) APIキーによる認証
         $apiKey = $this->extractApiKey();
         if (!$apiKey) {
             $this->sendError(401, 'API_KEY_MISSING', 'API key is required');
@@ -113,6 +120,44 @@ class ApiAuth
 
         // 権限を設定
         $this->permissions = isset($keyConfig['permissions']) ? $keyConfig['permissions'] : array();
+        return true;
+    }
+
+    /**
+     * UI経由（ブラウザ）の安全なリクエストか判定
+     * - セッションのCSRFトークンが一致する
+     * - X-Requested-With: XMLHttpRequest を推奨（必須ではない）
+     */
+    private function isValidUiRequest(): bool
+    {
+        // SecurityUtils が必要
+        if (!class_exists('SecurityUtils')) {
+            require_once dirname(__DIR__) . '/core/utils.php';
+        }
+
+        // CSRFトークン: ヘッダーまたはPOSTから取得（内蔵サーバーでも確実に拾う）
+        $headers = function_exists('getallheaders') ? getallheaders() : array();
+        $csrfHeader = $headers['X-CSRF-Token'] ?? $headers['x-csrf-token'] ?? null;
+
+        if (!$csrfHeader) {
+            // PHP内蔵サーバーなど getallheaders() が無い/不完全な環境向けのフォールバック
+            $server = array_change_key_case($_SERVER, CASE_UPPER);
+            $csrfHeader = $server['HTTP_X_CSRF_TOKEN'] ?? null;
+        }
+
+        $csrfPost = $_POST['csrf_token'] ?? null;
+        $csrfToken = $csrfHeader ?: $csrfPost;
+
+        if (!$csrfToken) {
+            return false;
+        }
+
+        if (!SecurityUtils::validateCSRFToken($csrfToken)) {
+            return false;
+        }
+
+        // UIアクセスの追加ヒント（将来の強化用）
+        // $xhr = ($headers['X-Requested-With'] ?? '') === 'XMLHttpRequest';
         return true;
     }
 

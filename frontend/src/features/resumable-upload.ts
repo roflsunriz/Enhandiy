@@ -78,7 +78,7 @@ async function checkTusAvailability(): Promise<void> {
   
   try {
     // サーバーのTus.io対応をチェック（タイムアウトを短縮）
-    const response = await fetch('/api/tus-upload.php', {
+    const response = await fetch('/api/index.php?path=/api/tus-upload', {
       method: 'OPTIONS',
       signal: AbortSignal.timeout(2000)
     });
@@ -177,7 +177,7 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
       
       // Tus.ioアップロードを作成（Docker環境対応）
       const upload = new window.tus.Upload(file, {
-        endpoint: '/api/tus-upload.php',
+        endpoint: '/api/index.php?path=/api/tus-upload',
         retryDelays: [0, 1000, 3000, 5000],
         metadata: metadata,
         chunkSize: 512 * 1024, // 512KB chunks for better compatibility
@@ -348,7 +348,7 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
       reject(new Error('Network error: ' + xhr.statusText));
     });
     
-    xhr.open('POST', '/api/upload.php');
+    xhr.open('POST', '/api/index.php?path=/api/files');
     xhr.send(formData);
   });
 }
@@ -518,7 +518,9 @@ function onUploadComplete(filename: string, _method: string): void {
         if (folderInput) folderInput.value = '';
         const fileCountSpan = document.querySelector('#selectedFilesContainer .file-count') as HTMLElement | null;
         if (fileCountSpan) fileCountSpan.textContent = '0';
-      } catch {}
+      } catch (e) {
+        console.warn('Failed to clear selected files UI:', e);
+      }
       
       // 選択ファイルコンテナを非表示
       const selectedFilesContainer = document.getElementById('selectedFilesContainer');
@@ -921,7 +923,9 @@ function formatTime(seconds: number): string {
 function handleUploadError(data: UploadApiResponse, filename: string): void {
   let errorMessage = '';
   
-  const status = (data as any).error_code ? (data as any).error_code : data.status;
+  const status = (data as unknown as { error_code?: string; status: string }).error_code
+    ? (data as unknown as { error_code?: string }).error_code as string
+    : (data as UploadApiResponse).status;
   switch (status) {
     case 'filesize_over':
       errorMessage = 'ファイル容量が大きすぎます: ' + filename;
