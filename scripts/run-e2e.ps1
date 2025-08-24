@@ -28,7 +28,7 @@ if (-not $SkipUp) {
 Write-Host "アプリ起動待ち: $BaseUrl"
 if (-not (Wait-ForHttpOk -Url $BaseUrl -Timeout $TimeoutSec)) {
   Write-Error "起動待ちタイムアウト: $BaseUrl"
-  docker compose -f $ComposeFilePath logs | cat
+  docker compose -f $ComposeFilePath logs | Get-Content
   docker compose -f $ComposeFilePath down
   exit 1
 }
