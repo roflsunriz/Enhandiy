@@ -132,19 +132,57 @@ function handleCreate()
 
     $fileSize = intval($uploadLength);
 
+    // 制限値（バイト）の算出を堅牢化（設定未取得・0/負数のときは安全なデフォルト100MB）
+    $configuredMaxMb = null;
+    if (isset($ret) && is_array($ret) && isset($ret['max_file_size'])) {
+        $configuredMaxMb = $ret['max_file_size'];
+    } elseif (isset($max_file_size)) {
+        $configuredMaxMb = $max_file_size;
+    }
+
+    $configuredMaxMb = is_numeric($configuredMaxMb) ? (int)$configuredMaxMb : 0;
+    if ($configuredMaxMb <= 0) {
+        $configuredMaxMb = 100; // フォールバック: 100MB
+    }
+    $limitBytes = $configuredMaxMb * 1024 * 1024;
+
+    // デバッグ用ログ（問題切り分け）
+    error_log("TUS create - Upload-Length(bytes): {$fileSize}, Max(bytes): {$limitBytes} ({$configuredMaxMb}MB)");
+
     // ファイルサイズチェック
-    if ($fileSize > $max_file_size * 1024 * 1024) {
+    if ($fileSize > $limitBytes) {
         http_response_code(413);
         echo json_encode(['error' => 'File size exceeds limit']);
         exit;
     }
 
-    // TUSアップロードのレート制限チェック
+    // TUSアップロードのレート制限チェック（設定値の取得を厳密化）
     $clientIP = SecurityUtils::getClientIP();
+
+    $configuredMaxPerHour = 50;
+    if (isset($ret['security']['max_uploads_per_hour']) && is_numeric($ret['security']['max_uploads_per_hour'])) {
+        $configuredMaxPerHour = (int)$ret['security']['max_uploads_per_hour'];
+    } elseif (isset($security['max_uploads_per_hour']) && is_numeric($security['max_uploads_per_hour'])) {
+        $configuredMaxPerHour = (int)$security['max_uploads_per_hour'];
+    }
+
+    $configuredMaxConcurrent = 5;
+    if (isset($ret['security']['max_concurrent_uploads']) && is_numeric($ret['security']['max_concurrent_uploads'])) {
+        $configuredMaxConcurrent = (int)$ret['security']['max_concurrent_uploads'];
+    } elseif (isset($security['max_concurrent_uploads']) && is_numeric($security['max_concurrent_uploads'])) {
+        $configuredMaxConcurrent = (int)$security['max_concurrent_uploads'];
+    }
+
+    // デバッグログに現在の設定値を出力
+    error_log(
+        "TUS rate-limit config - perHour: {$configuredMaxPerHour}, " .
+        "concurrent: {$configuredMaxConcurrent}, IP: {$clientIP}"
+    );
+
     $rateLimitResult = SecurityUtils::checkUploadRateLimit(
         $clientIP,
-        $ret['security']['max_uploads_per_hour'] ?? 50,
-        $ret['security']['max_concurrent_uploads'] ?? 5
+        $configuredMaxPerHour,
+        $configuredMaxConcurrent
     );
 
     if (!$rateLimitResult['allowed']) {
@@ -199,6 +237,36 @@ function handleCreate()
 
     // データベースに記録
     try {
+        // 暗号鍵の取得（設定の不整合に備えてフォールバック）
+        $encryptionKey = (isset($key) && is_string($key) && $key !== '')
+            ? $key
+            : (isset($ret['key']) && is_string($ret['key']) && $ret['key'] !== '' ? $ret['key'] : null);
+
+        if ($encryptionKey === null) {
+            // 追加フォールバック: 設定を再ロードして鍵を取得
+            try {
+                if (!class_exists('Config')) {
+                    include_once __DIR__ . '/../config/config.php';
+                }
+                $cfgObj = new Config();
+                $cfg = $cfgObj->index();
+                if (isset($cfg['key']) && is_string($cfg['key']) && $cfg['key'] !== '') {
+                    $encryptionKey = $cfg['key'];
+                }
+            } catch (Throwable $t) {
+                // noop, 下で最終エラー返却
+            }
+        }
+
+        if ($encryptionKey === null) {
+            error_log('TUS create - Encryption key is not configured (final)');
+            http_response_code(500);
+            echo json_encode(['error' => 'Server configuration error (encryption key)']);
+            exit;
+        }
+
+        // 鍵の長さをログ（中身は出さない）
+        error_log('TUS create - Encryption key length: ' . strlen($encryptionKey));
         // Replace key validation (required at system level)
         if (empty($metadata['replacekey'])) {
             // 差し替えキー不足でエラーの場合もトークンを解放
@@ -246,11 +314,11 @@ function handleCreate()
 
         // セキュリティ: キーを暗号化して保存
         $encryptedDlKey = (!empty($metadata['dlkey']) && trim($metadata['dlkey']) !== '')
-            ? SecurityUtils::encryptSecure($metadata['dlkey'], $key) : null;
+            ? SecurityUtils::encryptSecure($metadata['dlkey'], $encryptionKey) : null;
         $encryptedDelKey = (!empty($metadata['delkey']) && trim($metadata['delkey']) !== '')
-            ? SecurityUtils::encryptSecure($metadata['delkey'], $key) : null;
+            ? SecurityUtils::encryptSecure($metadata['delkey'], $encryptionKey) : null;
         $encryptedReplaceKey = (!empty($metadata['replacekey']) && trim($metadata['replacekey']) !== '')
-            ? SecurityUtils::encryptSecure($metadata['replacekey'], $key) : null;
+            ? SecurityUtils::encryptSecure($metadata['replacekey'], $encryptionKey) : null;
 
         $result = $sql->execute([
             $uploadId,
@@ -289,23 +357,14 @@ function handleCreate()
     touch($chunkPath);
 
     // レスポンス Location の生成
-    // ルータ経由 (/api/index.php?path=/api/tus-upload) の場合は、
-    // クライアントが以降 PATCH/HEAD を投げる先として /api/tus-upload/{id} を返す
+    // すべての環境で確実にルータに到達させるため、常に
+    // /api/index.php?path=/api/tus-upload/{id} を返す
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $host = $_SERVER['HTTP_HOST'];
     $requestUri = $_SERVER['REQUEST_URI'] ?? '';
     $pathParam = $_GET['path'] ?? '';
 
-    if (
-        (strpos($requestUri, '/api/index.php') !== false && strpos((string)$pathParam, '/api/tus-upload') === 0)
-        || preg_match('#^/api/tus-upload($|/)#', parse_url($requestUri, PHP_URL_PATH) ?: '') === 1
-    ) {
-        // ルータ経由のときは仮想パスで返す（例: /api/tus-upload/{id}）
-        $location = $protocol . $host . '/api/tus-upload/' . $uploadId;
-    } else {
-        // 直接ファイルに来ている環境では従来通りの物理パス + クエリで返す
-        $location = $protocol . $host . dirname($requestUri) . '/tus-upload.php?upload_id=' . $uploadId;
-    }
+    $location = $protocol . $host . '/api/index.php?path=/api/tus-upload/' . $uploadId;
 
     header('Location: ' . $location);
     header('Upload-Expires: ' . date('r', $expiresAt));
@@ -484,7 +543,7 @@ function handleHead()
  */
 function completeUpload($uploadId, $upload)
 {
-    global $db, $data_directory, $key, $encrypt_filename, $extension;
+    global $db, $data_directory, $key, $encrypt_filename, $extension, $ret;
 
     // デバッグログ開始
 
@@ -520,10 +579,19 @@ function completeUpload($uploadId, $upload)
         $delKeyHash = null;
         $encryptedReplaceKey = null;
 
+        // 暗号鍵の取得（設定の不整合に備えてフォールバック）
+        $encryptionKey = (isset($key) && is_string($key) && $key !== '')
+            ? $key
+            : (isset($ret['key']) && is_string($ret['key']) && $ret['key'] !== '' ? $ret['key'] : null);
+
+        if ($encryptionKey === null) {
+            throw new Exception('Encryption key is not configured');
+        }
+
         // ダウンロードキーの処理
         if (!empty($upload['dl_key']) && trim($upload['dl_key']) !== '') {
             try {
-                $decryptedDlKey = SecurityUtils::decryptSecure($upload['dl_key'], $key);
+                $decryptedDlKey = SecurityUtils::decryptSecure($upload['dl_key'], $encryptionKey);
                 $dlKeyHash = SecurityUtils::hashPassword($decryptedDlKey);
             } catch (Exception $e) {
                 // 復号化失敗時のフォールバック（レガシー平文データ対応）
@@ -534,7 +602,7 @@ function completeUpload($uploadId, $upload)
         // 削除キーの処理
         if (!empty($upload['del_key']) && trim($upload['del_key']) !== '') {
             try {
-                $decryptedDelKey = SecurityUtils::decryptSecure($upload['del_key'], $key);
+                $decryptedDelKey = SecurityUtils::decryptSecure($upload['del_key'], $encryptionKey);
                 $delKeyHash = SecurityUtils::hashPassword($decryptedDelKey);
             } catch (Exception $e) {
                 // 復号化失敗時のフォールバック（レガシー平文データ対応）
@@ -545,11 +613,11 @@ function completeUpload($uploadId, $upload)
         // 差し替えキーの処理
         if (!empty($upload['replace_key']) && trim($upload['replace_key']) !== '') {
             try {
-                $decryptedReplaceKey = SecurityUtils::decryptSecure($upload['replace_key'], $key);
-                $encryptedReplaceKey = SecurityUtils::encryptSecure($decryptedReplaceKey, $key);
+                $decryptedReplaceKey = SecurityUtils::decryptSecure($upload['replace_key'], $encryptionKey);
+                $encryptedReplaceKey = SecurityUtils::encryptSecure($decryptedReplaceKey, $encryptionKey);
             } catch (Exception $e) {
                 // 復号化失敗時のフォールバック（レガシー平文データ対応）
-                $encryptedReplaceKey = SecurityUtils::encryptSecure($upload['replace_key'], $key);
+                $encryptedReplaceKey = SecurityUtils::encryptSecure($upload['replace_key'], $encryptionKey);
             }
         }
 
@@ -697,7 +765,19 @@ function getUploadIdFromPath()
         return $_GET['upload_id'];
     }
 
-    // 2. PATH_INFOから取得を試行
+    // 2. ルータ経由の path クエリから取得を試行 (/api/index.php?path=/api/tus-upload/{id})
+    if (isset($_GET['path'])) {
+        $p = (string)$_GET['path'];
+        $pPath = parse_url($p, PHP_URL_PATH);
+        $parts = explode('/', trim((string)$pPath, '/'));
+        foreach ($parts as $part) {
+            if (strpos($part, 'tus_') === 0) {
+                return $part;
+            }
+        }
+    }
+
+    // 3. PATH_INFOから取得を試行
     if (isset($_SERVER['PATH_INFO'])) {
         $pathInfo = trim($_SERVER['PATH_INFO'], '/');
         if (strpos($pathInfo, 'tus_') === 0) {
@@ -705,7 +785,7 @@ function getUploadIdFromPath()
         }
     }
 
-    // 3. REQUEST_URIから取得を試行
+    // 4. REQUEST_URIから取得を試行
     $path = $_SERVER['REQUEST_URI'];
     $path = parse_url($path, PHP_URL_PATH);
     $parts = explode('/', $path);
@@ -716,10 +796,11 @@ function getUploadIdFromPath()
         }
     }
 
-    // 4. デバッグ情報をログに記録
+    // 5. デバッグ情報をログに記録
     error_log("Upload ID not found - REQUEST_URI: " . $_SERVER['REQUEST_URI'] .
               ", PATH_INFO: " . ($_SERVER['PATH_INFO'] ?? 'not set') .
-              ", QUERY_STRING: " . ($_SERVER['QUERY_STRING'] ?? 'not set'));
+              ", QUERY_STRING: " . ($_SERVER['QUERY_STRING'] ?? 'not set') .
+              ", GET[path]: " . (isset($_GET['path']) ? (string)$_GET['path'] : 'not set'));
 
     return null;
 }

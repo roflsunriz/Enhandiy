@@ -11,19 +11,19 @@ error_reporting(E_ALL);
 
 // セキュリティヘッダーとCORSの設定
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
 
-// OPTIONSリクエスト（プリフライト）への対応
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    // TUSエンドポイントは専用実装に委譲して適切なTusヘッダを返す
-    $path = isset($_GET['path']) ? $_GET['path'] : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    if (strpos($path, '/api/tus-upload') === 0) {
-        require_once __DIR__ . '/tus-upload.php';
-        exit;
-    }
+// TUSエンドポイントは全メソッドを専用実装に委譲（POST/PATCH/HEAD/OPTIONS）
+$__req_method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$__path = isset($_GET['path']) ? $_GET['path'] : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+if (strpos($__path, '/api/tus-upload') === 0) {
+    require_once __DIR__ . '/tus-upload.php';
+    exit;
+}
 
-    // それ以外は汎用のプリフライト応答
+// OPTIONSリクエスト（プリフライト）への対応（TUS以外）
+if ($__req_method === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
