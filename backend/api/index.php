@@ -16,6 +16,14 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 
 // OPTIONSリクエスト（プリフライト）への対応
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // TUSエンドポイントは専用実装に委譲して適切なTusヘッダを返す
+    $path = isset($_GET['path']) ? $_GET['path'] : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if (strpos($path, '/api/tus-upload') === 0) {
+        require_once __DIR__ . '/tus-upload.php';
+        exit;
+    }
+
+    // それ以外は汎用のプリフライト応答
     http_response_code(200);
     exit;
 }

@@ -242,7 +242,7 @@ class ApiRouter
             'file_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'file')),
             'folder_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'folder')),
             'system_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'system')),
-            'api_version' => '4.3.0'
+            'api_version' => '4.3.1'
         ];
     }
 }

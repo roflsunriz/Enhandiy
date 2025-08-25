@@ -288,10 +288,26 @@ function handleCreate()
     // 空のチャンクファイルを作成
     touch($chunkPath);
 
-    // レスポンス - GETパラメータ形式を使用
+    // レスポンス Location の生成
+    // ルータ経由 (/api/index.php?path=/api/tus-upload) の場合は、
+    // クライアントが以降 PATCH/HEAD を投げる先として /api/tus-upload/{id} を返す
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-    $baseUrl = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . '/tus-upload.php';
-    header('Location: ' . $baseUrl . '?upload_id=' . $uploadId);
+    $host = $_SERVER['HTTP_HOST'];
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    $pathParam = $_GET['path'] ?? '';
+
+    if (
+        (strpos($requestUri, '/api/index.php') !== false && strpos((string)$pathParam, '/api/tus-upload') === 0)
+        || preg_match('#^/api/tus-upload($|/)#', parse_url($requestUri, PHP_URL_PATH) ?: '') === 1
+    ) {
+        // ルータ経由のときは仮想パスで返す（例: /api/tus-upload/{id}）
+        $location = $protocol . $host . '/api/tus-upload/' . $uploadId;
+    } else {
+        // 直接ファイルに来ている環境では従来通りの物理パス + クエリで返す
+        $location = $protocol . $host . dirname($requestUri) . '/tus-upload.php?upload_id=' . $uploadId;
+    }
+
+    header('Location: ' . $location);
     header('Upload-Expires: ' . date('r', $expiresAt));
     http_response_code(201);
 }
