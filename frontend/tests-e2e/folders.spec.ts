@@ -15,10 +15,24 @@ async function closeAlertIfVisible(page) {
 }
 
 async function clickFolderDropdownAction(cardLocator, actionSelector) {
+  // ドロップダウントグルをクリック
   await cardLocator.locator('.dropdown-toggle').click();
+  
+  // メニューが表示されるまで待つ
   const menu = cardLocator.locator('.dropdown-menu');
-  await expect(menu).toBeVisible();
-  await menu.locator(actionSelector).click();
+  await expect(menu).toBeVisible({ timeout: 5000 });
+  
+  // Bootstrapのアニメーションが完了するまで待つ
+  await menu.page().waitForTimeout(300);
+  
+  // メニューアイテムをクリック
+  const menuItem = menu.locator(actionSelector).first();
+  
+  // アイテムが表示されるまで待つ
+  await expect(menuItem).toBeVisible({ timeout: 5000 });
+  
+  // JavaScriptで直接クリックする方法を試す
+  await menuItem.evaluate(el => el.click());
 }
 
 test.describe('フォルダ管理と移動フロー', () => {
@@ -32,11 +46,11 @@ test.describe('フォルダ管理と移動フロー', () => {
     await page.locator('#promptModalOk').click();
     await expect(page.locator('#promptModal')).toBeHidden();
     await closeAlertIfVisible(page);
-    const folderA = page.locator('#folder-grid [data-folder-id] .folder-name', { hasText: 'E2E-A' });
-    await expect(folderA).toBeVisible({ timeout: 15000 });
-
-    // data-folder-id を取得
-    const folderACard = page.locator('#folder-grid [data-folder-id]:has(.folder-name:has-text("E2E-A"))').first();
+    // 完全一致でE2E-Aフォルダを探す（E2E-A-renamedと区別するため）
+    const folderACard = page.locator('#folder-grid [data-folder-id]').filter({
+      has: page.locator('.folder-name').filter({ hasText: /^E2E-A$/ })
+    }).first();
+    await expect(folderACard).toBeVisible({ timeout: 15000 });
     const folderAId = await folderACard.getAttribute('data-folder-id');
 
     // 2) フォルダ名前変更 → E2E-A-renamed
@@ -57,7 +71,10 @@ test.describe('フォルダ管理と移動フロー', () => {
     await page.locator('#promptModalOk').click();
     await expect(page.locator('#promptModal')).toBeHidden();
     await closeAlertIfVisible(page);
-    const folderBCard = page.locator('#folder-grid [data-folder-id]:has(.folder-name:has-text("E2E-B"))').first();
+    // 完全一致でE2E-Bフォルダを探す
+    const folderBCard = page.locator('#folder-grid [data-folder-id]').filter({
+      has: page.locator('.folder-name').filter({ hasText: /^E2E-B$/ })
+    }).first();
     await expect(folderBCard).toBeVisible({ timeout: 15000 });
     const folderBId = await folderBCard.getAttribute('data-folder-id');
 

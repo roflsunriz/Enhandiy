@@ -1,0 +1,1 @@
+Start-Process "npx.cmd" -ArgumentList "playwright", "show-report" -WorkingDirectory "$PSScriptRoot\..\frontend" -NoNewWindow -Wait

@@ -2,8 +2,7 @@ param(
   [string]$ComposeFilePath = "infrastructure\docker-compose.yaml",
   [string]$BaseUrl = "http://localhost",
   [int]$TimeoutSec = 120,
-  [switch]$SkipUp = $false,
-  [switch]$LeaveUp = $false
+  [switch]$SkipUp = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,18 +73,11 @@ php -r 'include "/var/www/html/backend/config/config.php"; $c=new config(); $cfg
     }
   }
   npx playwright install chromium
-  npx playwright test
+  npx cross-env PW_SLOWMO=1200 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test
   $exitCode = $LASTEXITCODE
 } finally {
-  Pop-Location
-  if (-not $LeaveUp) {
-    Write-Host "Docker停止中..."
-    docker compose -f $ComposeFilePath down
-  } else {
-    Write-Host "コンテナは稼働状態のまま維持します (-LeaveUp 指定)"
-  }
-}
 
+}
 exit $exitCode
 
 

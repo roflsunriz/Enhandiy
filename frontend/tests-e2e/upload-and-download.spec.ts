@@ -4,6 +4,8 @@ import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+// シンプルな待機処理に変更
+
 test.describe('アップロード→ダウンロード一連動作', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -20,7 +22,20 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     await page.locator('#multipleFileInput').setInputFiles(filePath);
     await page.locator('#delkeyInput').fill('delete-key-1234');
     await page.locator('#replaceKeyInput').fill('replace-key-1234');
+    
+    // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    
+    // アップロード処理を待つ
+    await page.waitForTimeout(3000);
+    
+    // モーダルを閉じる
+    const uploadModal = page.locator('#uploadModal');
+    const closeBtn = uploadModal.locator('[data-bs-dismiss="modal"]').first();
+    if (await closeBtn.isVisible({ timeout: 1000 })) {
+      await closeBtn.click();
+    }
+    await page.waitForTimeout(1000);
 
     const listRowNoKey = page.locator('.file-list-item:has(.file-name:has-text("hello-no-key.txt"))').first();
     const gridItemNoKey = page.locator('.file-grid-item:has(.file-grid-item__name[title="hello-no-key.txt"])').first();
@@ -50,7 +65,20 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     await page.locator('#dlkeyInput').fill('dl-key-5678');
     await page.locator('#delkeyInput').fill('delete-key-5678');
     await page.locator('#replaceKeyInput').fill('replace-key-5678');
+    
+    // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    
+    // アップロード処理を待つ
+    await page.waitForTimeout(3000);
+    
+    // モーダルを閉じる
+    const uploadModal = page.locator('#uploadModal');
+    const closeBtn = uploadModal.locator('[data-bs-dismiss="modal"]').first();
+    if (await closeBtn.isVisible({ timeout: 1000 })) {
+      await closeBtn.click();
+    }
+    await page.waitForTimeout(1000);
 
     const listRowWithKey = page.locator('.file-list-item:has(.file-name:has-text("hello-with-key.txt"))').first();
     const gridItemWithKey = page.locator('.file-grid-item:has(.file-grid-item__name[title="hello-with-key.txt"])').first();

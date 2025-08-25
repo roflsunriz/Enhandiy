@@ -1,6 +1,6 @@
 {
   "name": "php-uploader-frontend",
-  "version": "4.0.2-roflsunriz",
+  "version": "4.3.0-roflsunriz",
   "description": "Modern TypeScript frontend for PHP file uploader",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "lint": "eslint src/**/*.{ts,js} --max-warnings 0",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:headed": "cross-env PW_HEADED=1 PW_SLOWMO=300 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test"
+    "test:e2e:headed": "cross-env PW_HEADED=1 PW_SLOWMO=100 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

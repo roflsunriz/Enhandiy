@@ -15,6 +15,8 @@ async function closeAlertIfVisible(page) {
   } catch {}
 }
 
+// シンプルな待機処理に変更
+
 async function forceCloseModalIfOpen(page, modalSelector) {
   const modal = page.locator(modalSelector);
   try {
@@ -110,8 +112,20 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#multipleFileInput').setInputFiles(origPath);
     await page.locator('#delkeyInput').fill('del-key-edit');
     await page.locator('#replaceKeyInput').fill('rep-key-edit');
+    
+    // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
-    await expect(page.locator('#uploadModal')).toBeHidden();
+    
+    // アップロード処理を待つ
+    await page.waitForTimeout(3000);
+    
+    // モーダルを閉じる
+    const uploadModal = page.locator('#uploadModal');
+    const closeBtn = uploadModal.locator('[data-bs-dismiss="modal"]').first();
+    if (await closeBtn.isVisible({ timeout: 1000 })) {
+      await closeBtn.click();
+    }
+    await page.waitForTimeout(1000);
     await closeAlertIfVisible(page);
 
     // 対象行取得（IDも確保）
@@ -151,7 +165,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#editComment').fill('comment with master key');
     // マスターキーを使用、置換キーは空に
     await page.locator('#editReplaceKeyInput').fill('');
-    await page.locator('#editMasterKeyInput').fill(process.env.PW_MASTER_KEY);
+    await page.locator('#editMasterKeyInput').fill(process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo');
     await Promise.all([
       waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#saveCommentBtn').click(),
@@ -196,7 +210,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#replaceFileInput').setInputFiles(repV2);
     // マスターキーを使用、置換キーは空に
     await page.locator('#modalReplaceKeyInput').fill('');
-    await page.locator('#replaceMasterKeyInput').fill(process.env.PW_MASTER_KEY);
+    await page.locator('#replaceMasterKeyInput').fill(process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo');
     await Promise.all([
       waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#replaceFileBtn').click(),

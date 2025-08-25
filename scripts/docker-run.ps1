@@ -1,0 +1,1 @@
+docker-compose -f "C:\Users\rofls\Documents\phpUploader\infrastructure\docker-compose.yaml" up -d web
