@@ -309,25 +309,57 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
     
     // 完了ハンドラ
     xhr.addEventListener('load', () => {
-      try {
-        const data = JSON.parse(xhr.responseText) as UploadApiResponse;
-        // フォールバックアップロード応答処理
-        
-        if (data.status === 'ok' || data.status === 'success') {
-          // フォールバックアップロード完了
+      const isOk = xhr.status >= 200 && xhr.status < 300;
+      const contentType = xhr.getResponseHeader('Content-Type') || '';
+      const text = (xhr.responseText || '').trim();
+
+      let parsed: UploadApiResponse | null = null;
+      if (contentType.includes('application/json') && text.length > 0) {
+        try {
+          parsed = JSON.parse(text) as UploadApiResponse;
+        } catch {
+          // JSONヘッダーなのに壊れている
+          console.error('Failed to parse JSON response:', text);
+        }
+      } else if (text.startsWith('{')) {
+        // 一部の環境でContent-Typeが未設定な場合のフォールバック
+        try {
+          parsed = JSON.parse(text) as UploadApiResponse;
+        } catch {
+          // JSONパース失敗時は何もしない（空ブロック回避のため明示的にコメント）
+        }
+      }
+
+      if (parsed) {
+        if (parsed.status === 'ok' || parsed.status === 'success') {
           onUploadComplete(file.name, 'fallback');
           resolve();
-        } else {
-          console.error('Fallback upload failed with response:', data);
-          handleUploadError(data, file.name);
-          uploadHadErrors = true;
-          reject(new Error('Upload failed: ' + data.status));
+          return;
         }
-      } catch {
-        console.error('Failed to parse response:', xhr.responseText);
+        console.error('Fallback upload failed with response:', parsed);
+        handleUploadError(parsed, file.name);
         uploadHadErrors = true;
-        reject(new Error('Invalid response format'));
+        reject(new Error('Upload failed: ' + parsed.status));
+        return;
       }
+
+      // JSONでないがHTTPは成功 → 成功扱い（レガシー/空ボディ対応）
+      if (isOk) {
+        onUploadComplete(file.name, 'fallback');
+        resolve();
+        return;
+      }
+
+      // HTTPエラーで非JSON → 詳細を組み立てて通知
+      const message = 'HTTP ' + xhr.status + ' ' + xhr.statusText + (text ? ' - ' + text.slice(0, 200) : '');
+      const errorData: UploadApiResponse = {
+        success: false,
+        status: 'server_error',
+        message
+      } as unknown as UploadApiResponse;
+      handleUploadError(errorData, file.name);
+      uploadHadErrors = true;
+      reject(new Error(message));
     });
     
     // エラーハンドラ

@@ -334,7 +334,7 @@ try {
         'file_name' => $fileName,
         'file_size' => $fileSize
     ]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     // 出力バッファをクリア
     if (ob_get_level()) {
         ob_clean();
