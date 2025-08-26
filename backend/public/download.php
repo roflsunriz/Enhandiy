@@ -356,7 +356,7 @@ function validateLegacyShareLink($id, $dlkey, $config, $db, $logger)
             echo '<p class="desc">共有リンクからのダウンロードには、ダウンロードキーの入力が必要です。</p>';
             echo '</div>';
             if ($invalid) {
-                echo '<div class="alert">ダウンロードキーが違うのじゃ。もう一度試すのじゃ。</div>';
+                echo '<div class="alert">ダウンロードキーが違います。もう一度試してください。</div>';
             }
             echo '<div class="card__body">';
             echo '<form id="authForm" method="post" action="download.php" novalidate>';
