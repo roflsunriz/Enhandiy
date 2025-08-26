@@ -6,7 +6,7 @@ header('Content-Type: application/json; charset=utf-8');
 // phpcs:disable PSR1.Files.SideEffects
 
 // configをインクルード
-include_once('../config/config.php');
+include_once(__DIR__ . '/../config/config.php');
 $config = new config();
 $ret = $config->index();
 // 配列キーが設定されている配列なら展開

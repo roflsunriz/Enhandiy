@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // 設定読み込み
-include_once('../config/config.php');
+include_once(__DIR__ . '/../config/config.php');
 
 $config = new config();
 $ret = $config->index();

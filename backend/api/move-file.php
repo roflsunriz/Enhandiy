@@ -4,7 +4,7 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // configをインクルード
-include_once('../config/config.php');
+include_once(__DIR__ . '/../config/config.php');
 $config = new config();
 $ret = $config->index();
 if (!is_null($ret)) {

@@ -4,7 +4,7 @@
 ini_set('display_errors', 0);
 
 // configをインクルード
-include_once('../config/config.php');
+include_once(__DIR__ . '/../config/config.php');
 $config = new config();
 $ret = $config->index();
 // 配列キーが設定されている配列なら展開

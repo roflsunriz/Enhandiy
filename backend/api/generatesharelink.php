@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
     header('Content-Type: application/json; charset=utf-8');
     $id = $_GET['id'];
     // config読み込み
-    include_once('../config/config.php');
+    include_once(__DIR__ . '/../config/config.php');
     $config = new config();
     $ret = $config->index();
     if (!is_null($ret) && is_array($ret)) {
@@ -63,7 +63,7 @@ $action = $_POST['action'] ?? '';
 if ($action === 'updateSettings') {
     header('Content-Type: application/json; charset=utf-8');
     // config読み込み
-    include_once('../config/config.php');
+    include_once(__DIR__ . '/../config/config.php');
     $config = new config();
     $ret = $config->index();
     if (!is_null($ret) && is_array($ret)) {
@@ -105,7 +105,7 @@ if ($expires_days && $expires_days > 0) {
 }
 
 // configをインクルード
-include_once('../config/config.php');
+include_once(__DIR__ . '/../config/config.php');
 require_once('../core/security.php');
 $config = new config();
 $ret = $config->index();
