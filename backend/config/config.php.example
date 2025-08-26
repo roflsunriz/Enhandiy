@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PHP Uploader Ver.4.3.3 設定ファイル
+ * PHP Uploader Ver.4.3.4 設定ファイル
  *
  * このファイルおよびデータディレクトリは外部からアクセスできないように
  * .htaccess等で保護してください
@@ -35,10 +35,14 @@ class config {
             // アプリケーション設定
             'title' => 'PHP Uploader',
             // アップローダ説明（任意）：空のままなら表示しない
+            // 'urls' に複数のURLを指定可能。従来の 'url' は互換のためサポート。
             'uploader_info' => [
                 'title' => 'example title',
                 'description' => 'example description',
-                'url' => 'https://example.com'
+                'urls' => [
+                    [ 'url' => 'https://example.com', 'title' => 'Example', 'desc' => 'Example site description' ],
+                    [ 'url' => 'https://example2.com', 'title' => 'Example2', 'desc' => 'Second example description' ]
+                ]
             ],
             'save_max_files' => 2000,  // 制限値を増加
             'max_comment' => 1024,     // 制限値を増加
@@ -265,7 +269,7 @@ class config {
     {
         // v4.0.0-roflsunriz: composer.jsonのversionフィールドは削除したため、
         // 固定バージョンを返す。リリース時に手動で更新する。
-        return '4.3.3';
+        return '4.3.4';
     }
 
     /**

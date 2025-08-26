@@ -5,9 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.3.3-roflsunriz] - 2025-08-27
+## [4.3.4-roflsunriz] - 2025-08-27
 
 ### Feature
+
+- 共有モーダルのアイコンをマテリアルアイコンに変更し一貫性を高めた
+- アップローダインフォメーションを拡張し、説明とURLとURLタイトルを設定可能にした。URLは複数指定可能になった。
+- アップローダインフォメーションを白基調にして既存のデザインとの整合性を高めた
+- #shareUrlテキストエリアの表示を強制するようにした
+
+### Fixed
+
+- 共有モーダルのラジオボタンの表示を調整
+- drag-drop.tsの'Invalid CSRF Token'エラーと'API_KEY_MISSING'エラーを修正
+
+## [4.3.3-roflsunriz] - 2025-08-27
+
+### BREAKING CHANGES
 
 - backend/core/security.phpにパスワードハッシュ化関数のArgon2IDからBCRYPTに変更
 - 既存のパスワードは検証失敗するので、データベースとデータを削除して再アップロードを推奨

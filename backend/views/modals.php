@@ -435,7 +435,7 @@ data-bs-backdrop="static" data-bs-keyboard="false">
           
           <!-- 現在の設定情報 -->
           <div class="alert alert-info">
-            <h5><strong>📊 現在の設定</strong></h5>
+            <h5><strong><?php echo render_icon('chart-bar', 18, 'icon'); ?> 現在の設定</strong></h5>
             <ul class="list-unstyled">
               <li id="currentMaxDownloads"><strong>最大ダウンロード数:</strong> 制限なし</li>
               <li id="currentExpiresDays"><strong>有効期限:</strong> 制限なし</li>
@@ -443,7 +443,7 @@ data-bs-backdrop="static" data-bs-keyboard="false">
           </div>
           
           <div class="alert alert-success">
-            <strong>📋 クリップボードにコピーされました！</strong><br>
+            <strong><?php echo render_icon('content-copy', 16, 'icon'); ?> クリップボードにコピーされました！</strong><br>
             このリンクを共有したい相手に送信してください。
           </div>
         </div>

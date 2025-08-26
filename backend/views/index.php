@@ -28,10 +28,31 @@
         if (isset($uploader_info) && is_array($uploader_info)) {
             $infoTitle = trim($uploader_info['title'] ?? '');
             $infoDesc = trim($uploader_info['description'] ?? '');
-            $infoUrl  = trim($uploader_info['url'] ?? '');
-            if ($infoTitle !== '' || $infoDesc !== '' || $infoUrl !== '') {
-                echo '<div class="alert alert-info text-start" role="alert" '
-                   . 'style="max-width:860px;margin:0 auto 15px;">';
+
+            // 複数URL対応: 各要素は文字列または ['url'=>'...', 'title'=>'...'] を許容
+            // 従来の 'url' も互換でサポート
+            $infoUrls = [];
+            if (!empty($uploader_info['urls']) && is_array($uploader_info['urls'])) {
+                foreach ($uploader_info['urls'] as $u) {
+                    if (is_array($u) && !empty($u['url'])) {
+                        $uUrl = trim($u['url']);
+                        $uTitle = trim($u['title'] ?? '');
+                        $uDesc = trim($u['desc'] ?? '');
+                    } else {
+                        $uUrl = trim((string)$u);
+                        $uTitle = '';
+                        $uDesc = '';
+                    }
+                    if ($uUrl !== '') {
+                        $infoUrls[] = ['url' => $uUrl, 'title' => $uTitle, 'desc' => $uDesc];
+                    }
+                }
+            } elseif (!empty($uploader_info['url'])) {
+                $infoUrls[] = ['url' => trim($uploader_info['url']), 'title' => '', 'desc' => ''];
+            }
+
+            if ($infoTitle !== '' || $infoDesc !== '' || count($infoUrls) > 0) {
+                echo '<div class="alert alert-info text-start" role="alert">';
                 if ($infoTitle !== '') {
                     $safeTitle = htmlspecialchars($infoTitle, ENT_QUOTES, 'UTF-8');
                     echo '<h4 class="alert-heading" style="margin-top:0;">'
@@ -42,13 +63,25 @@
                     $safeDesc = htmlspecialchars($infoDesc, ENT_QUOTES, 'UTF-8');
                     echo '<p style="margin-bottom:8px;">' . nl2br($safeDesc) . '</p>';
                 }
-                if ($infoUrl !== '') {
-                    $safeUrl = htmlspecialchars($infoUrl, ENT_QUOTES, 'UTF-8');
-                    echo '<p style="margin:0;">'
-                        . '<a href="' . $safeUrl . '" target="_blank" rel="noopener noreferrer">'
-                        . $safeUrl
-                        . '</a>'
-                        . '</p>';
+                if (count($infoUrls) > 0) {
+                    echo '<div style="margin:0;">';
+                    foreach ($infoUrls as $entry) {
+                        $url = $entry['url'] ?? '';
+                        $title = $entry['title'] ?? '';
+                        $desc = $entry['desc'] ?? '';
+                        $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+                        $linkText = ($title !== '') ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : $safeUrl;
+                        echo '<div style="display:inline-block;margin-right:16px;vertical-align:top;">'
+                            . '<a href="' . $safeUrl . '" target="_blank" rel="noopener noreferrer">'
+                            . $linkText
+                            . '</a>';
+                        if ($desc !== '') {
+                            $safeDesc = nl2br(htmlspecialchars($desc, ENT_QUOTES, 'UTF-8'));
+                            echo '<div class="small text-muted" style="margin-top:4px;">' . $safeDesc . '</div>';
+                        }
+                        echo '</div>';
+                    }
+                    echo '</div>';
                 }
                 echo '</div>';
             }
@@ -74,7 +107,7 @@
   <div class="row">
     <div class="col-sm-12">
       <p class="text-right">@<a href="https://github.com/roflsunriz/phpUploader" target="_blank">
-        roflsunriz/phpUploader</a> v<?php echo $version ?? '4.3.3'; ?> -
+        roflsunriz/phpUploader</a> v<?php echo $version ?? '4.3.4'; ?> -
         コミュニティフォーク - 機能強化版 (GitHub)</p>
     </div>
   </div>

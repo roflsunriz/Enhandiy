@@ -3,9 +3,31 @@
  * phpUploader - File Sharing Styles
  */
 
-/* 共有機能のスタイル */
-.share-modal-content {
-  padding: 10px 0;
+/* 共有形式ラベルとラジオの調整 */
+#shareLinkModal .modal-body .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.share-modal-content .radio {
+  margin-bottom: 8px;
+}
+
+.share-modal-content .radio label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.share-modal-content .radio input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  transform: translateY(1px);
 }
 
 .share-modal-content p {
@@ -48,4 +70,8 @@ td a[onclick*="share_button"] {
 td a[onclick*="share_button"]:hover {
   color: #31b0d5;
   text-decoration: underline;
+}
+
+#shareUrl {
+  display: block !important;
 }

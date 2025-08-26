@@ -7,6 +7,7 @@ import { ready, $, addClass, removeClass } from '../utils/dom';
 import { initializeErrorHandling } from '../utils/error-handling';
 import { showAlert } from '../utils/modal';
 import { UploadedFile, UploadOptions, UploadApiResponse } from '../types/upload';
+import { getCsrfToken } from '../utils/http';
 import { isPasswordTooWeak } from './password-strength';
 import { fileIconForExt } from '../utils/icons';
 
@@ -477,6 +478,16 @@ async function uploadSingleFile(file: File, options?: UploadOptions, progressBar
     if (opts.expiresDays && opts.expiresDays > 0) {
       formData.append('expires_days', opts.expiresDays.toString());
     }
+    // フォルダIDを追加（指定がある場合）
+    if (opts.folderId) {
+      formData.append('folder_id', String(opts.folderId));
+    }
+
+    // CSRFトークンをFormDataに追加
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      formData.append('csrf_token', csrfToken);
+    }
     
     // XMLHttpRequestを使用してプログレス監視
     const xhr = new XMLHttpRequest();
@@ -515,6 +526,10 @@ async function uploadSingleFile(file: File, options?: UploadOptions, progressBar
     });
     
     xhr.open('POST', '/api/index.php?path=/api/files');
+    // CSRFトークンをヘッダーにも設定（UIリクエスト判定用）
+    if (csrfToken) {
+      xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+    }
     xhr.send(formData);
   });
 }
