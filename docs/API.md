@@ -127,6 +127,8 @@ curl -H "Authorization: Bearer <API_KEY>" \
 ```bash
 curl -X POST -H "Authorization: Bearer <API_KEY>" \
      -F "file=@./report.pdf" \
+     -F "delkey=test_key_2025" \
+     -F "replacekey=test_key_2025" \
      -F "folder_id=3" \
      -F "comment=月報" \
      https://example.com/api/files

@@ -1,8 +1,8 @@
-# phpUploader v4.3.0-roflsunriz
+# phpUploader v4.3.2-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v4.3.0-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
+phpUploader v4.3.2-roflsunriz は、オリジナルのphpUploaderをベースに大幅に機能強化されたコミュニティフォーク版です。モダンなUI、高度なアップロード機能、包括的なAPI サポート、強化されたセキュリティ機能、一括操作、パスワード強度チェック、そして包括的なファイル管理機能を提供します。
 
 ![cover](./image/cover.png)
 
@@ -182,7 +182,7 @@ phpUploader v4.3.0-roflsunriz は、オリジナルのphpUploaderをベースに
 
 - PHP Version 8.1+
 - SQLite（PHPには通常 `sqlite3` 拡張がバンドルされていますが、Linuxディストリビューションによってはデフォルトで有効化されていない場合があります。その場合、例えばUbuntuやDebian系では `php8.1-sqlite3` のようなパッケージを追加インストールする必要があります。Windowsの公式PHP配布版では多くの場合デフォルトで有効ですが、`php.ini` で `extension=sqlite3` の記述がコメントアウトされていないか確認してください。）
-- PHP拡張: `openssl`, `json`, `mbstring`, `hash`
+- PHP拡張: `pdo_sqlite`, `openssl`, `json`, `mbstring`, `hash`
 - Webサーバー: Apache もしくは Nginx + PHP-FPM
 ## 🛠️ Requirementのインストール方法
 
@@ -274,12 +274,12 @@ PHP拡張モジュール（エクステンション）は、PHPの標準機能�
   ```bash
   php -m
   ```
-  このコマンドで表示されるリストに、必要な拡張（例: `sqlite3`, `mbstring`, `openssl`, `json`, `hash`）が含まれていればOKです。
+  このコマンドで表示されるリストに、必要な拡張（例: `sqlite3`, `pdo_sqlite`, `mbstring`, `openssl`, `json`, `hash`）が含まれていればOKです。
 
 - **拡張の有効化・インストール方法（Ubuntu例）**  
   拡張が無効・未インストールの場合は、以下のようにして追加できます。
   ```bash
-  sudo apt install -y php-sqlite3 php-mbstring php-json php-openssl php-hash
+  sudo apt install -y php-sqlite3 php-pdo-sqlite php-mbstring php-json php-openssl php-hash
   sudo systemctl restart apache2 # Apache利用時
   ```
   ※ 利用しているPHPのバージョンによっては、`php8.1-sqlite3` のようにバージョン番号が付く場合もあります。
@@ -294,12 +294,12 @@ PHP拡張モジュール（エクステンション）は、PHPの標準機能�
   拡張が有効にならない場合は、`phpinfo();` を使って現在のPHP設定を確認し、拡張ディレクトリや有効化状況をチェックしてください。
 
 **まとめ**  
-本プロジェクトでは、`openssl`, `json`, `mbstring`, `hash`, `sqlite3` などの拡張が必須です。インストール・有効化を忘れずに確認しておいてください。
+本プロジェクトでは、`pdo_sqlite`, `openssl`, `json`, `mbstring`, `hash`, `sqlite3` などの拡張が必須です。インストール・有効化を忘れずに確認しておいてください。
 
 
 ## 🎯 利用想定
 
-phpUploader v4.3.0-roflsunriz は、以下のような用途に最適化されています：
+phpUploader v4.3.2-roflsunriz は、以下のような用途に最適化されています：
 
 ### **基本的な利用シーン**
 - **小規模チーム**: 少人数での安全なファイル共有
@@ -641,7 +641,7 @@ infrastructure\scripts\release.bat x.x.x
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v4.3.0-roflsunriz)**
+### **コミュニティフォーク版 (v4.3.2-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
@@ -660,6 +660,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v4.3.0-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v4.3.2-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀

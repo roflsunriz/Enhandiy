@@ -54,7 +54,7 @@ try {
     $config = $configObj->index();
     // ディレクトリ作成・DB初期化
     $db = initializeApp($config);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(array(
@@ -100,7 +100,7 @@ try {
 
     $router = new ApiRouter($config);
     $router->handleRequest();
-} catch (Exception $e) {
+} catch (Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(array(
