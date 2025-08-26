@@ -871,14 +871,12 @@ class SecurityUtils
     }
 
     /**
-     * パスワードハッシュを生成（Argon2ID）
+     * パスワードハッシュを生成（BCRYPT）
      */
     public static function hashPassword(string $password): string
     {
-        return password_hash($password, PASSWORD_ARGON2ID, [
-            'memory_cost' => 65536, // 64 MB
-            'time_cost' => 4,       // 4 iterations
-            'threads' => 3,         // 3 threads
+        return password_hash($password, PASSWORD_BCRYPT, [
+            'cost' => 12,
         ]);
     }
 

@@ -5,9 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.3.3-roflsunriz] - 2025-08-27
+
+### Feature
+
+- backend/core/security.phpにパスワードハッシュ化関数のArgon2IDからBCRYPTに変更
+- 既存のパスワードは検証失敗するので、データベースとデータを削除して再アップロードを推奨
+
 ## [4.3.2-roflsunriz] - 2025-08-26
 
-### Fixed
+### Chore
 
 - ドキュメントの更新(API.md)
 
