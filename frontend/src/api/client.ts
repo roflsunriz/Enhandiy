@@ -301,21 +301,6 @@ export class UploadApi {
       return false;
     }
 
-    // ファイルサイズ制限（クライアントサイド基本チェック）
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    if (file.size > maxSize) {
-      console.error('File size exceeds limit:', file.size);
-      return false;
-    }
-
-    // 危険な拡張子チェック
-    const ext = filename.split('.').pop()?.toLowerCase();
-    const dangerousExts = ['exe', 'scr', 'bat', 'cmd', 'com', 'pif', 'vbs', 'js', 'jar'];
-    if (ext && dangerousExts.includes(ext)) {
-      console.error('Dangerous file extension:', ext);
-      return false;
-    }
-
     return true;
   }
 
