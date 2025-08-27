@@ -22,7 +22,7 @@ phpUploader v4.3.5-roflsunriz は、モダン UI・再開可能アップロー�
 
 ## 🔗 関連
 
-- **リリース**: `https://github.com/roflsunriz/phpUploader/releases`
+- **リリース**: [リリースページ](https://github.com/roflsunriz/phpUploader/releases)
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
 - **リリースノート**: `docs/RELEASE_NOTES_v*.md`
 
