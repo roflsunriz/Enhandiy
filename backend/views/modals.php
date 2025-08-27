@@ -419,9 +419,9 @@ data-bs-backdrop="static" data-bs-keyboard="false">
           </div>
 
           <div class="form-group">
-            <label for="shareUrl">共有内容</label>
+            <label for="shareUrlTextField">共有内容</label>
             <div class="input-group">
-              <textarea class="form-control" id="shareUrl" rows="3" readonly></textarea>
+              <textarea class="form-control" id="shareUrlTextField" rows="3" readonly></textarea>
               <span class="input-group-btn va-top">
                 <button class="btn btn-success h-80" type="button" id="copyShareUrlBtn"
                         title="クリップボードにコピー">

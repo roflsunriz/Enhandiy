@@ -541,7 +541,7 @@ function updateShareUrl(shareData: {
   share_url_with_comment?: string; 
 }): void {
   const selectedFormat = document.querySelector('input[name="shareFormat"]:checked') as HTMLInputElement;
-  const shareUrlInput = $('#shareUrl') as HTMLInputElement;
+  const shareUrlInput = $('#shareUrlTextField') as HTMLInputElement;
   
   if (!selectedFormat || !shareUrlInput) return;
   
@@ -656,7 +656,7 @@ async function handleSaveShareSettings(): Promise<void> {
 
 // 共有内容をクリップボードにコピー
 async function handleCopyShareUrl(): Promise<void> {
-  const shareUrlInput = $('#shareUrl') as HTMLInputElement;
+  const shareUrlInput = $('#shareUrlTextField') as HTMLInputElement;
   if (!shareUrlInput || !shareUrlInput.value) {
     showError('コピーする共有内容がありません。');
     return;

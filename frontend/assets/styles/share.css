@@ -72,6 +72,7 @@ td a[onclick*="share_button"]:hover {
   text-decoration: underline;
 }
 
-#shareUrl {
+/* Ensure textarea is visible regardless of other rules - updated selector to new id */
+#shareUrlTextField {
   display: block !important;
 }

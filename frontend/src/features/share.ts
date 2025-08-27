@@ -166,7 +166,7 @@ function displayShareLink(data: {
  */
 function handleShareFormatChange(): void {
   const selectedFormat = document.querySelector('input[name="shareFormat"]:checked') as HTMLInputElement;
-  const shareUrlInput = $('#shareUrl') as HTMLInputElement;
+  const shareUrlInput = $('#shareUrlTextField') as HTMLInputElement;
   const shareUrlOutput = $('#shareUrlInput') as HTMLInputElement;
   const shareUrlWithCommentOutput = $('#shareUrlWithCommentInput') as HTMLInputElement;
   
@@ -218,7 +218,7 @@ export function resetShareModal(): void {
  * 共有URL をクリップボードにコピー
  */
 export async function copyShareUrl(): Promise<void> {
-  const shareUrlInput = $('#shareUrl') as HTMLInputElement;
+  const shareUrlInput = $('#shareUrlTextField') as HTMLInputElement;
   
   if (!shareUrlInput || !shareUrlInput.value) {
     showError('コピーする共有URLがありません。');

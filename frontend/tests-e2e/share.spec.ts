@@ -49,7 +49,7 @@ test.describe('共有リンクフロー', () => {
     await page.locator('#generateShareLinkBtn').click();
     const resultPanel = page.locator('#shareResultPanel');
     await expect(resultPanel).toBeVisible();
-    const shareUrlInput = page.locator('#shareUrl');
+    const shareUrlInput = page.locator('#shareUrlTextField');
     await expect(shareUrlInput).toHaveValue(/http:\/\/localhost/);
     const shareUrl = await shareUrlInput.inputValue();
     // 生成直後にクリップボードへ反映されていることを確認
