@@ -80,9 +80,11 @@ class ApiAuth
     private function extractApiKey()
     {
         // Authorization: Bearer <api_key>
-        $headers = getallheaders();
-        if (isset($headers['Authorization'])) {
-            if (preg_match('/Bearer\s+(.+)/', $headers['Authorization'], $matches)) {
+        $headers = function_exists('getallheaders') ? getallheaders() : array();
+        if (!empty($headers)) {
+            $lower = array_change_key_case($headers, CASE_LOWER);
+            $authHeader = $lower['authorization'] ?? null;
+            if ($authHeader && preg_match('/Bearer\s+(.+)/i', $authHeader, $matches)) {
                 return $matches[1];
             }
         }
@@ -135,7 +137,7 @@ class ApiAuth
             require_once dirname(__DIR__) . '/core/utils.php';
         }
 
-        // CSRFトークン: ヘッダーまたはPOSTから取得（内蔵サーバーでも確実に拾う）
+        // CSRFトークン: ヘッダーまたはPOST/GETから取得（内蔵サーバーでも確実に拾う）
         $headers = function_exists('getallheaders') ? getallheaders() : array();
         $csrfHeader = $headers['X-CSRF-Token'] ?? $headers['x-csrf-token'] ?? null;
 
@@ -146,7 +148,8 @@ class ApiAuth
         }
 
         $csrfPost = $_POST['csrf_token'] ?? null;
-        $csrfToken = $csrfHeader ?: $csrfPost;
+        $csrfGet = $_GET['csrf_token'] ?? null;
+        $csrfToken = $csrfHeader ?: ($csrfPost ?: $csrfGet);
 
         if (!$csrfToken) {
             return false;
