@@ -1,8 +1,8 @@
-# phpUploader v4.3.6-roflsunriz
+# phpUploader v4.3.7-roflsunriz
 
 ## 🎉 概要
 
-phpUploader v4.3.6-roflsunriz は、モダン UI・再開可能アップロード・フォルダ管理・強力なセキュリティ・REST API を備えたファイルアップローダーです。README はインデックスのみを記載し、詳細は各ドキュメントへ分割しました。
+phpUploader v4.3.7-roflsunriz は、モダン UI・再開可能アップロード・フォルダ管理・強力なセキュリティ・REST API を備えたファイルアップローダーです。README はインデックスのみを記載し、詳細は各ドキュメントへ分割しました。
 
 ![cover](./image/cover.png)
 
@@ -29,7 +29,7 @@ phpUploader v4.3.6-roflsunriz は、モダン UI・再開可能アップロー�
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v4.3.6-roflsunriz)**
+### **コミュニティフォーク版 (v4.3.7-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/phpUploader/blob/main/LICENSE>
@@ -48,6 +48,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v2.0.0-roflsunriz...v4.3.6-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v2.0.0-roflsunriz...v4.3.7-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀
