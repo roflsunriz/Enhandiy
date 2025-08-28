@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PHP Uploader Ver.2.0 - メインエントリーポイント
+ * Enhandiy Ver.2.0 - メインエントリーポイント
  *
  * 簡易フレームワーク with モダンPHP対応
  */

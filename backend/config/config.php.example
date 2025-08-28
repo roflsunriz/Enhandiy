@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PHP Uploader Ver.4.3.7 設定ファイル
+ * Enhandiy Ver.4.3.7 設定ファイル
  *
  * このファイルおよびデータディレクトリは外部からアクセスできないように
  * .htaccess等で保護してください
@@ -33,7 +33,7 @@ class config {
             'api_rate_limit' => 100,    // 1時間あたりのリクエスト制限数（0で無制限）
 
             // アプリケーション設定
-            'title' => 'PHP Uploader',
+            'title' => 'Enhandiy',
             // アップローダ説明（任意）：空のままなら表示しない
             // 'urls' に複数のURLを指定可能。従来の 'url' は互換のためサポート。
             'uploader_info' => [
