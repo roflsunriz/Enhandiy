@@ -1,6 +1,6 @@
 /**
  * 型安全なAPIクライアント
- * PHPUploaderのAPI操作を型安全に行うためのクライアント
+ * EnhandiyのAPI操作を型安全に行うためのクライアント
  */
 
 import { post, get, getCsrfToken, request } from '../utils/http';

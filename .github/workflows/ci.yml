@@ -121,7 +121,7 @@ jobs:
       - name: Test Docker build
         run: |
           echo "🐳 Dockerビルドテストを実行中..."
-          docker build -t phpuploader-test ./infrastructure/docker/ || {
+          docker build -t Enhandiy-test ./infrastructure/docker/ || {
             echo "⚠️ Dockerビルドに問題がありましたが、継続します"
             exit 0
           }

@@ -1,1 +1,1 @@
-docker-compose -f "C:\Users\rofls\Documents\phpUploader\infrastructure\docker-compose.yaml" down
+docker-compose -f "C:\Users\rofls\Documents\Enhandiy\infrastructure\docker-compose.yaml" down

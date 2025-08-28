@@ -51,8 +51,8 @@ body:
     id: version
     attributes:
       label: 📦 バージョン
-      description: 使用しているphpUploaderのバージョン
-      placeholder: v1.2.1
+      description: 使用しているEnhandiyのバージョン
+      placeholder: v4.3.7
     validations:
       required: true
 
@@ -62,8 +62,6 @@ body:
       label: 🐘 PHP バージョン
       description: 使用しているPHPのバージョン
       options:
-        - PHP 7.4
-        - PHP 8.0
         - PHP 8.1
         - PHP 8.2
         - PHP 8.3
@@ -89,7 +87,7 @@ body:
     attributes:
       label: 🌐 ブラウザ情報
       description: 使用しているブラウザとバージョン（フロントエンドの問題の場合）
-      placeholder: Chrome 120.0.0.0, Firefox 121.0, Safari 17.0 など
+      placeholder: Chrome 139.0.7258.155, Firefox 142.0.1, Safari 18.6 など
 
   - type: textarea
     id: error-logs

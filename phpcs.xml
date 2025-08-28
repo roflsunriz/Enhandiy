@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="phpUploader Coding Standard">
-    <description>Coding standard for phpUploader project</description>
+<ruleset name="Enhandiy Coding Standard">
+    <description>Coding standard for Enhandiy project</description>
     
     <!-- 対象ファイル -->
     <file>.</file>

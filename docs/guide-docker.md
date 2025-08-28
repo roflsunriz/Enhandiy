@@ -4,8 +4,8 @@
 
 ```bash
 # 1. コミュニティフォーク版リポジトリをクローン（推奨）
-git clone https://github.com/roflsunriz/phpUploader.git
-cd phpUploader
+git clone https://github.com/roflsunriz/Enhandiy.git
+cd Enhandiy
 
 # または、オリジナル版
 # git clone https://github.com/shimosyan/phpUploader.git

@@ -1,6 +1,6 @@
-# phpUploader RESTful API ドキュメント (v4.3.1)
+# Enhandiy RESTful API ドキュメント (v4.3.1)
 
-> 本ドキュメントは phpUploader に同梱される RESTful API の使用方法をまとめたものです。
+> 本ドキュメントは Enhandiy に同梱される RESTful API の使用方法をまとめたものです。
 > ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/backend/public/api/index.php`（または Web ルート公開時は `/api/index.php`）を入口として自動ルーティングされます。
 > 以降の例では **相対パス** (`/api/...`) で表記します。
 > **注意:** Apache等のWebサーバーで `/api/*` へのアクセスを `/api/index.php?path=/api/*` にリライト（書き換え）する設定が必要です。これを行わない場合、本ドキュメント記載のような `/api/xxx` 形式のURLではAPIに正しくアクセスできません。サンプルの `.htaccess` や `apache` 設定例を参照してください。

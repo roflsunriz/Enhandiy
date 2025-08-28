@@ -4,7 +4,7 @@
 
 /**
  * Tus.io プロトコル対応アップロードAPI
- * phpUploader - Tus.io Server Implementation
+ * Enhandiy - Tus.io Server Implementation
  */
 
 // タイムアウト設定（本番環境用）

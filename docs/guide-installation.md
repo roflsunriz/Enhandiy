@@ -38,7 +38,7 @@ php -m | grep -E 'openssl|json|mbstring|hash|sqlite3'
 ## 新規インストール手順
 
 1. リリースを取得
-   - コミュニティフォーク（推奨）: `https://github.com/roflsunriz/phpUploader/releases`
+   - コミュニティフォーク（推奨）: `https://github.com/roflsunriz/Enhandiy/releases`
    - オリジナル: `https://github.com/shimosyan/phpUploader/releases`
 2. 設定ファイルテンプレートをコピー
    ```bash

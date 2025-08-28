@@ -1,13 +1,13 @@
-# phpUploader v4.3.0-roflsunriz リリースノート
+# Enhandiy v4.3.0 リリースノート
 
 **リリース日**: 2025年8月25日  
-**バージョン**: 4.3.0-roflsunriz  
+**バージョン**: 4.3.0  
 
 ---
 
 ## 🎉 概要
 
-phpUploader v4.3.0-roflsunriz は、本番環境での動作を保証するための変更を施したリリースとダウンロードキー認証フォームを追加したリリースです。共有リンク経由でのダウンロード時、ダウンロードキーがバイパスされないよう修正しました。また、dockerからフロントエンドアセットとバックエンドアセットのエイリアスを削除しました。その他、変更に伴って発生したバグを修正しました。
+Enhandiy v4.3.0 は、本番環境での動作を保証するための変更を施したリリースとダウンロードキー認証フォームを追加したリリースです。共有リンク経由でのダウンロード時、ダウンロードキーがバイパスされないよう修正しました。また、dockerからフロントエンドアセットとバックエンドアセットのエイリアスを削除しました。その他、変更に伴って発生したバグを修正しました。
 
 ---
 
@@ -30,9 +30,9 @@ phpUploader v4.3.0-roflsunriz は、本番環境での動作を保証するた�
 
 ## 📞 **サポート**
 
-- **GitHub Issues**: [https://github.com/roflsunriz/phpUploader/issues](https://github.com/roflsunriz/phpUploader/issues)
+- **GitHub Issues**: [https://github.com/roflsunriz/Enhandiy/issues](https://github.com/roflsunriz/Enhandiy/issues)
 - **ドキュメント**: [docs/](docs/) フォルダ内の各種ドキュメント
 
 ---
 
-**Full Changelog**: [v3.5.0...v4.3.0-roflsunriz](https://github.com/roflsunriz/phpUploader/compare/v3.5.0-roflsunriz...v4.3.0-roflsunriz)
+**Full Changelog**: [v3.5.0...v4.3.0](https://github.com/roflsunriz/Enhandiy/compare/v3.5.0-roflsunriz...v4.3.0)

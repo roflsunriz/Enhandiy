@@ -1,4 +1,4 @@
-Push-Location "C:\Users\rofls\Documents\phpUploader\frontend"
+Push-Location "C:\Users\rofls\Documents\Enhandiy\frontend"
 try {
   if (Test-Path package-lock.json) {
     npm ci

@@ -3,7 +3,7 @@
 /**
  * Tus.io セッション清理処理
  * 期限切れのアップロードセッションとチャンクファイルを削除
- * phpUploader - Tus.io Cleanup Script
+ * Enhandiy - Tus.io Cleanup Script
  */
 
 //configをインクルード

@@ -1,8 +1,8 @@
-# phpUploader v4.3.7-roflsunriz
+# Enhandiy v4.3.7
 
 ## 🎉 概要
 
-phpUploader v4.3.7-roflsunriz は、モダン UI・再開可能アップロード・フォルダ管理・強力なセキュリティ・REST API を備えたファイルアップローダーです。README はインデックスのみを記載し、詳細は各ドキュメントへ分割しました。
+Enhandiy v4.3.7 は、モダン UI・再開可能アップロード・フォルダ管理・強力なセキュリティ・REST API を備えたファイルアップローダーです。README はインデックスのみを記載し、詳細は各ドキュメントへ分割しました。
 
 ![cover](./image/cover.png)
 
@@ -22,17 +22,17 @@ phpUploader v4.3.7-roflsunriz は、モダン UI・再開可能アップロー�
 
 ## 🔗 関連
 
-- **リリース**: [リリースページ](https://github.com/roflsunriz/phpUploader/releases)
+- **リリース**: [リリースページ](https://github.com/roflsunriz/Enhandiy/releases)
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
 - **リリースノート**: `docs/RELEASE_NOTES_v*.md`
 
 
 ## 📄 License
 
-### **コミュニティフォーク版 (v4.3.7-roflsunriz)**
+### **コミュニティフォーク版 (v4.3.7)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
-<https://github.com/roflsunriz/phpUploader/blob/main/LICENSE>
+<https://github.com/roflsunriz/Enhandiy/blob/main/LICENSE>
 
 ### **オリジナル版**
 Copyright (c) 2025 shimosyan  
@@ -48,6 +48,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v2.0.0-roflsunriz...v4.3.7-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v2.0.0-roflsunriz...v4.3.7>
 
-phpUploaderをご利用いただき、ありがとうございます！ 🚀
+Enhandiyをご利用いただき、ありがとうございます！ 🚀

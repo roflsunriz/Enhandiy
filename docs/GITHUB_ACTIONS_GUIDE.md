@@ -9,7 +9,6 @@
 **目的**: リリース前の品質チェックを自動実行
 
 **トリガー**:
-- `feature/todo-improvements-backup` ブランチへのプッシュ
 - `release/*` ブランチへのプッシュ  
 - `main/master` ブランチへのプルリクエスト
 - 手動実行（任意のブランチ）
@@ -45,8 +44,8 @@ GitHub Actions タブ → "Pre-Release Quality Check" → "Run workflow"
 # 手動実行
 GitHub Actions タブ → "Tag and Release" → "Run workflow"
 # 入力項目:
-# - Version: 2.0.0-roflsunriz
-# - Branch: feature/todo-improvements-backup
+# - Version: 4.3.7
+# - Branch: main
 # - Pre-release: false (通常リリースの場合)
 ```
 
@@ -55,7 +54,7 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 **目的**: 完全自動化されたリリース作成
 
 **トリガー**:
-- `v*.*.*-roflsunriz` パターンのタグプッシュ
+- `v*.*.*` パターンのタグプッシュ
 - 手動実行（任意のタグ）
 
 **実行内容**:
@@ -66,8 +65,8 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 - リリース完了通知
 
 **生成されるアセット**:
-- `phpUploader-v2.0.0-roflsunriz-source.zip`
-- `phpUploader-v2.0.0-roflsunriz-source.tar.gz`
+- `Enhandiy-v4.3.7-source.zip`
+- `Enhandiy-v4.3.7-source.tar.gz`
 
 ## 🔄 推奨リリースフロー
 
@@ -76,7 +75,7 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 1. GitHub Actions タブに移動
 2. "Pre-Release Quality Check" を選択
 3. "Run workflow" をクリック
-4. Branch: feature/todo-improvements-backup を選択
+4. Branch: main を選択
 5. 実行して全チェックが✅になることを確認
 ```
 
@@ -86,8 +85,8 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 2. "Tag and Release" を選択
 3. "Run workflow" をクリック
 4. 以下を入力:
-   - Version: 2.0.0-roflsunriz
-   - Branch: feature/todo-improvements-backup
+   - Version: 4.3.7
+   - Branch: main
    - Pre-release: false
 5. 実行してタグが作成されることを確認
 ```
@@ -102,7 +101,7 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 ## 🛠️ カスタマイズ
 
 ### バージョン形式の変更
-現在の形式: `X.Y.Z-roflsunriz`
+現在の形式: `X.Y.Z`
 
 異なる形式を使用したい場合は、以下のファイルを編集:
 - `.github/workflows/release.yml` の `tags` パターン
@@ -132,14 +131,14 @@ permissions:
 
 ```bash
 # タグ作成
-git tag -a v4.0.4-roflsunriz -m "Release v4.0.4-roflsunriz"
-git push origin v4.0.4-roflsunriz
+git tag -a v4.3.7 -m "Release v4.3.7"
+git push origin v4.3.7
 
 # リリース作成
 
 # タグ削除
-git tag -d v4.0.4-roflsunriz
-git push origin :refs/tags/v4.0.4-roflsunriz
+git tag -d v4.3.7
+git push origin :refs/tags/v4.3.7
 ```
 
 ## 🐛 トラブルシューティング
@@ -148,15 +147,15 @@ git push origin :refs/tags/v4.0.4-roflsunriz
 
 **1. タグが既に存在する**
 ```
-❌ Tag v2.0.0-roflsunriz already exists
+❌ Tag v4.3.7 already exists
 ```
 **解決**: 異なるバージョン番号を使用するか、既存のタグを削除
 
 **2. バージョン形式エラー**
 ```
-❌ Invalid version format: 2.0.0
+❌ Invalid version format: 4.3.7
 ```
-**解決**: `-roflsunriz` サフィックスを追加 (例: `2.0.0-roflsunriz`)
+**解決**: バージョン形式を確認 (例: `4.3.7`)
 
 **3. リリースノートが見つからない**
 ```

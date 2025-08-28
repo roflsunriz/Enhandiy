@@ -3,11 +3,11 @@ name: 🚀 Automated Release
 on:
   push:
     tags:
-      - 'v*.*.*-roflsunriz'  # v4.0.0-roflsunriz などのタグでトリガー
+      - 'v*.*.*'  # v4.0.0 などのタグでトリガー
   workflow_dispatch:  # 手動実行も可能
     inputs:
       tag_name:
-        description: 'Release tag (e.g., v4.0.0-roflsunriz)'
+        description: 'Release tag (e.g., v4.0.0)'
         required: true
         type: string
       prerelease:
@@ -43,7 +43,7 @@ jobs:
         id: version
         run: |
           TAG_NAME="${{ steps.tag.outputs.tag_name }}"
-          # タグからバージョンを抽出 (v4.0.0-roflsunriz -> 4.0.0-roflsunriz)
+          # タグからバージョンを抽出 (v4.0.0 -> 4.0.0)
           VERSION=${TAG_NAME#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
@@ -85,18 +85,12 @@ jobs:
           
           # リリースボディを作成
           cat > release_body.md << 'EOF'
-          # phpUploader ${{ steps.tag.outputs.tag_name }} - Enhanced Community Fork
+          # Enhandiy ${{ steps.tag.outputs.tag_name }} - Official Release
           
-          ## 🎉 Release Highlights
-          
-          This is an enhanced community fork of phpUploader with significant improvements and new features.
-          
-          EOF
+          ## リリースノート
           
           # リリースノートファイルがあれば追加
           if [ -n "$NOTES_FILE" ] && [ -f "$NOTES_FILE" ]; then
-            echo "" >> release_body.md
-            echo "## 📋 Detailed Release Notes" >> release_body.md
             echo "" >> release_body.md
             cat "$NOTES_FILE" >> release_body.md
           fi
@@ -112,40 +106,38 @@ jobs:
           # インストール手順を追加
           cat >> release_body.md << 'EOF'
           
-          ## 📦 Installation
+          ## 📦 インストール方法
           
-          ### Download Options
-          - **Source Code**: Download the source code archive below
-          - **Git Clone**: `git clone https://github.com/roflsunriz/phpUploader.git`
-          - **Specific Tag**: `git clone -b ${{ steps.tag.outputs.tag_name }} https://github.com/roflsunriz/phpUploader.git`
+          ### ダウンロードオプション
+          - **Source Code**: 以下のソースコードアーカイブをダウンロード
+          - **Git Clone**: `git clone https://github.com/roflsunriz/Enhandiy.git`
+          - **特定のタグ**: `git clone -b ${{ steps.tag.outputs.tag_name }} https://github.com/roflsunriz/Enhandiy.git`
           
-          ### Quick Setup
-          1. Extract the downloaded archive
-          2. Copy `backend/config/config.php.example` to `backend/config/config.php`
-          3. Configure your settings in `backend/config/config.php`
-          4. Set up your web server to point to the project root
-          5. Access the application - database will be created automatically
+          ### クイックセットアップ
+          1. ダウンロードしたアーカイブを展開
+          2. `backend/config/config.php.example` を `backend/config/config.php` にコピー
+          3. `backend/config/config.php` に設定を設定
+          4. ウェブサーバーをbackend/publicのルートに設定
+          5. アプリケーションにアクセス - データベースは自動的に作成されます
           
-          ## 🔗 Links
-          - **Documentation**: See included `docs/` directory
-          - **API Reference**: `docs/API.md`
-          - **Original Project**: [shimosyan/phpUploader](https://github.com/shimosyan/phpUploader)
+          ## 🔗 リンク
+          - **ドキュメント**: `docs/` ディレクトリを参照
+          - **APIリファレンス**: `docs/API.md`
+          - **オリジナルプロジェクト**: [shimosyan/phpUploader](https://github.com/shimosyan/phpUploader)
           
-          ## 🙏 Attribution
-          This enhanced version builds upon the excellent foundation provided by the original phpUploader project.
+          ## 🙏 謝辞
+          この拡張バージョンは、元のphpUploaderプロジェクトが提供する優れた基盤に基づいて構築されています。
           
-          ---
-          
-          **Full Changelog**: https://github.com/roflsunriz/phpUploader/commits/${{ steps.tag.outputs.tag_name }}
+          **変更履歴**: https://github.com/roflsunriz/Enhandiy/commits/${{ steps.tag.outputs.tag_name }}
           EOF
           
-          echo "Release body prepared successfully"
+          echo "リリースボディを作成しました"
 
       - name: 🏗️ Build release assets
         run: |
           # プロジェクトのアーカイブを作成
           TAG_NAME="${{ steps.tag.outputs.tag_name }}"
-          PROJECT_NAME="phpUploader-${TAG_NAME}"
+          PROJECT_NAME="Enhandiy-${TAG_NAME}"
           
           # 不要なファイルを除外してアーカイブ作成
           mkdir -p dist
@@ -157,7 +149,7 @@ jobs:
           # ファイルサイズを確認
           ls -lh dist/
           
-          echo "Release assets built successfully"
+          echo "リリースアセットを作成しました"
 
       - name: 🚀 Create GitHub Release
         uses: actions/create-release@v1
@@ -166,7 +158,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.tag.outputs.tag_name }}
-          release_name: phpUploader ${{ steps.tag.outputs.tag_name }}
+          release_name: Enhandiy ${{ steps.tag.outputs.tag_name }}
           body_path: release_body.md
           draft: false
           prerelease: ${{ github.event.inputs.prerelease || false }}
@@ -177,8 +169,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/phpUploader-${{ steps.tag.outputs.tag_name }}-source.zip
-          asset_name: phpUploader-${{ steps.tag.outputs.tag_name }}-source.zip
+          asset_path: ./dist/Enhandiy-${{ steps.tag.outputs.tag_name }}-source.zip
+          asset_name: Enhandiy-${{ steps.tag.outputs.tag_name }}-source.zip
           asset_content_type: application/zip
 
       - name: 📎 Upload TAR.GZ Asset
@@ -187,26 +179,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/phpUploader-${{ steps.tag.outputs.tag_name }}-source.tar.gz
-          asset_name: phpUploader-${{ steps.tag.outputs.tag_name }}-source.tar.gz
+          asset_path: ./dist/Enhandiy-${{ steps.tag.outputs.tag_name }}-source.tar.gz
+          asset_name: Enhandiy-${{ steps.tag.outputs.tag_name }}-source.tar.gz
           asset_content_type: application/gzip
 
       - name: 📢 Release Summary
         run: |
-          echo "## 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎉 リリースが正常に作成されました！" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tag**: ${{ steps.tag.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "**Release URL**: ${{ steps.create_release.outputs.html_url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Release Assets" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 リリースアセット" >> $GITHUB_STEP_SUMMARY
           echo "- Source code (ZIP)" >> $GITHUB_STEP_SUMMARY
           echo "- Source code (TAR.GZ)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 クイックリンク" >> $GITHUB_STEP_SUMMARY
           echo "- [View Release](${{ steps.create_release.outputs.html_url }})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Download ZIP](https://github.com/roflsunriz/phpUploader/releases/download/${{ steps.tag.outputs.tag_name }}/phpUploader-${{ steps.tag.outputs.tag_name }}-source.zip)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Download TAR.GZ](https://github.com/roflsunriz/phpUploader/releases/download/${{ steps.tag.outputs.tag_name }}/phpUploader-${{ steps.tag.outputs.tag_name }}-source.tar.gz)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download ZIP](https://github.com/roflsunriz/Enhandiy/releases/download/${{ steps.tag.outputs.tag_name }}/Enhandiy-${{ steps.tag.outputs.tag_name }}-source.zip)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download TAR.GZ](https://github.com/roflsunriz/Enhandiy/releases/download/${{ steps.tag.outputs.tag_name }}/Enhandiy-${{ steps.tag.outputs.tag_name }}-source.tar.gz)" >> $GITHUB_STEP_SUMMARY
 
   notify-completion:
     name: 📬 Notify Completion
@@ -218,12 +210,12 @@ jobs:
       - name: 🎉 Success Notification
         if: needs.create-release.result == 'success'
         run: |
-          echo "✅ Release automation completed successfully!"
-          echo "🚀 New release is now available on GitHub"
+          echo "✅ リリース自動化が正常に完了しました！"
+          echo "🚀 新しいリリースがGitHubで利用可能になりました"
           
       - name: ❌ Failure Notification
         if: needs.create-release.result == 'failure'
         run: |
-          echo "❌ Release automation failed"
-          echo "Please check the logs and try again"
+          echo "❌ リリース自動化に失敗しました"
+          echo "ログを確認し、再度試行してください"
           exit 1
