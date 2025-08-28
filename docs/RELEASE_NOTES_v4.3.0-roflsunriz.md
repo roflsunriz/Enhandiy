@@ -35,4 +35,4 @@ Enhandiy v4.3.0 は、本番環境での動作を保証するための変更を�
 
 ---
 
-**Full Changelog**: [v3.5.0...v4.3.0](https://github.com/roflsunriz/Enhandiy/compare/v3.5.0-roflsunriz...v4.3.0)
+**Full Changelog**: [v4.3.0...v4.3.0](https://github.com/roflsunriz/Enhandiy/compare/v4.3.0...v4.3.0)
