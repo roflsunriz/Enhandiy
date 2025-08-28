@@ -422,6 +422,9 @@ data-bs-backdrop="static" data-bs-keyboard="false">
             <label for="shareUrlTextField">共有内容</label>
             <div class="input-group">
               <textarea class="form-control" id="shareUrlTextField" rows="3" readonly></textarea>
+              <!-- 本番配信中のビルド済み share.js が参照する隠しフィールド（値の受け皿） -->
+              <input type="hidden" id="shareUrlInput" value="">
+              <input type="hidden" id="shareUrlWithCommentInput" value="">
               <span class="input-group-btn va-top">
                 <button class="btn btn-success h-80" type="button" id="copyShareUrlBtn"
                         title="クリップボードにコピー">
