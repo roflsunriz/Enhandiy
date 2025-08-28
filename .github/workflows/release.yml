@@ -86,48 +86,56 @@ jobs:
           # リリースボディを作成
           cat > release_body.md << 'EOF'
           # Enhandiy ${{ steps.tag.outputs.tag_name }} - Official Release
-          
+
           ## リリースノート
-          
+          EOF
+
           # リリースノートファイルがあれば追加
           if [ -n "$NOTES_FILE" ] && [ -f "$NOTES_FILE" ]; then
             echo "" >> release_body.md
             cat "$NOTES_FILE" >> release_body.md
           fi
-          
+
           # 変更履歴を追加
           echo "" >> release_body.md
           echo "## 🔄 Recent Changes" >> release_body.md
           echo "" >> release_body.md
           echo '```' >> release_body.md
-          git log --oneline -10 >> release_body.md
+          git log --oneline -5 >> release_body.md
           echo '```' >> release_body.md
-          
+
+          # CHANGELOG.md が存在する場合、最新の3セクションを抽出して追加
+          if [ -f "CHANGELOG.md" ]; then
+            echo "" >> release_body.md
+            echo "## CHANGELOG - Latest 3 entries" >> release_body.md
+            awk 'BEGIN{count=0;printing=0} /^##\s/ {count++; if(count>3) exit; printing=1} { if(printing) print }' CHANGELOG.md >> release_body.md
+          fi
+
           # インストール手順を追加
           cat >> release_body.md << 'EOF'
-          
+
           ## 📦 インストール方法
-          
+
           ### ダウンロードオプション
           - **Source Code**: 以下のソースコードアーカイブをダウンロード
           - **Git Clone**: `git clone https://github.com/roflsunriz/Enhandiy.git`
           - **特定のタグ**: `git clone -b ${{ steps.tag.outputs.tag_name }} https://github.com/roflsunriz/Enhandiy.git`
-          
+
           ### クイックセットアップ
           1. ダウンロードしたアーカイブを展開
           2. `backend/config/config.php.example` を `backend/config/config.php` にコピー
           3. `backend/config/config.php` に設定を設定
           4. ウェブサーバーをbackend/publicのルートに設定
           5. アプリケーションにアクセス - データベースは自動的に作成されます
-          
+
           ## 🔗 リンク
           - **ドキュメント**: `docs/` ディレクトリを参照
           - **APIリファレンス**: `docs/API.md`
           - **オリジナルプロジェクト**: [shimosyan/phpUploader](https://github.com/shimosyan/phpUploader)
-          
+
           ## 🙏 謝辞
-          この拡張バージョンは、元のphpUploaderプロジェクトが提供する優れた基盤に基づいて構築されています。
-          
+          この拡張バージョンは、オリジナルのphpUploaderプロジェクトが提供する優れた基盤に基づいて構築されています。
+
           **変更履歴**: https://github.com/roflsunriz/Enhandiy/commits/${{ steps.tag.outputs.tag_name }}
           EOF
           
