@@ -82,19 +82,8 @@ jobs:
           TAG_NAME="${{ steps.tag.outputs.tag_name }}"
           VERSION="${{ steps.version.outputs.version }}"
           NOTES_FILE="${{ steps.release_notes.outputs.notes_file }}"
-          
           # リリースボディを作成
           cat > release_body.md << 'EOF'
-          # Enhandiy ${{ steps.tag.outputs.tag_name }} - Official Release
-
-          ## リリースノート
-          EOF
-
-          # リリースノートファイルがあれば追加
-          if [ -n "$NOTES_FILE" ] && [ -f "$NOTES_FILE" ]; then
-            echo "" >> release_body.md
-            cat "$NOTES_FILE" >> release_body.md
-          fi
 
           # 変更履歴を追加
           echo "" >> release_body.md
