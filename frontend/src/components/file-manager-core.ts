@@ -351,6 +351,18 @@ export class FileManagerCore {
       // 現在のフォルダIDを取得
       const urlParams = new URLSearchParams(window.location.search);
       const folderId = urlParams.get('folder') || '';
+
+      // 空の `folder` パラメータが残っている場合は削除して履歴をクリーンアップ
+      // （例: "?folder=" のような残骸を除去する）
+      if (urlParams.has('folder') && (urlParams.get('folder') === '' || urlParams.get('folder') === null)) {
+        urlParams.delete('folder');
+        const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + (window.location.hash || '');
+        try {
+          window.history.replaceState({}, '', newUrl);
+        } catch {
+          // replaceState が使えない環境では無視
+        }
+      }
       
       // RESTエンドポイントから複合データを取得
       const apiRes = await FileApi.getFiles(folderId || undefined, { includeFolders: true, includeBreadcrumb: true });

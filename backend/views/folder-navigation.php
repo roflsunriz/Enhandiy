@@ -19,7 +19,21 @@
       <div class="folder-breadcrumb">
         <label><?php echo render_icon('map-marker', 18, 'icon'); ?> 現在の場所:</label>
         <ol class="breadcrumb folder-breadcrumb-list">
-          <li><a href="?folder=" class="breadcrumb-link"><?php echo render_icon('home', 18, 'icon'); ?> ルート</a></li>
+          <?php
+            // ルートリンクはクエリを空にしない（余分な `?folder=` を残さない）
+            $requestUri = $_SERVER['REQUEST_URI'];
+            $path = parse_url($requestUri, PHP_URL_PATH);
+            $fragment = parse_url($requestUri, PHP_URL_FRAGMENT);
+            $rootUrl = $path;
+            if ($fragment !== null && $fragment !== '') {
+                $rootUrl .= '#' . $fragment;
+            }
+            ?>
+          <li>
+            <a href="<?php echo htmlspecialchars($rootUrl, ENT_QUOTES, 'UTF-8'); ?>" class="breadcrumb-link">
+              <?php echo render_icon('home', 18, 'icon'); ?> ルート
+            </a>
+          </li>
           <?php if (isset($breadcrumb) && is_array($breadcrumb)) : ?>
                 <?php foreach ($breadcrumb as $index => $bc) : ?>
                     <?php if ($index + 1 === count($breadcrumb)) : ?>

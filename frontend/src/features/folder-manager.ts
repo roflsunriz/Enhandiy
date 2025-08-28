@@ -175,7 +175,9 @@ class SimpleFolderManager {
   private updateBreadcrumb(breadcrumb: Array<{id: number, name: string}>): void {
     const breadcrumbContainer = document.querySelector('.breadcrumb');
     if (breadcrumbContainer) {
-      let breadcrumbHtml = `<li><a href="?folder=" class="breadcrumb-link">${actionIcons.home(16)} ルート</a></li>`;
+      // ルートに戻るリンクはクエリを空にしない（余分な `?folder=` を残さない）
+      const rootHref = window.location.pathname + window.location.hash;
+      let breadcrumbHtml = `<li><a href="${this.cleanUrlForRoot(rootHref)}" class="breadcrumb-link">${actionIcons.home(16)} ルート</a></li>`;
       
       breadcrumb.forEach((folder, index) => {
         if (index + 1 === breadcrumb.length) {
@@ -193,6 +195,22 @@ class SimpleFolderManager {
       });
       
       breadcrumbContainer.innerHTML = breadcrumbHtml;
+    }
+  }
+
+  /**
+   * ルートに戻るためのURLを生成（空の `?folder=` を残さない）
+   */
+  private cleanUrlForRoot(base: string): string {
+    // baseはパス＋ハッシュの組合せ
+    // 既にクエリが含まれている場合は取り除く
+    try {
+      const url = new URL(window.location.href);
+      // pathname + search + hash -> we want pathname + hash when returning root
+      return url.pathname + (url.hash || '');
+    } catch  {
+      // URL constructor が失敗した場合はシンプルに返却
+      return base;
     }
   }
 
