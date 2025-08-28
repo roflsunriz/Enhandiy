@@ -32,7 +32,7 @@ phpUploader v4.3.5-roflsunriz は、モダン UI・再開可能アップロー�
 ### **コミュニティフォーク版 (v4.3.5-roflsunriz)**
 Copyright (c) 2025 roflsunriz  
 Released under the MIT license  
-<https://github.com/roflsunriz/phpUploader/blob/main/MIT-LICENSE.txt>
+<https://github.com/roflsunriz/phpUploader/blob/main/LICENSE>
 
 ### **オリジナル版**
 Copyright (c) 2025 shimosyan  
@@ -48,6 +48,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v1.0.0...v4.3.5-roflsunriz>
+**Full Changelog**: <https://github.com/roflsunriz/phpUploader/compare/v2.0.0-roflsunriz...v4.3.5-roflsunriz>
 
 phpUploaderをご利用いただき、ありがとうございます！ 🚀
