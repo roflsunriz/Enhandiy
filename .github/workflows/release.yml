@@ -112,9 +112,10 @@ jobs:
           ### クイックセットアップ
           1. ダウンロードしたアーカイブを展開
           2. `backend/config/config.php.example` を `backend/config/config.php` にコピー
-          3. `backend/config/config.php` に設定を設定
+          3. `backend/config/config.php` の管理者マスターキー、暗号化キー、セッションソルトを設定。その他設定を調整
           4. ウェブサーバーをbackend/publicのルートに設定
-          5. アプリケーションにアクセス - データベースは自動的に作成されます
+          5. /api/*へのアクセスに/api/index.php?path=/api/*へのルーティングを設定
+          6. アプリケーションにアクセス - データベースは自動的に作成されます
 
           ## 🔗 リンク
           - **ドキュメント**: `docs/` ディレクトリを参照
