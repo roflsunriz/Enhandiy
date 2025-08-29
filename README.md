@@ -11,6 +11,7 @@ Enhandiy v4.3.7 は、モダン UI・再開可能アップロード・フォル�
 
 ## 📚 ドキュメントインデックス
 
+- **ギャラリー**: [gallery.md](docs/gallery.md)
 - **概要・主要機能**: [guide-overview.md](docs/guide-overview.md)
 - **インストールと要件**: [guide-installation.md](docs/guide-installation.md)
 - **設定ガイド**: [guide-configuration.md](docs/guide-configuration.md)
