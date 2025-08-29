@@ -5,6 +5,13 @@
 Enhandiy v4.3.7 は、モダン UI・再開可能アップロード・フォルダ管理・強力なセキュリティ・REST API を備えたファイルアップローダーです。README はインデックスのみを記載し、詳細は各ドキュメントへ分割しました。
 
 ![cover](./image/cover.png)
+![upload-form](./image/upload-form.png)
+![share](./image/share.png)
+![move-file](./image/move-file.png)
+![delete-file](./image/delete-file.png)
+![bulk-delete](./image/bulk-delete.png)
+![edit-comment](./image/edit-comment.png)
+![replace-file](./image/replace-file.png)
 
 > 注意: `/api/*` を利用するには Web サーバーで `/api/index.php?path=/api/*` へのリライト設定が必要です。詳細は [API.md](docs/API.md) の「付録: ルーティング設定例（Apache / Nginx）」を参照してください。
 
