@@ -28,6 +28,7 @@ import {
   mdiFormatSize,
   mdiClockOutline
 } from '@mdi/js';
+import { mdiPause, mdiPlay, mdiStop, mdiCloseCircleOutline as mdiCancel } from '@mdi/js';
 
 export type SvgSize = number | string;
 
@@ -47,7 +48,11 @@ export const actionIcons = {
   refresh: (size: SvgSize = 18) => svgPath(mdiRefresh, size),
   home: (size: SvgSize = 18) => svgPath(mdiHomeOutline, size),
   arrowUp: (size: SvgSize = 16) => svgPath(mdiArrowUp, size),
-  arrowDown: (size: SvgSize = 16) => svgPath(mdiArrowDown, size)
+  arrowDown: (size: SvgSize = 16) => svgPath(mdiArrowDown, size),
+  pause: (size: SvgSize = 18) => svgPath(mdiPause, size),
+  resume: (size: SvgSize = 18) => svgPath(mdiPlay, size),
+  stop: (size: SvgSize = 18) => svgPath(mdiStop, size),
+  cancel: (size: SvgSize = 18) => svgPath(mdiCancel, size)
 } as const;
 
 // メタデータ用の小型アイコン

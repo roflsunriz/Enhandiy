@@ -42,6 +42,9 @@ export interface UploadInfo {
   progress: number;
   lastTime?: number;
   lastBytes?: number;
+  lastSpeed?: number;
+  uploadedBytes?: number;
+  totalBytes?: number;
   completed?: boolean;
 }
 

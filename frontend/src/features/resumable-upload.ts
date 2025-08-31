@@ -220,6 +220,9 @@ export function uploadFileResumable(file: File, options: UploadOptions = {}): Pr
             uploadInfo.lastTime = currentTime;
             uploadInfo.lastBytes = bytesUploaded;
             uploadInfo.progress = percentage;
+            uploadInfo.lastSpeed = speed;
+            uploadInfo.uploadedBytes = bytesUploaded;
+            uploadInfo.totalBytes = bytesTotal;
             
             updateUploadProgress(file.name, percentage, bytesUploaded, bytesTotal, 'resumable', speed);
           }
@@ -284,6 +287,20 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
     const startTime = Date.now();
     let lastTime = startTime;
     let lastBytes = 0;
+
+    // グローバルトラッキングに追加（フォールバックでも集計できるように）
+    if (!resumableUploads[file.name]) {
+      resumableUploads[file.name] = {
+        file,
+        options,
+        progress: 0,
+        lastTime: startTime,
+        lastBytes: 0,
+        lastSpeed: 0,
+        uploadedBytes: 0,
+        totalBytes: file.size
+      };
+    }
     
     const xhr = new XMLHttpRequest();
     
@@ -301,6 +318,17 @@ async function fallbackUpload(file: File, options: UploadOptions): Promise<void>
           
           lastTime = currentTime;
           lastBytes = e.loaded;
+
+          // トラッキング更新
+          const info = resumableUploads[file.name];
+          if (info) {
+            info.progress = percentage;
+            info.lastTime = currentTime;
+            info.lastBytes = e.loaded;
+            info.lastSpeed = speed;
+            info.uploadedBytes = e.loaded;
+            info.totalBytes = e.total;
+          }
           
           updateUploadProgress(file.name, percentage, e.loaded, e.total, 'fallback', speed);
         }
@@ -887,8 +915,8 @@ function updateGlobalProgress(): void {
   // フォーム内プログレスバー要素
   const progressContainer = $('#progressContainer') as HTMLElement;
   const progressBar = $('#progressBar') as HTMLElement;
-  const progressText = $('#progressText') as HTMLElement;
-  const uploadStatus = $('#uploadStatus') as HTMLElement;
+  const progressPercent = $('#progressPercent') as HTMLElement;
+  const progressSpeed = $('#progressSpeed') as HTMLElement;
 
   if (totalUploads === 0) {
     // すべて完了、またはアップロード未開始
@@ -897,24 +925,30 @@ function updateGlobalProgress(): void {
   }
 
   let totalProgress = 0;
-  let completedCount = 0;
+  let totalSpeed = 0;
 
   Object.values(resumableUploads).forEach((uploadInfo) => {
     if (uploadInfo.progress !== undefined) {
       totalProgress += uploadInfo.progress;
     }
-    if (uploadInfo.completed) {
-      completedCount++;
+    if (typeof uploadInfo.lastSpeed === 'number' && uploadInfo.lastSpeed >= 0) {
+      totalSpeed += uploadInfo.lastSpeed;
     }
   });
 
   const averageProgress = Math.round(totalProgress / totalUploads);
 
   // プログレスバーを表示・更新
-  if (progressContainer) progressContainer.style.display = 'block';
+  if (progressContainer) {
+    removeClass(progressContainer, 'd-none');
+    progressContainer.style.display = 'block';
+  }
   if (progressBar) progressBar.style.width = averageProgress + '%';
-  if (progressText) progressText.textContent = averageProgress + '%';
-  if (uploadStatus) uploadStatus.textContent = '完了: ' + completedCount + '/' + totalUploads;
+  if (progressPercent) progressPercent.textContent = averageProgress + '%';
+
+  // 速度はアップロード中の合算（B/s）を表示
+  const aggregatedSpeed = totalSpeed > 0 ? formatSpeed(totalSpeed) : '計算中...';
+  if (progressSpeed) progressSpeed.textContent = aggregatedSpeed;
 }
 
 /**

@@ -43,11 +43,24 @@
       <input id="multipleFileInput" type="file" multiple class="d-none">
       <input id="folderInput" type="file" webkitdirectory multiple class="d-none">
 
-      <!-- 選択ファイル表示 -->
+      <!-- アップロード プログレス（ドラッグ＆ドロップ領域とファイルリストの間） -->
+      <div id="progressContainer" class="form-section d-none">
+        <div class="form-upload-progress" aria-label="アップロード進行状況">
+          <div id="progressBar" class="form-upload-progress-bar" role="progressbar"></div>
+          <div class="form-upload-progress-overlay">
+            <span id="progressPercent">0%</span>
+            <span class="sep">/</span>
+            <span id="progressSpeed">0 B/s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 選択ファイル表示（シンプル：ファイル名 + 方式インジケーター + 制御ボタン） -->
       <div id="selectedFilesContainer" class="selected-files-container" style="display:none">
-        <h5>選択されたファイル:</h5>
+        <div class="selected-files-actions text-right" style="margin-bottom:8px;">
+          <button type="button" class="btn btn-sm btn-default" id="clearFilesBtn">クリア</button>
+        </div>
         <div id="selectedFilesList" class="selected-files-list"></div>
-        <button type="button" class="btn btn-sm btn-default" id="clearFilesBtn">クリア</button>
       </div>
 
       <!-- アップロード制限情報 -->
@@ -189,18 +202,6 @@
         </div>
       </div>
       <?php endif; ?>
-
-      <!-- プログレスバーエリア -->
-      <div id="progressContainer" class="form-section d-none">
-        <h5>アップロード進行状況</h5>
-        <div class="progress">
-          <div id="progressBar" class="progress-bar progress-bar-info progress-bar-striped active" 
-               role="progressbar">
-            <span id="progressText">0%</span>
-          </div>
-        </div>
-        <div id="uploadStatus" class="text-muted"></div>
-      </div>
 
       <div class="form-section text-right">
         <button type="button" class="btn btn-default btn-lg d-none" id="cancelBtn">キャンセル</button>

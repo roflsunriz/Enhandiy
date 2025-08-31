@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Enhandiy Ver.4.3.8 設定ファイル
+ * Enhandiy Ver.4.3.9 設定ファイル
  *
  * このファイルおよびデータディレクトリは外部からアクセスできないように
  * .htaccess等で保護してください
@@ -269,7 +269,7 @@ class config {
     {
         // v4.0.0-roflsunriz: composer.jsonのversionフィールドは削除したため、
         // 固定バージョンを返す。リリース時に手動で更新する。
-        return '4.3.8';
+        return '4.3.9';
     }
 
     /**

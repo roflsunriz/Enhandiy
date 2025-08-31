@@ -9,7 +9,7 @@ import { showAlert } from '../utils/modal';
 import { UploadedFile, UploadOptions, UploadApiResponse } from '../types/upload';
 import { getCsrfToken } from '../utils/http';
 import { isPasswordTooWeak } from './password-strength';
-import { fileIconForExt } from '../utils/icons';
+import { actionIcons } from '../utils/icons';
 
 // グローバル変数
 let selectedFiles: UploadedFile[] = [];
@@ -191,73 +191,44 @@ function handleFiles(files: FileList): void {
   showSelectedFilesContainer();
 }
 
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 function updateFilesList(): void {
   const filesList = $('#selectedFilesList');
   if (!filesList) return;
   
   filesList.innerHTML = '';
   
-  selectedFiles.forEach((file, index) => {
+  selectedFiles.forEach((file) => {
     const fileItem = document.createElement('div');
     fileItem.className = 'file-item';
     fileItem.dataset.filename = file.name;
-    
-    const fileIcon = getFileIcon(file.name);
-    const fileName = file.name;
-    const fileSize = formatFileSize(file.size);
-    
+
+    // シンプル表示：方式インジケーター + 制御（大きめ）
     fileItem.innerHTML = `
       <div class="upload-method-indicator" style="display: none;"></div>
-      <span class="file-icon">${fileIcon}</span>
-      <div class="file-info">
-        <span class="file-name">${escapeHtml(fileName)}</span>
-        <span class="file-size">${fileSize}</span>
-      </div>
-      <div class="upload-controls">
-        <button type="button" class="upload-control-btn pause" title="一時停止" style="display: none;">
-          <span class="glyphicon glyphicon-pause"></span>
+      <span class="file-name">${escapeHtml(file.name)}</span>
+      <div class="upload-controls upload-controls--lg">
+        <button type="button" class="upload-control-btn upload-control-btn--lg pause" title="一時停止" style="display: none;">
+          ${actionIcons.pause(20)}
         </button>
-        <button type="button" class="upload-control-btn resume" title="再開" style="display: none;">
-          <span class="glyphicon glyphicon-play"></span>
+        <button type="button" class="upload-control-btn upload-control-btn--lg resume" title="再開" style="display: none;">
+          ${actionIcons.resume(20)}
         </button>
-        <button type="button" class="upload-control-btn cancel" title="キャンセル" style="display: none;">
-          <span class="glyphicon glyphicon-stop"></span>
+        <button type="button" class="upload-control-btn upload-control-btn--lg cancel" title="キャンセル" style="display: none;">
+          ${actionIcons.cancel(20)}
         </button>
-      </div>
-      <button type="button" class="file-remove" data-index="${index}">
-        <span class="glyphicon glyphicon-remove"></span>
-      </button>
-      <div class="upload-progress" style="display: none;">
-        <div class="upload-progress-bar"></div>
-      </div>
-      <div class="upload-status" style="display: none;"></div>
-      <div class="detailed-progress" style="display: none;">
-        <div class="progress-text">
-          <span class="progress-percentage">0%</span>
-          <span class="progress-size">0B / ${fileSize}</span>
-        </div>
-        <div class="speed-info">速度: 計算中...</div>
       </div>
     `;
     
     filesList.appendChild(fileItem);
   });
-  
-  // 削除ボタンイベント
-  const removeButtons = filesList.querySelectorAll('.file-remove');
-  removeButtons.forEach((button) => {
-    button.addEventListener('click', (e: Event) => {
-      if (isUploading) return;
-      const target = e.currentTarget as HTMLElement;
-      const index = parseInt(target.dataset.index || '0');
-      selectedFiles.splice(index, 1);
-      updateFilesList();
-      
-      if (selectedFiles.length === 0) {
-        hideSelectedFilesContainer();
-      }
-    });
-  });
+
+  // 旧: 個別削除ボタンは非表示のためイベントは不要
   
   // アップロード制御ボタンイベント（再開可能アップロード用）
   const pauseButtons = filesList.querySelectorAll('.upload-control-btn.pause');
@@ -292,21 +263,6 @@ function updateFilesList(): void {
       }
     });
   });
-}
-
-function getFileIcon(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase() || '';
-  return fileIconForExt(ext, 20);
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 function showSelectedFilesContainer(): void {
@@ -615,13 +571,6 @@ function handleUploadError(data: UploadApiResponse, filename: string): void {
   if (errorContainer) {
     errorContainer.style.display = 'block';
   }
-}
-
-// HTMLエスケープ関数
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 // グローバル変数として公開（既存のJavaScriptとの互換性のため）
