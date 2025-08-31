@@ -5,7 +5,7 @@
 
 import { FileData } from '../types/global';
 import { FileManagerCore } from './file-manager-core';
-import { actionIcons, fileIconForMime } from '../utils/icons';
+import { actionIcons, fileIconForMime, metaIcons } from '../utils/icons';
 
 export class FileManagerRenderer {
   private core: FileManagerCore;
@@ -262,16 +262,12 @@ export class FileManagerRenderer {
           ${file.comment ? `<div class="file-grid-item__comment">${this.escapeHtml(this.truncateText(file.comment, 50))}</div>` : ''}
         </div>
         
-        <!-- メタデータ部分（白背景、二段構成） -->
-        <div class="file-grid-item__metadata">
-          <div class="file-grid-item__metadata-row">
-            <div class="file-grid-item__size"><span class="meta-label">サイズ:</span> ${fileSize}</div>
-            <div class="file-grid-item__downloads"><span class="meta-label">DL:</span> ${this.formatDownloads(file)}</div>
-          </div>
-          <div class="file-grid-item__metadata-row">
-            <div class="file-grid-item__date"><span class="meta-label">投稿:</span> ${uploadDate}</div>
-            ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<div class="file-grid-item__folder"><span class="meta-label">場所:</span> ${this.getFolderPath(file.folder_id)}</div>` : ''}
-          </div>
+        <!-- メタデータ部分（2x2 グリッド・アイコンラベル） -->
+        <div class="file-grid-item__metadata metadata-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;align-items:center;">
+          <div class="meta-item meta-item--size">${metaIcons.size(16)} <span class="meta-text">${fileSize}</span></div>
+          <div class="meta-item meta-item--downloads">${metaIcons.downloads(16)} <span class="meta-text">${this.formatDownloads(file)}</span></div>
+          <div class="meta-item meta-item--date">${metaIcons.date(16)} <span class="meta-text">${uploadDate}</span></div>
+          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<div class=\"meta-item meta-item--folder\">${metaIcons.folder(16)} <span class=\"meta-text\">${this.getFolderPath(file.folder_id)}</span></div>` : ''}
         </div>
         
         <!-- アクションボタン部分（二段構成） -->

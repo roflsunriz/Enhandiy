@@ -107,7 +107,7 @@
   <div class="row">
     <div class="col-sm-12">
       <p class="text-right">@<a href="https://github.com/roflsunriz/Enhandiy" target="_blank">
-        roflsunriz/Enhandiy</a> v<?php echo $version ?? '4.3.7'; ?> - (GitHub)</p>
+        roflsunriz/Enhandiy</a> v<?php echo $version ?? '4.3.8'; ?> - (GitHub)</p>
     </div>
   </div>
 </div>

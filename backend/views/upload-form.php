@@ -20,7 +20,7 @@
              value="<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>">
 
       <!-- ドラッグ&ドロップエリア -->
-      <div id="dragDropArea" class="drag-drop-area">
+      <div id="dragDropArea" class="drag-drop-area drag-drop-area--compact">
         <div class="drag-drop-content">
           <div class="drag-drop-icon">
             <span class="glyphicon glyphicon-cloud-upload"></span>

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 - グリッド表示のUI調整
+- ドラッグ・アンド・ドロップエリアをコンパクト化
 
 ## [4.3.7] - 2025-08-28
 

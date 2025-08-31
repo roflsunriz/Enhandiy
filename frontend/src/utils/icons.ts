@@ -24,6 +24,10 @@ import {
   mdiArrowUp,
   mdiArrowDown
 } from '@mdi/js';
+import {
+  mdiFormatSize,
+  mdiClockOutline
+} from '@mdi/js';
 
 export type SvgSize = number | string;
 
@@ -44,6 +48,14 @@ export const actionIcons = {
   home: (size: SvgSize = 18) => svgPath(mdiHomeOutline, size),
   arrowUp: (size: SvgSize = 16) => svgPath(mdiArrowUp, size),
   arrowDown: (size: SvgSize = 16) => svgPath(mdiArrowDown, size)
+} as const;
+
+// メタデータ用の小型アイコン
+export const metaIcons = {
+  size: (size: SvgSize = 16) => svgPath(mdiFormatSize, size),
+  downloads: (size: SvgSize = 16) => svgPath(mdiDownload, size),
+  date: (size: SvgSize = 16) => svgPath(mdiClockOutline, size),
+  folder: (size: SvgSize = 16) => svgPath(mdiFolderOutline, size)
 } as const;
 
 export function messageIcon(type: 'success' | 'error' | 'warning' | 'info', size: SvgSize = 16): string {

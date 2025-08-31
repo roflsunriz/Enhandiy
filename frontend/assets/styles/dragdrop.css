@@ -463,6 +463,36 @@
 }
 
 /* レスポンシブ対応 */
+/* コンパクトバリアント */
+.drag-drop-area--compact {
+  padding: 16px 12px;
+  margin-bottom: 12px;
+}
+.drag-drop-area--compact .drag-drop-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.drag-drop-area--compact h4 {
+  font-size: 16px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.drag-drop-area--compact p {
+  margin-bottom: 8px;
+}
+.drag-drop-area--compact .btn {
+  margin: 0 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.drag-drop-area--compact .drag-drop-overlay-content .glyphicon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.drag-drop-area--compact .drag-drop-overlay-content p {
+  font-size: 14px;
+}
 @media (max-width: 768px) {
   .drag-drop-area {
     padding: 30px 15px;

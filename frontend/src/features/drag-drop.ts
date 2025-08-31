@@ -38,6 +38,8 @@ function initializeDragDrop(): void {
     return;
   }
 
+  // スタイル/クラスはテンプレートとfrontend/assetsのCSSで管理（JSでは何もしない）
+
   // ドラッグ&ドロップイベント
   dragDropArea.addEventListener('dragover', handleDragOver);
   dragDropArea.addEventListener('dragenter', handleDragEnter);
