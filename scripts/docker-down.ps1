@@ -1,1 +1,4 @@
-docker-compose -f "C:\Users\rofls\Documents\Enhandiy\infrastructure\docker-compose.yaml" down
+${ErrorActionPreference = "Stop"}
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$composePath = Join-Path $repoRoot 'infrastructure\docker-compose.yaml'
+docker-compose -f $composePath down

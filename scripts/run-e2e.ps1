@@ -19,65 +19,72 @@ function Wait-ForHttpOk {
   return $false
 }
 
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if (-not [System.IO.Path]::IsPathRooted($ComposeFilePath)) {
+  $ComposeFilePath = Join-Path $repoRoot $ComposeFilePath
+}
+
 if (-not $SkipUp) {
-  Write-Host "Docker起動中..."
+  Write-Host "Starting Docker..."
   docker compose -f $ComposeFilePath up -d
 }
 
-Write-Host "アプリ起動待ち: $BaseUrl"
+Write-Host "Waiting for app: $BaseUrl"
 if (-not (Wait-ForHttpOk -Url $BaseUrl -Timeout $TimeoutSec)) {
-  Write-Error "起動待ちタイムアウト: $BaseUrl"
+  Write-Error "Startup timeout: $BaseUrl"
   docker compose -f $ComposeFilePath logs | Get-Content
   docker compose -f $ComposeFilePath down
   exit 1
 }
 
-Push-Location frontend
+$frontendPath = Join-Path $repoRoot 'frontend'
+
+# Install frontend deps without changing current directory
+$p = Start-Process -FilePath 'npm.cmd' -ArgumentList 'install' -WorkingDirectory $frontendPath -NoNewWindow -Wait -PassThru
+if ($p.ExitCode -ne 0) { exit $p.ExitCode }
+
+$env:PLAYWRIGHT_BASE_URL = $BaseUrl
+
+# Try to fetch master key from container
 try {
-  npm install
-  $env:PLAYWRIGHT_BASE_URL = $BaseUrl
-  # Docker内のconfig.phpからマスターキーを取得して環境変数に渡す
-  try {
-    # Here-String を使ってクォート崩れを防止し、bash -lc 経由で php を実行
-    $phpInline = @"
+  $phpInline = @"
 php -r 'include "/var/www/html/backend/config/config.php"; $c=new config(); $cfg=$c->index(); echo $cfg["master"];'
 "@
-    $masterKey = (docker compose -f $ComposeFilePath exec -T php_apache bash -lc $phpInline) 2>$null
-    if ($LASTEXITCODE -eq 0) {
-      $masterKey = ($masterKey | Out-String).Trim()
-      if ($masterKey -and $masterKey.Length -gt 0) {
-        $env:PW_MASTER_KEY = $masterKey
-      } else {
-        Write-Warning "Master key not returned from container. Proceeding without PW_MASTER_KEY."
-      }
+  $masterKey = (docker compose -f $ComposeFilePath exec -T php_apache bash -lc $phpInline) 2>$null
+  if ($LASTEXITCODE -eq 0) {
+    $masterKey = ($masterKey | Out-String).Trim()
+    if ($masterKey -and $masterKey.Length -gt 0) {
+      $env:PW_MASTER_KEY = $masterKey
     } else {
-      Write-Warning "Failed to fetch master key from container. Proceeding without PW_MASTER_KEY."
+      Write-Warning "Master key not returned from container. Proceeding without PW_MASTER_KEY."
     }
-  } catch {}
-
-  # フォールバック: ホストの backend/config/config.php から 'master' を正規表現で抽出
-  if (-not $env:PW_MASTER_KEY) {
-    try {
-      $cfgPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'backend\config\config.php'
-      if (Test-Path $cfgPath) {
-        $content = Get-Content -Raw -LiteralPath $cfgPath
-        $m = [regex]::Match($content, "'master'\s*=>\s*'([^']+)'")
-        if ($m.Success) {
-          $env:PW_MASTER_KEY = $m.Groups[1].Value
-        } else {
-          Write-Warning "Could not parse master key from $cfgPath"
-        }
-      }
-    } catch {
-      Write-Warning "Failed to read master key from host config.php"
-    }
+  } else {
+    Write-Warning "Failed to fetch master key from container. Proceeding without PW_MASTER_KEY."
   }
-  npx playwright install chromium
-  npx cross-env PW_SLOWMO=1200 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test
-  $exitCode = $LASTEXITCODE
-} finally {
+} catch {}
 
+# Fallback: parse host config.php for 'master'
+if (-not $env:PW_MASTER_KEY) {
+  try {
+    $cfgPath = Join-Path $repoRoot 'backend\config\config.php'
+    if (Test-Path $cfgPath) {
+      $content = Get-Content -Raw -LiteralPath $cfgPath
+      $m = [regex]::Match($content, "'master'\s*=>\s*'([^']+)'")
+      if ($m.Success) {
+        $env:PW_MASTER_KEY = $m.Groups[1].Value
+      } else {
+        Write-Warning "Could not parse master key from $cfgPath"
+      }
+    }
+  } catch {
+    Write-Warning "Failed to read master key from host config.php"
+  }
 }
-exit $exitCode
 
+# Ensure Playwright is installed and run tests from frontend directory
+$p = Start-Process -FilePath 'npx.cmd' -ArgumentList 'playwright install chromium' -WorkingDirectory $frontendPath -NoNewWindow -Wait -PassThru
+if ($p.ExitCode -ne 0) { exit $p.ExitCode }
+
+$p = Start-Process -FilePath 'npx.cmd' -ArgumentList 'cross-env PW_SLOWMO=1200 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test' -WorkingDirectory $frontendPath -NoNewWindow -Wait -PassThru
+exit $p.ExitCode
 
