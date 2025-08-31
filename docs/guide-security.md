@@ -3,7 +3,7 @@
 ## 設定ファイルのセキュリティ
 
 - `backend/config/config.php` は機密情報を含むため、外部アクセスを遮断してください。
-- `master` と `key`, `session_salt` には推測困難なランダムな値を設定してください。
+- `master` と `key`, `session_salt` には推測困難なランダムな値を設定してください。32文字以上の長さを推奨します。
 - 本番環境では `backend/config`, `db`, `storage/logs`, `temp` ディレクトリへの直接アクセスを禁止してください。
 
 ### 推奨設定例

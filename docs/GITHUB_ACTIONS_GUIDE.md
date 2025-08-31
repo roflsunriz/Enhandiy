@@ -44,7 +44,7 @@ GitHub Actions タブ → "Pre-Release Quality Check" → "Run workflow"
 # 手動実行
 GitHub Actions タブ → "Tag and Release" → "Run workflow"
 # 入力項目:
-# - Version: 4.3.7
+# - Version: x.x.x
 # - Branch: main
 # - Pre-release: false (通常リリースの場合)
 ```
@@ -65,8 +65,8 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 - リリース完了通知
 
 **生成されるアセット**:
-- `Enhandiy-v4.3.7-source.zip`
-- `Enhandiy-v4.3.7-source.tar.gz`
+- `Enhandiy-vx.x.x-source.zip`
+- `Enhandiy-vx.x.x-source.tar.gz`
 
 ## 🔄 推奨リリースフロー
 
@@ -85,7 +85,7 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 2. "Tag and Release" を選択
 3. "Run workflow" をクリック
 4. 以下を入力:
-   - Version: 4.3.7
+   - Version: x.x.x
    - Branch: main
    - Pre-release: false
 5. 実行してタグが作成されることを確認
@@ -131,14 +131,14 @@ permissions:
 
 ```bash
 # タグ作成
-git tag -a v4.3.7 -m "Release v4.3.7"
-git push origin v4.3.7
+git tag -a vx.x.x -m "Release vx.x.x"
+git push origin vx.x.x
 
 # リリース作成
 
 # タグ削除
-git tag -d v4.3.7
-git push origin :refs/tags/v4.3.7
+git tag -d vx.x.x
+git push origin :refs/tags/vx.x.x
 ```
 
 ## 🐛 トラブルシューティング
@@ -147,15 +147,15 @@ git push origin :refs/tags/v4.3.7
 
 **1. タグが既に存在する**
 ```
-❌ Tag v4.3.7 already exists
+❌ Tag vx.x.x already exists
 ```
 **解決**: 異なるバージョン番号を使用するか、既存のタグを削除
 
 **2. バージョン形式エラー**
 ```
-❌ Invalid version format: 4.3.7
+❌ Invalid version format: vx.x.x
 ```
-**解決**: バージョン形式を確認 (例: `4.3.7`)
+**解決**: バージョン形式を確認 (例: `vx.x.x`)
 
 **3. リリースノートが見つからない**
 ```
@@ -179,8 +179,9 @@ git push origin :refs/tags/v4.3.7
 ## 🤝 貢献
 
 ワークフローの改善提案や不具合報告は、GitHubのIssuesまでお願いします。
+プルリクエストも歓迎します。
 
 ---
 
 **作成者**: @roflsunriz  
-**最終更新**: 2025/08/02
+**最終更新**: 2025/08/31

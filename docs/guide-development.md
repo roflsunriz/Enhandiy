@@ -14,7 +14,7 @@ cp backend/config/config.php.example backend/config/config.php
 
 ## バージョン管理
 
-- バージョンは `backend/config/config.php` で一元管理し、UI 下部に表示されます。
+- バージョンは `backend/config/config.php` で集中管理し、UI 下部に表示されます。
 - `backend/routes/router.php` に API バージョンがあるため、更新時に変更が必要です。
 - `backend/services/system-api-handler.php` にもバージョンがあるため、更新時に変更が必要です。
 - `docs/RELEASE_NOTES_*.md` にバージョンごとの変更点を記載しています。

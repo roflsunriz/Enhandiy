@@ -2,6 +2,7 @@
 
 > 本ドキュメントは Enhandiy に同梱される RESTful API の使用方法をまとめたものです。
 > ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/backend/public/api/index.php`（または Web ルート公開時は `/api/index.php`）を入口として自動ルーティングされます。
+> `/backend/public/` をルートディレクトリとしてルーティングするとスマートです。その場合、`https://example.com/` でアクセスできます。
 > 以降の例では **相対パス** (`/api/...`) で表記します。
 > **注意:** Apache等のWebサーバーで `/api/*` へのアクセスを `/api/index.php?path=/api/*` にリライト（書き換え）する設定が必要です。これを行わない場合、本ドキュメント記載のような `/api/xxx` 形式のURLではAPIに正しくアクセスできません。サンプルの `.htaccess` や `apache` 設定例を参照してください。
 
@@ -39,13 +40,13 @@ API キーは `backend/config/config.php` で設定します。
 ```php
 'api_enabled'   => true,
 'api_rate_limit' => 100, // 1時間あたりの最大リクエスト数 (0 で無制限)
-'api_keys' => [
-    // 任意のランダムキーを使用
-    'abcdEFGH1234' => [
-        'permissions' => ['read', 'write', 'delete', 'admin'],
-        'expires'     => null, // 又は '2025-12-31 23:59:59'
+    'api_keys' => [  // 有効なAPIキー（配列で複数設定可能）
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890' => [
+            'name' => 'Your Preffered API Key Name',
+            'permissions' => ['read', 'write', 'delete', 'admin'],
+            'expires' => null  // null = 無期限, または 'YYYY-MM-DD HH:mm:ss' 形式
+        ]
     ],
-],
 ```
 
 > **permissions** 列挙
@@ -122,6 +123,13 @@ curl -H "Authorization: Bearer <API_KEY>" \
   "https://example.com/api/files?page=1&limit=20&folder=3"
 ```
 
+デフォルトでは、
+
+```bash
+curl -H "Authorization: Bearer <API_KEY>" \
+  "https://example.com/api/index.php?path=/api/files?page=1&limit=20&folder=3&include=folders,breadcrumb"
+```
+
 #### 4.1.2 例: ファイルアップロード
 
 ```bash
@@ -134,6 +142,19 @@ curl -X POST -H "Authorization: Bearer <API_KEY>" \
      https://example.com/api/files
 ```
 
+同様にデフォルトでは、
+
+```bash
+curl -X POST -H "Authorization: Bearer <API_KEY>" \
+     -F "file=@./report.pdf" \
+     -F "delkey=test_key_2025" \
+     -F "replacekey=test_key_2025" \
+     -F "folder_id=3" \
+     -F "comment=月報" \
+     https://example.com/api/index.php?path=/api/files
+```
+
+
 #### 4.1.3 例: ファイルダウンロード
 
 ```bash
@@ -143,6 +164,15 @@ curl -o "downloaded_file.pdf" \
 
 # ダウンロード情報のみ取得（ヘッダー確認）
 curl -I https://example.com/api/files/123/download
+```
+
+同様にデフォルトでは、
+
+```bash
+curl -o "downloaded_file.pdf" \
+     https://example.com/api/index.php?path=/api/files/123/download
+
+curl -I https://example.com/api/index.php?path=/api/files/123/download
 ```
 
 補足: 共有リンクキー（`key`）を付けると `/download.php` の公開ダウンロードフローで制限が適用されます。
@@ -156,6 +186,15 @@ curl -X PUT -H "Authorization: Bearer <API_KEY>" \
      https://example.com/api/files/123
 ```
 
+同様にデフォルトでは、
+
+```bash
+curl -X PUT -H "Authorization: Bearer <API_KEY>" \
+     -F "file=@./new.pdf" \
+     -F "replacekey=<REPLACE_KEY>" \
+     https://example.com/api/index.php?path=/api/files/123
+```
+
 `master_key` を送るとマスターキーでも許可。必要に応じて `csrf_token` も送信可能です。
 
 #### 4.1.5 例: コメント更新とフォルダ移動（PATCH）
@@ -164,7 +203,18 @@ curl -X PUT -H "Authorization: Bearer <API_KEY>" \
 curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
      -H "Content-Type: application/json" \
      -d '{"comment":"メモ更新","folder_id":3}' \
+     -F "replacekey=<REPLACE_KEY>" \
      https://example.com/api/files/123
+```
+
+同様にデフォルトでは、
+
+```bash
+curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{"comment":"メモ更新","folder_id":3}' \
+     -F "replacekey=<REPLACE_KEY>" \
+     https://example.com/api/index.php?path=/api/files/123
 ```
 
 #### 4.1.6 例: 複数ファイル移動（PATCH /batch）
@@ -176,6 +226,15 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
      https://example.com/api/files/batch
 ```
 
+同様にデフォルトでは、
+
+```bash
+curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{"file_ids":[1,2,3],"folder_id":5}' \
+     https://example.com/api/index.php?path=/api/files/batch
+```
+
 #### 4.1.7 例: 共有設定更新とURL生成
 
 ```bash
@@ -183,6 +242,15 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
      -H "Content-Type: application/json" \
      -d '{"max_downloads":10, "expires_days":7}' \
      https://example.com/api/files/123/share
+```
+
+同様にデフォルトでは、
+
+```bash
+curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
+     -H "Content-Type: application/json" \
+     -d '{"max_downloads":10, "expires_days":7}' \
+     https://example.com/api/index.php?path=/api/files/123/share
 ```
 
 ### 4.2 フォルダ API
@@ -297,6 +365,7 @@ location ~ \.php$ {
 
 ## 7. CHANGELOG (簡易)
 
+* **4.3.8** – デフォルトの `api/index.php` を経由する場合について明記
 * **4.3.1** – 共有設定 API、バッチ移動/削除、TUS ルーティング、UI-CSRF 認証を明記
 * **4.0.1-roflsunriz** – ファイルダウンロード API を追加
 * **4.0.0-roflsunriz** – フォルダ構造整理（APIエンドポイントは変更なし）
