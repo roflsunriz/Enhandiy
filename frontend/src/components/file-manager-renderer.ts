@@ -267,7 +267,7 @@ export class FileManagerRenderer {
           <div class="meta-item meta-item--size">${metaIcons.size(16)} <span class="meta-text">${fileSize}</span></div>
           <div class="meta-item meta-item--downloads">${metaIcons.downloads(16)} <span class="meta-text">${this.formatDownloads(file)}</span></div>
           <div class="meta-item meta-item--date">${metaIcons.date(16)} <span class="meta-text">${uploadDate}</span></div>
-          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<div class=\"meta-item meta-item--folder\">${metaIcons.folder(16)} <span class=\"meta-text\">${this.getFolderPath(file.folder_id)}</span></div>` : ''}
+          ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `<div class="meta-item meta-item--folder">${metaIcons.folder(16)} <span class="meta-text">${this.getFolderPath(file.folder_id)}</span></div>` : ''}
         </div>
         
         <!-- アクションボタン部分（二段構成） -->

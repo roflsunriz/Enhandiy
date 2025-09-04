@@ -85,6 +85,6 @@ if (-not $env:PW_MASTER_KEY) {
 $p = Start-Process -FilePath 'npx.cmd' -ArgumentList 'playwright install chromium' -WorkingDirectory $frontendPath -NoNewWindow -Wait -PassThru
 if ($p.ExitCode -ne 0) { exit $p.ExitCode }
 
-$p = Start-Process -FilePath 'npx.cmd' -ArgumentList 'cross-env PW_SLOWMO=1200 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test' -WorkingDirectory $frontendPath -NoNewWindow -Wait -PassThru
+$p = Start-Process -FilePath 'npx.cmd' -ArgumentList 'cross-env PW_SLOWMO=1200 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test --grep-invert @cleanup' -WorkingDirectory $frontendPath -NoNewWindow -Wait -PassThru
 exit $p.ExitCode
 

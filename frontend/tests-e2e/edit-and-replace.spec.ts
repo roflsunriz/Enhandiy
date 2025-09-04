@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { test, expect } from '@playwright/test';
+import { delay } from './helpers/delay';
 test.setTimeout(120000);
 import { mkdtempSync, writeFileSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
@@ -84,7 +85,7 @@ async function closeToastIfVisible(page) {
 }
 
 async function getRowSizeBytes(row) {
-  const text = (await row.locator('td.file-list__size, .file-grid-item__size').first().textContent()) || '';
+  const text = (await row.locator('td.file-list__size, .meta-item--size span.meta-text').first().textContent()) || '';
   const match = text.replace(/[,\s]/g, '').match(/(\d+)(B|KB|MB|GB|TB)/i);
   if (!match) return 0;
   const value = parseInt(match[1], 10);
@@ -105,19 +106,25 @@ test.describe('コメント編集とファイル差し替え', () => {
     writeFileSync(repV2, 'v2-1234567890123456'); // 18 B
 
     await page.goto('/');
+    await delay('low');
 
     // ファイルをアップロード（差し替えキーと削除キー必須）
     await page.locator('button[data-bs-target="#uploadModal"]').click();
+    await delay('medium');
     await expect(page.locator('#uploadModal')).toBeVisible();
     await page.locator('#multipleFileInput').setInputFiles(origPath);
+    await delay('low');
     await page.locator('#delkeyInput').fill('del-key-edit');
+    await delay('low');
     await page.locator('#replaceKeyInput').fill('rep-key-edit');
+    await delay('low');
     
     // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    await delay('high');
     
     // アップロード処理を待つ
-    await page.waitForTimeout(3000);
+    await delay('high');
     
     // モーダルを閉じる
     const uploadModal = page.locator('#uploadModal');
@@ -125,7 +132,7 @@ test.describe('コメント編集とファイル差し替え', () => {
     if (await closeBtn.isVisible({ timeout: 1000 })) {
       await closeBtn.click();
     }
-    await page.waitForTimeout(1000);
+    await delay('medium');
     await closeAlertIfVisible(page);
 
     // 対象行取得（IDも確保）
@@ -139,19 +146,21 @@ test.describe('コメント編集とファイル差し替え', () => {
 
     // 1) コメント編集（差し替えキー）
     await fileRow.locator('.file-action-btn--edit').click();
+    await delay('medium');
     const editModal = page.locator('#editModal');
     await expect(editModal).toBeVisible();
     await page.locator('#editComment').fill('comment with replace key');
+    await delay('low');
     // どちらか一方のみ入力（置換キーを使用、マスターキーは空に）
     await page.locator('#editMasterKeyInput').fill('');
+    await delay('low');
     await page.locator('#editReplaceKeyInput').fill('rep-key-edit');
+    await delay('low');
     await Promise.all([
       waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#saveCommentBtn').click(),
     ]);
-    await closeAlertIfVisible(page);
-    await closeToastIfVisible(page);
-    await forceCloseModalIfOpen(page, '#editModal');
+
     // 反映待ち: 手動リフレッシュ
     await refreshAndWait(page);
     const rowAfterComment1 = await ensureRowVisibleById(page, fileId);
@@ -161,18 +170,20 @@ test.describe('コメント編集とファイル差し替え', () => {
 
     // 2) コメント編集（マスターキー）
     await fileRow.locator('.file-action-btn--edit').click();
+    await delay('medium');
     await expect(editModal).toBeVisible();
     await page.locator('#editComment').fill('comment with master key');
+    await delay('low');
     // マスターキーを使用、置換キーは空に
     await page.locator('#editReplaceKeyInput').fill('');
+    await delay('low');
     await page.locator('#editMasterKeyInput').fill(process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo');
+    await delay('low');
     await Promise.all([
       waitForApi(page, '/api/index.php?path=/api/files/'),
       page.locator('#saveCommentBtn').click(),
     ]);
-    await closeAlertIfVisible(page);
-    await closeToastIfVisible(page);
-    await forceCloseModalIfOpen(page, '#editModal');
+
     await refreshAndWait(page);
     const rowAfterComment2 = await ensureRowVisibleById(page, fileId);
     await expect(
@@ -181,20 +192,23 @@ test.describe('コメント編集とファイル差し替え', () => {
 
     // 3) ファイル差し替え（差し替えキー）
     await fileRow.locator('.file-action-btn--edit').click();
+    await delay('medium');
     await expect(editModal).toBeVisible();
     // 差し替えタブへ
     await page.locator('#replace-tab').click();
+    await delay('low');
     await page.locator('#replaceFileInput').setInputFiles(repV1);
+    await delay('low');
     // 置換キーを使用、マスターキーは空に
     await page.locator('#replaceMasterKeyInput').fill('');
+    await delay('low');
     await page.locator('#modalReplaceKeyInput').fill('rep-key-edit');
+    await delay('low');
     await Promise.all([
       waitForApi(page, '/api/index.php?path=/api/files/'),
-      page.locator('#replaceFileBtn').click(),
+      (async () => { await page.locator('#replaceFileBtn').click(); await delay('high'); })(),
     ]);
-    await closeAlertIfVisible(page);
-    await closeToastIfVisible(page);
-    await forceCloseModalIfOpen(page, '#editModal');
+
     await refreshAndWait(page);
 
     // ダウンロードして内容が new v1 になっていること
@@ -213,11 +227,9 @@ test.describe('コメント編集とファイル差し替え', () => {
     await page.locator('#replaceMasterKeyInput').fill(process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo');
     await Promise.all([
       waitForApi(page, '/api/index.php?path=/api/files/'),
-      page.locator('#replaceFileBtn').click(),
+      (async () => { await page.locator('#replaceFileBtn').click(); await delay('high'); })(),
     ]);
-    await closeAlertIfVisible(page);
-    await closeToastIfVisible(page);
-    await forceCloseModalIfOpen(page, '#editModal');
+
     await refreshAndWait(page);
 
     // ダウンロードして内容が new v2 になっていること

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { test, expect } from '@playwright/test';
+import { delay } from './helpers/delay';
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -9,6 +10,7 @@ import { join } from 'path';
 test.describe('アップロード→ダウンロード一連動作', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    await delay('low');
   });
 
   test('DLキー無しでアップロードし、ダウンロード可能', async ({ page, context }) => {
@@ -17,17 +19,22 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     writeFileSync(filePath, 'hello without key');
 
     await page.locator('button[data-bs-target="#uploadModal"]').click();
+    await delay('medium');
     await expect(page.locator('#uploadModal')).toBeVisible();
 
     await page.locator('#multipleFileInput').setInputFiles(filePath);
+    await delay('low');
     await page.locator('#delkeyInput').fill('delete-key-1234');
+    await delay('low');
     await page.locator('#replaceKeyInput').fill('replace-key-1234');
+    await delay('low');
     
     // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    await delay('high');
     
     // アップロード処理を待つ
-    await page.waitForTimeout(3000);
+    await delay('high');
     
     // モーダルを閉じる
     const uploadModal = page.locator('#uploadModal');
@@ -35,7 +42,7 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     if (await closeBtn.isVisible({ timeout: 1000 })) {
       await closeBtn.click();
     }
-    await page.waitForTimeout(1000);
+    await delay('medium');
 
     const listRowNoKey = page.locator('.file-list-item:has(.file-name:has-text("hello-no-key.txt"))').first();
     const gridItemNoKey = page.locator('.file-grid-item:has(.file-grid-item__name[title="hello-no-key.txt"])').first();
@@ -59,18 +66,24 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     writeFileSync(filePath, 'hello with dlkey');
 
     await page.locator('button[data-bs-target="#uploadModal"]').click();
+    await delay('medium');
     await expect(page.locator('#uploadModal')).toBeVisible();
 
     await page.locator('#multipleFileInput').setInputFiles(filePath);
+    await delay('low');
     await page.locator('#dlkeyInput').fill('dl-key-5678');
+    await delay('low');
     await page.locator('#delkeyInput').fill('delete-key-5678');
+    await delay('low');
     await page.locator('#replaceKeyInput').fill('replace-key-5678');
+    await delay('low');
     
     // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    await delay('high');
     
     // アップロード処理を待つ
-    await page.waitForTimeout(3000);
+    await delay('high');
     
     // モーダルを閉じる
     const uploadModal = page.locator('#uploadModal');
@@ -78,7 +91,7 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     if (await closeBtn.isVisible({ timeout: 1000 })) {
       await closeBtn.click();
     }
-    await page.waitForTimeout(1000);
+    await delay('medium');
 
     const listRowWithKey = page.locator('.file-list-item:has(.file-name:has-text("hello-with-key.txt"))').first();
     const gridItemWithKey = page.locator('.file-grid-item:has(.file-grid-item__name[title="hello-with-key.txt"])').first();
@@ -87,12 +100,15 @@ test.describe('アップロード→ダウンロード一連動作', () => {
     const targetRow = listRowWithKey.or(gridItemWithKey);
     const dlBtn = targetRow.locator('.file-action-btn--download').first();
     await dlBtn.click();
+    await delay('medium');
 
     const modal = page.locator('#downloadAuthModal');
     await expect(modal).toBeVisible();
 
     await page.locator('#downloadAuthDlKey').fill('dl-key-5678');
+    await delay('low');
     await page.locator('#downloadAuthConfirmBtn').click();
+    await delay('high');
 
     await expect(modal).toBeHidden({ timeout: 10000 });
   });

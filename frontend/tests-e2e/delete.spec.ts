@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { test, expect } from '@playwright/test';
+import { delay } from './helpers/delay';
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -49,22 +50,28 @@ async function refreshAll(page) {
 test.describe('削除機能', () => {
   test('個別削除: 削除キーで削除できる', async ({ page }) => {
     await page.goto('/');
+    await delay('low');
 
     const dir = mkdtempSync(join(tmpdir(), 'e2e-del-one-'));
     const filePath = join(dir, 'delete-me.txt');
     writeFileSync(filePath, 'please delete me');
 
     await page.locator('button[data-bs-target="#uploadModal"]').click();
+    await delay('medium');
     await expect(page.locator('#uploadModal')).toBeVisible();
     await page.locator('#multipleFileInput').setInputFiles(filePath);
+    await delay('low');
     await page.locator('#delkeyInput').fill('del-key-one');
+    await delay('low');
     await page.locator('#replaceKeyInput').fill('rep-key-one');
+    await delay('low');
     
     // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    await delay('high');
     
     // アップロード処理を待つ
-    await page.waitForTimeout(3000);
+    await delay('high');
     
     // モーダルを閉じる
     const uploadModal = page.locator('#uploadModal');
@@ -72,7 +79,7 @@ test.describe('削除機能', () => {
     if (await closeBtn.isVisible({ timeout: 1000 })) {
       await closeBtn.click();
     }
-    await page.waitForTimeout(1000);
+    await delay('medium');
     await closeAlertIfVisible(page);
 
     const row = page
@@ -81,10 +88,12 @@ test.describe('削除機能', () => {
     await expect(row).toBeVisible({ timeout: 15000 });
 
     await row.locator('.file-action-btn--delete').click();
+    await delay('medium');
 
     const modal = page.locator('#deleteAuthModal');
     await expect(modal).toBeVisible();
     await page.locator('#deleteAuthDelKey').fill('del-key-one');
+    await delay('low');
     
     // 削除確認ボタンをクリックしてAPIレスポンスを待つ
     await Promise.all([
@@ -109,6 +118,7 @@ test.describe('削除機能', () => {
 
   test('一括削除: 全選択→マスターキーで削除', async ({ page }) => {
     await page.goto('/');
+    await delay('low');
 
     // 2ファイル用意
     const dir = mkdtempSync(join(tmpdir(), 'e2e-del-bulk-'));
@@ -119,16 +129,21 @@ test.describe('削除機能', () => {
 
     // アップロード(複数指定)
     await page.locator('button[data-bs-target="#uploadModal"]').click();
+    await delay('medium');
     await expect(page.locator('#uploadModal')).toBeVisible();
     await page.locator('#multipleFileInput').setInputFiles([f1, f2]);
+    await delay('low');
     await page.locator('#delkeyInput').fill('del-key-bulk');
+    await delay('low');
     await page.locator('#replaceKeyInput').fill('rep-key-bulk');
+    await delay('low');
     
     // アップロードボタンをクリック
     await page.locator('#uploadBtn').click();
+    await delay('high');
     
     // アップロード処理を待つ
-    await page.waitForTimeout(3000);
+    await delay('high');
     
     // モーダルを閉じる
     const uploadModal = page.locator('#uploadModal');
@@ -136,7 +151,7 @@ test.describe('削除機能', () => {
     if (await closeBtn.isVisible({ timeout: 1000 })) {
       await closeBtn.click();
     }
-    await page.waitForTimeout(1000);
+    await delay('medium');
     await closeAlertIfVisible(page);
 
     // 2つ見えるまで待つ
@@ -151,22 +166,27 @@ test.describe('削除機能', () => {
     const checkboxA = rowA.locator('input.file-checkbox');
     const checkboxB = rowB.locator('input.file-checkbox');
     await checkboxA.check();
+    await delay('low');
     await checkboxB.check();
+    await delay('low');
 
     // 一括操作の削除ボタン
     const bulkDeleteBtn = page.locator('.file-manager__bulk-actions .bulk-action-btn--delete');
     await expect(bulkDeleteBtn).toBeVisible({ timeout: 10000 });
     await bulkDeleteBtn.click();
+    await delay('medium');
 
     // 確認→パスワード入力
     const confirmModal = page.locator('#confirmModal');
     await expect(confirmModal).toBeVisible();
     await page.locator('#confirmModalOk').click();
+    await delay('low');
 
     const pwModal = page.locator('#passwordModal');
     await expect(pwModal).toBeVisible();
     const masterKey = process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo';
     await page.locator('#passwordModalInput').fill(masterKey);
+    await delay('low');
     
     // パスワード確認ボタンをクリックしてAPIレスポンスを待つ
     await Promise.all([

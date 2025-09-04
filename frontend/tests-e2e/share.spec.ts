@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { test, expect } from '@playwright/test';
+import { delay } from './helpers/delay';
 import { mkdtempSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -15,16 +16,22 @@ test.describe('共有リンクフロー', () => {
     writeFileSync(filePath, 'share flow test');
 
     await page.goto('/');
+    await delay('low');
 
     // アップロードモーダルを開く
     await page.locator('button[data-bs-target="#uploadModal"]').click();
+    await delay('medium');
     await expect(page.locator('#uploadModal')).toBeVisible();
 
     // ファイル選択と必須キー入力
     await page.locator('#multipleFileInput').setInputFiles(filePath);
+    await delay('low');
     await page.locator('#delkeyInput').fill('delete-key-share');
+    await delay('low');
     await page.locator('#replaceKeyInput').fill('replace-key-share');
+    await delay('low');
     await page.locator('#uploadBtn').click();
+    await delay('high');
 
     // 一覧/グリッドに反映
     const listRow = page.locator('.file-list-item:has(.file-name:has-text("share-target.txt"))').first();
@@ -34,19 +41,24 @@ test.describe('共有リンクフロー', () => {
 
     // 共有ボタンでモーダル起動
     await fileRow.locator('.file-action-btn--share').first().click();
+    await delay('medium');
     const shareModal = page.locator('#shareLinkModal');
     await expect(shareModal).toBeVisible();
 
     // ダウンロード数のみ設定（ユーザー要望の流れに合わせる）
     await page.locator('#shareMaxDownloads').fill('2');
+    await delay('low');
     await expect(page.locator('#currentMaxDownloads')).toContainText('2');
 
     // 設定保存→共有リンク生成→クリップボード確認→コピーボタン→クリップボード確認
     await page.locator('#saveShareSettingsBtn').click();
+    await delay('medium');
     // 共有リンク生成（生成直後に自動でクリップボードへコピーされる仕様）
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://localhost' });
     await page.evaluate(() => navigator.clipboard.writeText('PREV'));
+    await delay('low');
     await page.locator('#generateShareLinkBtn').click();
+    await delay('high');
     const resultPanel = page.locator('#shareResultPanel');
     await expect(resultPanel).toBeVisible();
     const shareUrlInput = page.locator('#shareUrlTextField');
@@ -58,11 +70,13 @@ test.describe('共有リンクフロー', () => {
 
     // コピーボタンでもクリップボードに同内容がコピーされることを再確認
     await page.locator('#copyShareUrlBtn').click();
+    await delay('medium');
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied.trim()).toBe(shareUrl.trim());
 
     // モーダルを閉じる
     await page.locator('#shareLinkModal .btn[data-bs-dismiss="modal"]').click();
+    await delay('medium');
     await expect(shareModal).toBeHidden();
 
     // ダウンロード回数制限: 2回は成功、3回目で無効化
