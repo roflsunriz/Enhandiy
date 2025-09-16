@@ -52,3 +52,4 @@ docker-debug.md
 #playwright test reports
 frontend/playwright-report/
 frontend/test-results/
+test-results/
