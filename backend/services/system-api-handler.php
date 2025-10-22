@@ -32,7 +32,7 @@ class SystemApiHandler
             // 基本情報
             $statusInfo = [
                 'status' => 'ok',
-                'version' => '4.3.9',
+                'version' => '4.4.0',
                 'api_enabled' => $this->config['api_enabled'] ?? true,
                 'folders_enabled' => $this->config['folders_enabled'] ?? false,
                 'server_time' => date('c'),
