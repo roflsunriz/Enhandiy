@@ -522,14 +522,24 @@ class FileApiHandler
                 return;
             }
 
-            // データベース更新: 表示用はアップロード時のオリジナル名、保存用は実体ファイル名
+            // 新しいファイルのハッシュを計算
+            $newFileHash = hash_file('sha256', $newFilePath);
+
+            // データベース更新: 表示用はアップロード時のオリジナル名、保存用は実体ファイル名、ハッシュも更新
             $stmt = $pdo->prepare(
-                "UPDATE uploaded SET origin_file_name = ?, stored_file_name = ?, size = ?, updated_at = ? WHERE id = ?"
+                "UPDATE uploaded
+                    SET origin_file_name = ?,
+                        stored_file_name = ?,
+                        size = ?,
+                        file_hash = ?,
+                        updated_at = ?
+                 WHERE id = ?"
             );
             $stmt->execute(array(
                 $newFileName,
                 $storedFileName,
                 $fileSize,
+                $newFileHash,
                 time(),
                 $fileId
             ));

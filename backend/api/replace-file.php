@@ -157,16 +157,52 @@ try {
     }
 
     $tmp = $_FILES['file']['tmp_name'];
-    $dest = $dataDir . '/file_' . $fileId . '.' . $ext;
+
+    // 旧ファイルを削除（stored_file_name 優先、なければ旧形式）
+    if (!empty($existing['stored_file_name'])) {
+        $oldPath = $dataDir . '/' . $existing['stored_file_name'];
+    } else {
+        $oldExt = pathinfo($existing['origin_file_name'], PATHINFO_EXTENSION);
+        $oldPath = $dataDir . '/file_' . $fileId . '.' . $oldExt;
+    }
+    $realOld = realpath($oldPath);
+    $realData = realpath($dataDir);
+    if ($realOld !== false && $realData !== false && strpos($realOld, $realData) === 0 && file_exists($oldPath)) {
+        @unlink($oldPath);
+    }
+
+    // 保存ファイル名の決定（設定に応じてハッシュ化 or 旧形式）
+    if (isset($config['encrypt_filename']) && $config['encrypt_filename']) {
+        $hashed = SecurityUtils::generateSecureFileName($fileId, $originalName);
+        $storedFileName = SecurityUtils::generateStoredFileName($hashed, $ext);
+        $dest = $dataDir . '/' . $storedFileName;
+    } else {
+        $storedFileName = 'file_' . $fileId . '.' . $ext;
+        $dest = $dataDir . '/' . $storedFileName;
+    }
+
     if (!move_uploaded_file($tmp, $dest)) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Failed to save file']);
         exit;
     }
 
-    // データベース更新
-    $stmt = $pdo->prepare('UPDATE uploaded SET origin_file_name = ?, size = ? WHERE id = ?');
-    $updateSuccess = $stmt->execute([$originalName, $fileSize, $fileId]);
+    // 新ファイルのハッシュを計算
+    $fileHash = hash_file('sha256', $dest);
+
+    // データベース更新（ファイル名・サイズ・保存名・ハッシュ・更新時刻）
+    $stmt = $pdo->prepare(
+        'UPDATE uploaded SET origin_file_name = ?, stored_file_name = ?, size = ?, ' .
+        'file_hash = ?, updated_at = ? WHERE id = ?'
+    );
+    $updateSuccess = $stmt->execute([
+        $originalName,
+        $storedFileName,
+        $fileSize,
+        $fileHash,
+        time(),
+        $fileId
+    ]);
 
     if ($updateSuccess) {
         // 履歴記録（ファイル差し替え履歴）

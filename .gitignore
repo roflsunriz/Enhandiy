@@ -53,3 +53,4 @@ docker-debug.md
 frontend/playwright-report/
 frontend/test-results/
 test-results/
+.playwright-mcp/
