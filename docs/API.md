@@ -1,4 +1,4 @@
-# Enhandiy RESTful API ドキュメント (v4.3.1)
+# Enhandiy RESTful API ドキュメント (v4.4.1)
 
 > 本ドキュメントは Enhandiy に同梱される RESTful API の使用方法をまとめたものです。
 > ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/backend/public/api/index.php`（または Web ルート公開時は `/api/index.php`）を入口として自動ルーティングされます。
@@ -101,10 +101,10 @@ UI-CSRF 認証について
 
 | メソッド | パス | 権限 | 説明 |
 |--|--|--|--|
-| GET    | `/api/files` | read | ファイル一覧取得（`page`,`limit`,`folder`,`include=folders,breadcrumb`） |
-| POST   | `/api/files` | write | ファイルアップロード（multipart/form-data） |
-| GET    | `/api/files/{id}` | read | 単一ファイル情報取得 |
-| GET    | `/api/files/{id}/download` | なし | ファイルダウンロード（バイナリ）。このルートは認証不要 |
+| GET    | `/api/files` | なし | ファイル一覧取得（`page`,`limit`,`folder`,`include=folders,breadcrumb`）。認証不要 |
+| POST   | `/api/files` | なし | ファイルアップロード（multipart/form-data）。認証不要 |
+| GET    | `/api/files/{id}` | なし | 単一ファイル情報取得。認証不要 |
+| GET    | `/api/files/{id}/download` | なし | ファイルダウンロード（バイナリ）。認証不要 |
 | PUT    | `/api/files/{id}` | write | 既存ファイルの差し替え（multipart/form-data） |
 | POST   | `/api/files/{id}/replace` | write | 既存ファイルの差し替え（互換エイリアス） |
 | PATCH  | `/api/files/{id}` | write | コメント・フォルダ移動更新（`comment`, `folder_id`） |
@@ -119,21 +119,21 @@ UI-CSRF 認証について
 #### 4.1.1 例: ファイル一覧取得
 
 ```bash
-curl -H "Authorization: Bearer <API_KEY>" \
-  "https://example.com/api/files?page=1&limit=20&folder=3"
+# 認証不要
+curl "https://example.com/api/files?page=1&limit=20&folder=3"
 ```
 
 デフォルトでは、
 
 ```bash
-curl -H "Authorization: Bearer <API_KEY>" \
-  "https://example.com/api/index.php?path=/api/files?page=1&limit=20&folder=3&include=folders,breadcrumb"
+curl "https://example.com/api/index.php?path=/api/files?page=1&limit=20&folder=3&include=folders,breadcrumb"
 ```
 
 #### 4.1.2 例: ファイルアップロード
 
 ```bash
-curl -X POST -H "Authorization: Bearer <API_KEY>" \
+# 認証不要
+curl -X POST \
      -F "file=@./report.pdf" \
      -F "delkey=test_key_2025" \
      -F "replacekey=test_key_2025" \
@@ -145,7 +145,7 @@ curl -X POST -H "Authorization: Bearer <API_KEY>" \
 同様にデフォルトでは、
 
 ```bash
-curl -X POST -H "Authorization: Bearer <API_KEY>" \
+curl -X POST \
      -F "file=@./report.pdf" \
      -F "delkey=test_key_2025" \
      -F "replacekey=test_key_2025" \
@@ -365,6 +365,7 @@ location ~ \.php$ {
 
 ## 7. CHANGELOG (簡易)
 
+* **4.4.1** – ファイル一覧取得・ファイルアップロード・単一ファイル取得を認証不要に変更
 * **4.3.8** – デフォルトの `api/index.php` を経由する場合について明記
 * **4.3.1** – 共有設定 API、バッチ移動/削除、TUS ルーティング、UI-CSRF 認証を明記
 * **4.0.1-roflsunriz** – ファイルダウンロード API を追加

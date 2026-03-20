@@ -136,13 +136,12 @@ jobs:
         run: |
           echo "📚 Checking documentation..."
           
-          # リリースノートの確認
-          RELEASE_NOTES=$(find . -name "RELEASE_NOTES*.md" | head -1)
-          if [ -n "$RELEASE_NOTES" ]; then
-            echo "✅ Release notes found: $RELEASE_NOTES"
-            wc -l "$RELEASE_NOTES"
+          # CHANGELOG.md の確認
+          if [ -f "CHANGELOG.md" ]; then
+            echo "✅ CHANGELOG.md found"
+            wc -l "CHANGELOG.md"
           else
-            echo "⚠️  Release notes not found"
+            echo "⚠️  CHANGELOG.md not found"
           fi
           
           # ライセンスファイルの確認
@@ -225,14 +224,11 @@ jobs:
           COMPOSER_VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
           echo "Composer version: $COMPOSER_VERSION"
           
-          # リリースノートファイルの確認
-          EXPECTED_NOTES="RELEASE_NOTES_v${COMPOSER_VERSION}.md"
-          if [ -f "$EXPECTED_NOTES" ]; then
-            echo "✅ Release notes found: $EXPECTED_NOTES"
+          # CHANGELOG.md に該当バージョンのエントリがあるか確認
+          if grep -q "\[${COMPOSER_VERSION}\]" CHANGELOG.md 2>/dev/null; then
+            echo "✅ CHANGELOG.md contains entry for version $COMPOSER_VERSION"
           else
-            echo "⚠️  Expected release notes file not found: $EXPECTED_NOTES"
-            echo "Available release notes:"
-            ls -la RELEASE_NOTES*.md 2>/dev/null || echo "No release notes found"
+            echo "⚠️  CHANGELOG.md does not contain entry for version $COMPOSER_VERSION"
           fi
 
       - name: 🎯 Release Checklist
@@ -246,7 +242,7 @@ jobs:
             "config.php.example:$([ -f backend/config/config.php.example ] && echo '✅' || echo '❌')"
             "README.md:$([ -f README.md ] && echo '✅' || echo '❌')"
             "License file:$([ -f LICENSE ] || [ -f MIT-LICENSE.txt ] && echo '✅' || echo '❌')"
-            "Release notes:$(ls RELEASE_NOTES*.md >/dev/null 2>&1 && echo '✅' || echo '❌')"
+            "CHANGELOG.md:$([ -f CHANGELOG.md ] && echo '✅' || echo '❌')"
             "API documentation:$([ -f docs/API.md ] && echo '✅' || echo '❌')"
           )
           

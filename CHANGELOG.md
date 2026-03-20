@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.4.1] - 2026-03-21
+
+### Changed
+
+- ファイル一覧取得（GET /api/files）、ファイルアップロード（POST /api/files）、単一ファイル取得（GET /api/files/{id}）を認証不要に変更
+- リリースノート作成をCHANGELOG.mdに一本化（RELEASE_NOTES*.md関連コードを削除）
+
 ## [4.4.0] - 2025-10-22
 
 ### Fixed

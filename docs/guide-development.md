@@ -17,8 +17,7 @@ cp backend/config/config.php.example backend/config/config.php
 - バージョンは `backend/config/config.php` で集中管理し、UI 下部に表示されます。
 - `backend/routes/router.php` に API バージョンがあるため、更新時に変更が必要です。
 - `backend/services/system-api-handler.php` にもバージョンがあるため、更新時に変更が必要です。
-- `docs/RELEASE_NOTES_*.md` にバージョンごとの変更点を記載しています。
-- `CHANGELOG.md` と `README.md` もバージョンに合わせて適宜更新してください。
+- `CHANGELOG.md` にバージョンごとの変更点を記載しています。`README.md` もバージョンに合わせて適宜更新してください。
 
 ### バージョン確認テスト（Docker）
 

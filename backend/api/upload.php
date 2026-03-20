@@ -58,14 +58,13 @@ try {
         $responseHandler->error('No file selected.', [], 400);
     }
 
-    // CSRFトークンの検証
-    $receivedToken = $_POST['csrf_token'] ?? null;
-
-    // CSRFトークンの検証
-
-    if (!SecurityUtils::validateCSRFToken($receivedToken)) {
-        $logger->warning('CSRF token validation failed', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
-        $responseHandler->error('Invalid request. Please reload the page.', [], 403);
+    // CSRFトークンの検証（APIモードでは認証不要のためスキップ）
+    if (!$isApiMode) {
+        $receivedToken = $_POST['csrf_token'] ?? null;
+        if (!SecurityUtils::validateCSRFToken($receivedToken)) {
+            $logger->warning('CSRF token validation failed', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
+            $responseHandler->error('Invalid request. Please reload the page.', [], 403);
+        }
     }
 
     // アップロードレート制限チェック

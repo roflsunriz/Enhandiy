@@ -108,11 +108,7 @@ GitHub Actions タブ → "Tag and Release" → "Run workflow"
 - `.github/workflows/tag-and-release.yml` の バージョン検証正規表現
 
 ### リリースノートのカスタマイズ
-リリースノートは以下の順序で検索されます:
-1. `RELEASE_NOTES_v{version}.md`
-2. `RELEASE_NOTES_{tag}.md`
-3. `CHANGELOG.md`
-4. デフォルトテンプレート
+リリースノートは `CHANGELOG.md` から自動的に最新3エントリを抽出して生成されます。
 
 ### アセットの追加
 `release.yml` の "Build release assets" ステップを編集して、追加のファイルやアーカイブを作成できます。

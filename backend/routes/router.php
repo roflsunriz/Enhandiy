@@ -48,10 +48,10 @@ class ApiRouter
      */
     private function setupRoutes()
     {
-        // ファイル操作エンドポイント
-        $this->addRoute('GET', '/api/files', 'handleGetFiles', array('read'), 'file');
-        $this->addRoute('POST', '/api/files', 'handlePostFile', array('write'), 'file');
-        $this->addRoute('GET', '/api/files/(\d+)', 'handleGetFile', array('read'), 'file');
+        // ファイル操作エンドポイント（一覧・アップロード・単一取得は認証不要）
+        $this->addRoute('GET', '/api/files', 'handleGetFiles', array(), 'file');
+        $this->addRoute('POST', '/api/files', 'handlePostFile', array(), 'file');
+        $this->addRoute('GET', '/api/files/(\d+)', 'handleGetFile', array(), 'file');
         // ダウンロードは共有リンク前提でトークン検証を内部で行うため、ルーターの権限チェックは不要
         $this->addRoute('GET', '/api/files/(\d+)/download', 'handleDownloadFile', array(), 'file');
         $this->addRoute('DELETE', '/api/files/(\d+)', 'handleDeleteFile', array('delete'), 'file');
@@ -127,13 +127,19 @@ class ApiRouter
             // Tus.io エンドポイントはtus側で検証するため、ここでの認証はスキップ
             $isTusEndpoint = (preg_match('#^/api/tus-upload($|/)#', $path) === 1);
 
-            // ダウンロードはAPIキー不要（仕様）: GET /api/files/{id}/download を無認証で許可
-            $isPublicDownload = (
-                $_SERVER['REQUEST_METHOD'] === 'GET'
-                && preg_match('#^/api/files/\d+/download$#', $path) === 1
+            // 公開エンドポイント: 認証不要で許可するルート
+            $isPublicEndpoint = (
+                // GET /api/files (ファイル一覧)
+                ($method === 'GET' && $path === '/api/files')
+                // POST /api/files (ファイルアップロード)
+                || ($method === 'POST' && $path === '/api/files')
+                // GET /api/files/{id} (単一ファイル情報)
+                || ($method === 'GET' && preg_match('#^/api/files/\d+$#', $path) === 1)
+                // GET /api/files/{id}/download (ファイルダウンロード)
+                || ($method === 'GET' && preg_match('#^/api/files/\d+/download$#', $path) === 1)
             );
 
-            if (!$isTusEndpoint && !$isPublicDownload) {
+            if (!$isTusEndpoint && !$isPublicEndpoint) {
                 // 通常のAPIはここで認証
                 if (!$this->auth->authenticate()) {
                     return; // 認証失敗時はauth.phpでレスポンス済み
@@ -242,7 +248,7 @@ class ApiRouter
             'file_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'file')),
             'folder_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'folder')),
             'system_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'system')),
-            'api_version' => '4.4.0'
+            'api_version' => '4.4.1'
         ];
     }
 }

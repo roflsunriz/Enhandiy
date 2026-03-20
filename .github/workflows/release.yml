@@ -48,40 +48,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
-      - name: 🔍 Find release notes
-        id: release_notes
-        run: |
-          TAG_NAME="${{ steps.tag.outputs.tag_name }}"
-          VERSION="${{ steps.version.outputs.version }}"
-          
-          # リリースノートファイルを探す（複数のパターンを試す）
-          if [ -f "docs/RELEASE_NOTES_v${VERSION}.md" ]; then
-            NOTES_FILE="docs/RELEASE_NOTES_v${VERSION}.md"
-          elif [ -f "docs/RELEASE_NOTES_${VERSION}.md" ]; then
-            NOTES_FILE="docs/RELEASE_NOTES_${VERSION}.md"
-          elif [ -f "docs/RELEASE_NOTES_${TAG_NAME}.md" ]; then
-            NOTES_FILE="docs/RELEASE_NOTES_${TAG_NAME}.md"
-          elif [ -f "CHANGELOG.md" ]; then
-            NOTES_FILE="CHANGELOG.md"
-          else
-            echo "No release notes found, using default"
-            NOTES_FILE=""
-          fi
-          
-          echo "notes_file=$NOTES_FILE" >> $GITHUB_OUTPUT
-          echo "Found release notes: $NOTES_FILE"
-          echo "Searched patterns:"
-          echo "  - RELEASE_NOTES_v${VERSION}.md"
-          echo "  - RELEASE_NOTES_${VERSION}.md"
-          echo "  - RELEASE_NOTES_${TAG_NAME}.md"
-          echo "  - CHANGELOG.md"
-
       - name: 📝 Prepare release body
         id: release_body
         run: |
           TAG_NAME="${{ steps.tag.outputs.tag_name }}"
           VERSION="${{ steps.version.outputs.version }}"
-          NOTES_FILE="${{ steps.release_notes.outputs.notes_file }}"
           # リリースボディを作成（変更履歴から開始）
           {
             echo "## 🔄 Recent Changes"
