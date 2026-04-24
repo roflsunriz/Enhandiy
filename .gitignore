@@ -54,3 +54,7 @@ frontend/playwright-report/
 frontend/test-results/
 test-results/
 .playwright-mcp/
+
+# Claude / Claw local files
+.claw/
+CLAUDE.md
