@@ -1,4 +1,4 @@
-import{r as G,i as J,$ as S,d as w,e as B,b as W}from"./error-handling.js";import{a as R}from"./http.js";import{s as v}from"./modal.js";import{h as j,b as X}from"./bootstrap.js";import{i as q}from"./password-strength.js";const m={};let C=!1,E=!1;G(()=>{J(),Y(),S(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
+import{r as G,i as J,$ as S,b as w,a as B,s as W}from"./error-handling.js";import{g as R}from"./http.js";import{s as v}from"./modal.js";import{h as j,b as X}from"./bootstrap.js";import{i as q}from"./password-strength.js";const m={};let C=!1,E=!1;G(()=>{J(),Y(),S(".global-upload-status")||document.body.insertAdjacentHTML("beforeend",`
       <div class="global-upload-status">
         <h6>アップロード進行状況</h6>
         <div class="global-upload-progress">
