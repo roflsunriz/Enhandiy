@@ -237,7 +237,7 @@ export class FileManagerRenderer {
             <th class="file-list__actions">操作</th>
           </tr>
         </thead>
-        <tbody id="folder-grid" class="file-manager__folder-list">
+        <tbody class="file-manager__folder-list">
           ${folders.map(folder => this.createFolderListItem(folder)).join('')}
         </tbody>
         <tbody>

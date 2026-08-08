@@ -85,7 +85,7 @@ import{a as c,m as S,n as w,j as _,h as b,r as $,i as M,o as P,q as v}from"./htt
             <th class="file-list__actions">操作</th>
           </tr>
         </thead>
-        <tbody id="folder-grid" class="file-manager__folder-list">
+        <tbody class="file-manager__folder-list">
           ${t.map(a=>this.createFolderListItem(a)).join("")}
         </tbody>
         <tbody>

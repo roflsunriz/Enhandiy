@@ -111,6 +111,18 @@ test.describe('Fluent UI レスポンシブ品質', () => {
     await expect(table.locator('.folder-list-item .folder-name')).toHaveText('統合フォルダ');
     await expect(table.locator('.file-list-item .file-name')).toHaveText('統合ファイル.txt');
 
+    const folderListLayout = await table.locator('.file-manager__folder-list').evaluate(element => {
+      const tableElement = element.closest('table');
+      const folderRow = element.querySelector('.folder-list-item');
+      return {
+        display: getComputedStyle(element).display,
+        tableWidth: tableElement?.getBoundingClientRect().width || 0,
+        rowWidth: folderRow?.getBoundingClientRect().width || 0,
+      };
+    });
+    expect(folderListLayout.display).toBe('table-row-group');
+    expect(folderListLayout.rowWidth).toBeGreaterThan(folderListLayout.tableWidth * 0.9);
+
     await page.locator('.file-manager__search-input').fill('統合フォルダ');
     await expect(table.locator('.folder-list-item')).toBeVisible();
     await expect(table.locator('.file-list-item')).toHaveCount(0);
