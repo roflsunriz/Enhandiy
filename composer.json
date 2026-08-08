@@ -32,6 +32,7 @@
     },
     "scripts": {
         "check-syntax": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l",
+        "test": "php infrastructure/scripts/test-browser-title.php",
         "release": "php infrastructure/scripts/release.php"
     }
 }

@@ -114,9 +114,7 @@ jobs:
           }
 
       - name: Run application tests
-        run: |
-          # 基本的な機能テスト（将来のPHPUnit用）
-          echo "Basic functionality tests would run here"
+        run: composer test
 
       - name: Test Docker build
         run: |

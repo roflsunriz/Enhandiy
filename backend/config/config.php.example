@@ -33,7 +33,8 @@ class config {
             'api_rate_limit' => 100,    // 1時間あたりのリクエスト制限数（0で無制限）
 
             // アプリケーション設定
-            'title' => 'Enhandiy',
+            'browser_title' => 'Enhandiy', // ブラウザのタブに表示するタイトル
+            'title' => 'Enhandiy',         // ヘッダーに表示するワークスペース名
             // アップローダ説明（任意）：空のままなら表示しない
             // 'urls' に複数のURLを指定可能。従来の 'url' は互換のためサポート。
             'uploader_info' => [

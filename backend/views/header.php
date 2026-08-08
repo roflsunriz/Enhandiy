@@ -5,6 +5,10 @@ require_once __DIR__ . '/icons.php';
 $headerInfoTitle = '';
 $headerInfoDesc = '';
 $headerInfoUrls = [];
+$pageTitle = is_string($title ?? null) && trim($title) !== '' ? trim($title) : 'Enhandiy';
+$browserTabTitle = is_string($browser_title ?? null) && trim($browser_title) !== ''
+    ? trim($browser_title)
+    : $pageTitle;
 if (isset($uploader_info) && is_array($uploader_info)) {
     $headerInfoTitle = trim($uploader_info['title'] ?? '');
     $headerInfoDesc = trim($uploader_info['description'] ?? '');
@@ -35,7 +39,7 @@ if (isset($uploader_info) && is_array($uploader_info)) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo htmlspecialchars($browserTabTitle, ENT_QUOTES, 'UTF-8'); ?></title>
 
     <!-- Bootstrap 5 -->
     <link 
@@ -74,7 +78,7 @@ if (isset($uploader_info) && is_array($uploader_info)) {
           <span>Enhandiy</span>
         </a>
         <div class="app-topbar__identity">
-          <h1 id="app-page-title"><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></h1>
+          <h1 id="app-page-title"><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></h1>
           <p>
             <?php if ($headerInfoTitle !== '') : ?>
               <strong><?php echo htmlspecialchars($headerInfoTitle, ENT_QUOTES, 'UTF-8'); ?></strong>
