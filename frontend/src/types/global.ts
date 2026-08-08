@@ -27,9 +27,9 @@ export interface FileData {
 
 // フォルダデータの型定義
 export interface FolderData {
-  id: string;
+  id: string | number;
   name: string;
-  parent_id?: string;
+  parent_id?: string | number | null;
   created_at: string;
   file_count: number;
 }

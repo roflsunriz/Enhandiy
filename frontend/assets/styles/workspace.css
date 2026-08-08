@@ -1,0 +1,535 @@
+/**
+ * Unified workspace layout
+ *
+ * Keeps identity, uploader information, navigation, folders, files and upload
+ * affordances in one continuous Fluent surface.
+ */
+
+.app-topbar {
+  height: auto;
+  min-height: 72px;
+}
+
+.app-topbar__inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  min-height: 72px;
+  padding-block: 9px;
+}
+
+.app-brand {
+  padding-right: 18px;
+  border-right: 1px solid var(--fluent-stroke);
+}
+
+.app-topbar__identity {
+  min-width: 0;
+}
+
+.app-topbar__identity h1 {
+  overflow: hidden;
+  margin: 0;
+  color: var(--fluent-foreground);
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-topbar__identity p {
+  display: flex;
+  min-width: 0;
+  gap: 7px;
+  align-items: center;
+  overflow: hidden;
+  margin: 3px 0 0;
+  color: var(--fluent-foreground-muted);
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-topbar__identity p strong {
+  color: var(--fluent-accent-pressed);
+  font-weight: 650;
+}
+
+.app-topbar__identity p strong + span::before {
+  margin-right: 7px;
+  color: var(--fluent-foreground-subtle);
+  content: "·";
+}
+
+.app-topbar__links {
+  display: flex;
+  min-width: 0;
+  max-width: min(34vw, 460px);
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app-topbar__links::-webkit-scrollbar {
+  display: none;
+}
+
+.app-topbar__links a {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 34px;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--fluent-radius-sm);
+  color: var(--fluent-foreground-muted);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--fluent-motion), background var(--fluent-motion), border-color var(--fluent-motion);
+}
+
+.app-topbar__links a:hover {
+  border-color: var(--fluent-stroke);
+  color: var(--fluent-accent-pressed);
+  background: var(--fluent-accent-subtle);
+}
+
+.app-topbar__links a span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.container.app-shell {
+  padding-top: clamp(18px, 3vw, 32px);
+}
+
+.app-workspace {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid var(--fluent-stroke);
+  border-radius: var(--fluent-radius-lg);
+  background: var(--fluent-surface-solid);
+  box-shadow: var(--fluent-shadow-8);
+}
+
+.app-workspace__navigation {
+  display: flex;
+  min-height: 62px;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--fluent-stroke);
+  background: rgba(248, 249, 251, 0.94);
+}
+
+.app-workspace__location {
+  min-width: 0;
+}
+
+.folder-breadcrumb {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  align-items: center;
+}
+
+.folder-breadcrumb__label,
+.app-workspace__all-files {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--fluent-foreground-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.folder-breadcrumb-list {
+  min-width: 0;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+}
+
+.folder-breadcrumb-list::-webkit-scrollbar {
+  display: none;
+}
+
+.folder-breadcrumb-list li {
+  flex: 0 0 auto;
+}
+
+.app-workspace__primary-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.app-workspace__primary-actions .btn {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.app-file-surface,
+body .file-manager-v2 {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.file-manager__header {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 18px;
+  background: var(--fluent-surface-solid);
+}
+
+.file-manager__title-group h2 {
+  font-size: 18px;
+}
+
+.file-manager__content {
+  min-height: 360px;
+}
+
+.file-manager__grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  padding: 18px;
+}
+
+.file-manager__grid > #folder-grid {
+  display: contents;
+}
+
+.folder-grid-item {
+  min-width: 0;
+  min-height: 100%;
+}
+
+.folder-grid-item .folder-item-wrapper {
+  position: relative;
+  height: 100%;
+  min-height: 220px;
+}
+
+.folder-grid-item .folder-item {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 42px;
+  border: 1px solid var(--fluent-stroke);
+  border-radius: var(--fluent-radius-lg);
+  color: var(--fluent-foreground);
+  background: linear-gradient(145deg, #fbfcfe, #f3f7fb);
+  box-shadow: var(--fluent-shadow-2);
+  text-align: center;
+  text-decoration: none;
+  transition: border-color var(--fluent-motion), box-shadow var(--fluent-motion), transform var(--fluent-motion);
+}
+
+.folder-grid-item .folder-item:hover {
+  border-color: #9fc2e4;
+  color: var(--fluent-foreground);
+  background: linear-gradient(145deg, #f8fbff, #eaf3fb);
+  box-shadow: var(--fluent-shadow-8);
+  transform: translateY(-2px);
+}
+
+.folder-grid-item .folder-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  color: var(--fluent-accent);
+  background: #fff;
+  box-shadow: var(--fluent-shadow-2);
+}
+
+.folder-grid-item .folder-item__content {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.folder-grid-item .folder-name {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.folder-item__meta {
+  color: var(--fluent-foreground-muted);
+  font-size: 11px;
+}
+
+.folder-grid-item .folder-menu {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 10px;
+  opacity: 1;
+}
+
+.folder-menu .dropdown-toggle--icon {
+  display: inline-grid;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  place-items: center;
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.folder-menu .dropdown-toggle::after {
+  display: none;
+}
+
+.folder-list-item {
+  background: #fbfcfd;
+}
+
+.folder-list-item:hover {
+  background: var(--fluent-accent-subtle);
+}
+
+.folder-item--list {
+  display: inline-flex;
+  width: auto;
+  min-height: 34px;
+  gap: 9px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--fluent-foreground);
+  background: transparent;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.folder-item--list:hover {
+  color: var(--fluent-accent-pressed);
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.folder-item--list .folder-icon {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--fluent-accent);
+  background: var(--fluent-accent-soft);
+}
+
+.folder-list__actions .folder-menu {
+  position: static;
+  display: inline-block;
+  opacity: 1;
+}
+
+.folder-list__actions .dropdown-toggle--icon {
+  background: transparent;
+}
+
+.file-grid-item {
+  min-height: 220px;
+}
+
+.file-grid-item__header {
+  min-height: 104px;
+}
+
+.file-manager__empty {
+  grid-column: 1 / -1;
+}
+
+.app-workspace__drop-overlay {
+  position: absolute;
+  z-index: 20;
+  inset: 10px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 2px dashed var(--fluent-accent);
+  border-radius: var(--fluent-radius-lg);
+  color: var(--fluent-accent-pressed);
+  background: rgba(235, 243, 252, 0.94);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9), var(--fluent-shadow-8);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.985);
+  transition: opacity var(--fluent-motion), transform var(--fluent-motion);
+  backdrop-filter: blur(8px);
+}
+
+.app-workspace__drop-overlay strong {
+  font-size: 18px;
+}
+
+.app-workspace__drop-overlay span {
+  color: var(--fluent-foreground-muted);
+  font-size: 13px;
+}
+
+.app-workspace.drag-over .app-workspace__drop-overlay {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 900px) {
+  .app-topbar__inner {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .app-topbar__links {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    padding-left: 48px;
+  }
+
+  .app-workspace__navigation {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-workspace__location,
+  .folder-breadcrumb,
+  .folder-breadcrumb-list {
+    width: 100%;
+  }
+
+  .app-workspace__primary-actions {
+    width: 100%;
+  }
+
+  .app-workspace__primary-actions .btn {
+    flex: 1 1 0;
+  }
+
+  .file-manager__header {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .file-manager__controls {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .file-manager__search,
+  .file-manager__search-input {
+    width: 100%;
+  }
+
+  .file-manager__sort {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .file-manager__view-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .file-manager__view-btn,
+  .file-manager__refresh-btn {
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .file-manager__stats {
+    grid-column: auto;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-topbar__inner {
+    gap: 10px;
+  }
+
+  .app-brand {
+    padding-right: 10px;
+  }
+
+  .app-brand > span:last-child {
+    display: none;
+  }
+
+  .app-topbar__identity h1 {
+    font-size: 15px;
+  }
+
+  .app-topbar__links {
+    padding-left: 40px;
+  }
+
+  .app-topbar__links a {
+    max-width: 170px;
+  }
+
+  .container.app-shell {
+    width: calc(100% - 16px);
+    padding-top: 10px;
+  }
+
+  .app-workspace__navigation,
+  .file-manager__header {
+    padding: 12px;
+  }
+
+  .folder-breadcrumb {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .file-manager__grid {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .folder-grid-item .folder-item-wrapper,
+  .folder-grid-item .folder-item,
+  .file-grid-item {
+    min-height: 210px;
+  }
+
+  .app-workspace__drop-overlay {
+    inset: 6px;
+    padding: 20px;
+    text-align: center;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .app-workspace,
+  .folder-grid-item .folder-item {
+    border-width: 2px;
+  }
+}

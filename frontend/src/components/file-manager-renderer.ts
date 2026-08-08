@@ -3,7 +3,7 @@
  * HTML生成とDOM操作を担当
  */
 
-import { FileData } from '../types/global';
+import { FileData, FolderData } from '../types/global';
 import { FileManagerCore } from './file-manager-core';
 import { actionIcons, fileIconForMime, metaIcons } from '../utils/icons';
 
@@ -34,12 +34,12 @@ export class FileManagerRenderer {
     this.core.container.innerHTML = `
       <div class="file-manager__header">
         <div class="file-manager__title-group">
-          <span class="file-manager__eyebrow">ライブラリ</span>
-          <h2>ファイル</h2>
+          <span class="file-manager__eyebrow">コンテンツ</span>
+          <h2>フォルダとファイル</h2>
         </div>
         <div class="file-manager__controls">
           <div class="file-manager__search">
-            <input type="search" class="file-manager__search-input" placeholder="ファイル名・コメントで検索" aria-label="ファイルを検索">
+            <input type="search" class="file-manager__search-input" placeholder="フォルダ・ファイルを検索" aria-label="フォルダとファイルを検索">
           </div>
           <div class="file-manager__sort">
             <label>並び順:</label>
@@ -178,36 +178,40 @@ export class FileManagerRenderer {
    */
   private renderFiles(): void {
     const files = this.core.getCurrentPageFiles();
+    const folders = this.getVisibleFolders();
     const viewMode = this.core.getViewMode();
     
     if (viewMode === 'grid') {
-      this.renderGridView(files);
+      this.renderGridView(files, folders);
     } else {
-      this.renderListView(files);
+      this.renderListView(files, folders);
     }
   }
 
   /**
    * グリッドビューのレンダリング
    */
-  private renderGridView(files: FileData[]): void {
+  private renderGridView(files: FileData[], folders: FolderData[]): void {
     const container = this.core.container.querySelector('.file-manager__grid') as HTMLElement;
     
-    if (files.length === 0) {
+    if (files.length === 0 && folders.length === 0) {
       container.innerHTML = this.createEmptyState();
       return;
     }
     
-    container.innerHTML = files.map(file => this.createGridItem(file)).join('');
+    const folderHtml = folders.length > 0
+      ? `<div id="folder-grid" class="file-manager__folder-grid">${folders.map(folder => this.createFolderGridItem(folder)).join('')}</div>`
+      : '';
+    container.innerHTML = folderHtml + files.map(file => this.createGridItem(file)).join('');
   }
 
   /**
    * リストビューのレンダリング
    */
-  private renderListView(files: FileData[]): void {
+  private renderListView(files: FileData[], folders: FolderData[]): void {
     const container = this.core.container.querySelector('.file-manager__list') as HTMLElement;
     
-    if (files.length === 0) {
+    if (files.length === 0 && folders.length === 0) {
       container.innerHTML = this.createEmptyState();
       return;
     }
@@ -220,7 +224,7 @@ export class FileManagerRenderer {
               <input type="checkbox" class="select-all-checkbox">
             </th>
             <th class="file-list__name sortable" data-sort="name">
-              ファイル名 <span class="sort-icon"></span>
+              名前 <span class="sort-icon"></span>
             </th>
             <th class="file-list__size sortable" data-sort="size">
               サイズ <span class="sort-icon"></span>
@@ -233,6 +237,9 @@ export class FileManagerRenderer {
             <th class="file-list__actions">操作</th>
           </tr>
         </thead>
+        <tbody id="folder-grid" class="file-manager__folder-list">
+          ${folders.map(folder => this.createFolderListItem(folder)).join('')}
+        </tbody>
         <tbody>
           ${files.map(file => this.createListItem(file)).join('')}
         </tbody>
@@ -311,13 +318,75 @@ export class FileManagerRenderer {
     `;
   }
 
+  private createFolderGridItem(folder: FolderData): string {
+    const folderId = String(folder.id);
+    const folderName = this.escapeHtml(folder.name);
+    const fileCount = Number(folder.file_count || 0);
+
+    return `
+      <article class="folder-grid-item" data-folder-id="${this.escapeHtml(folderId)}">
+        <div class="folder-item-wrapper">
+          <a href="?folder=${encodeURIComponent(folderId)}" class="folder-item" data-folder-link="${this.escapeHtml(folderId)}">
+            <span class="folder-icon">${actionIcons.move(24)}</span>
+            <span class="folder-item__content">
+              <span class="folder-name" title="${folderName}">${folderName}</span>
+              <span class="folder-item__meta">${fileCount}件のファイル</span>
+            </span>
+          </a>
+          ${this.createFolderMenu(folderId, folderName)}
+        </div>
+      </article>
+    `;
+  }
+
+  private createFolderListItem(folder: FolderData): string {
+    const folderId = String(folder.id);
+    const folderName = this.escapeHtml(folder.name);
+    const createdAt = this.formatDate(folder.created_at || '');
+    const folderColumn = window.config?.folders_enabled ? '<td class="file-list__folder">現在の場所</td>' : '';
+
+    return `
+      <tr class="folder-list-item" data-folder-id="${this.escapeHtml(folderId)}">
+        <td class="file-list__select" aria-hidden="true"></td>
+        <td class="file-list__name">
+          <a href="?folder=${encodeURIComponent(folderId)}" class="folder-item folder-item--list" data-folder-link="${this.escapeHtml(folderId)}">
+            <span class="folder-icon">${actionIcons.move(20)}</span>
+            <span class="folder-name" title="${folderName}">${folderName}</span>
+          </a>
+        </td>
+        <td class="file-list__size">フォルダ</td>
+        <td class="file-list__date">${createdAt}</td>
+        ${folderColumn}
+        <td class="file-list__downloads">${Number(folder.file_count || 0)}</td>
+        <td class="file-list__actions folder-list__actions">${this.createFolderMenu(folderId, folderName)}</td>
+      </tr>
+    `;
+  }
+
+  private createFolderMenu(folderId: string, folderName: string): string {
+    return `
+      <div class="folder-menu dropdown">
+        <button class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle--icon" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false" aria-label="${folderName}の操作">
+          <span aria-hidden="true">⋯</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-menu--narrow">
+          <li><a class="dropdown-item rename-folder" href="#" data-folder-id="${this.escapeHtml(folderId)}">${actionIcons.edit(16)} 名前変更</a></li>
+          <li><a class="dropdown-item move-folder" href="#" data-folder-id="${this.escapeHtml(folderId)}">${actionIcons.move(16)} 移動</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item delete-folder text-danger-soft" href="#" data-folder-id="${this.escapeHtml(folderId)}">${actionIcons.delete(16)} 削除</a></li>
+        </ul>
+      </div>
+    `;
+  }
+
   private createEmptyState(): string {
     return `
       <div class="file-manager__empty">
         <div class="file-manager__empty-state">
           <span class="file-manager__empty-icon" aria-hidden="true">${actionIcons.move(26)}</span>
-          <h3 class="file-manager__empty-title">ファイルはまだありません</h3>
-          <p class="file-manager__empty-description">アップロードすると、ここから整理・共有・ダウンロードできます。</p>
+          <h3 class="file-manager__empty-title">この場所は空です</h3>
+          <p class="file-manager__empty-description">ファイルをドロップするか、新しいフォルダを作成してください。</p>
         </div>
       </div>
     `;
@@ -436,8 +505,9 @@ export class FileManagerRenderer {
   private renderStats(): void {
     const stats = this.core.getStats();
     const statsContainer = this.core.container.querySelector('.file-manager__stats-text') as HTMLElement;
+    const folderCount = this.getVisibleFolders().length;
     
-    let statsText = `${stats.totalFiles}件のファイル`;
+    let statsText = `${folderCount}フォルダ・${stats.totalFiles}ファイル`;
     
     if (stats.filteredFiles !== stats.totalFiles) {
       statsText += ` (${stats.filteredFiles}件表示)`;
@@ -469,6 +539,25 @@ export class FileManagerRenderer {
    */
   private getFileIcon(_mimeType: string): string {
     return '';
+  }
+
+  private getVisibleFolders(): FolderData[] {
+    if (!window.config?.folders_enabled || !Array.isArray(window.folderData)) {
+      return [];
+    }
+
+    const currentFolderId = new URLSearchParams(window.location.search).get('folder');
+    const query = this.core.getState().searchQuery.trim().toLocaleLowerCase('ja');
+
+    return window.folderData
+      .filter(folder => {
+        const parentId = folder.parent_id === undefined || folder.parent_id === null || folder.parent_id === ''
+          ? null
+          : String(folder.parent_id);
+        return parentId === currentFolderId;
+      })
+      .filter(folder => !query || folder.name.toLocaleLowerCase('ja').includes(query))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true, sensitivity: 'base' }));
   }
 
   private getFileTypeClass(mimeType: string): string {

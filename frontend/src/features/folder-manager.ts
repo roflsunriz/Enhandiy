@@ -51,31 +51,67 @@ class SimpleFolderManager {
     // フォルダ管理メニュー（イベントデリゲーション）
     document.addEventListener('click', (e: Event) => {
       const target = e.target as HTMLElement;
-      
-      if (target.classList.contains('rename-folder')) {
+
+      const renameAction = target.closest<HTMLElement>('.rename-folder');
+      if (renameAction) {
         e.preventDefault();
-        const folderId = target.dataset.folderId;
+        const folderId = renameAction.dataset.folderId;
         if (folderId) {
           this.showRenameFolderDialog(folderId);
         }
+        return;
       }
-      
-      if (target.classList.contains('move-folder')) {
+
+      const moveAction = target.closest<HTMLElement>('.move-folder');
+      if (moveAction) {
         e.preventDefault();
-        const folderId = target.dataset.folderId;
+        const folderId = moveAction.dataset.folderId;
         if (folderId) {
           this.showMoveFolderDialog(folderId);
         }
+        return;
       }
-      
-      if (target.classList.contains('delete-folder')) {
+
+      const deleteAction = target.closest<HTMLElement>('.delete-folder');
+      if (deleteAction) {
         e.preventDefault();
-        const folderId = target.dataset.folderId;
+        const folderId = deleteAction.dataset.folderId;
         if (folderId) {
           this.showDeleteFolderDialog(folderId);
         }
+        return;
+      }
+
+      const folderLink = target.closest<HTMLAnchorElement>('a[data-folder-link], a.breadcrumb-link');
+      if (folderLink && !e.defaultPrevented && this.isPlainNavigationClick(e)) {
+        e.preventDefault();
+        void this.navigateTo(folderLink.href);
       }
     });
+
+    window.addEventListener('popstate', () => {
+      this.currentFolderId = new URLSearchParams(window.location.search).get('folder') || null;
+      void this.refreshAll();
+    });
+  }
+
+  private isPlainNavigationClick(event: Event): boolean {
+    if (!(event instanceof MouseEvent)) return true;
+    return event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+  }
+
+  private async navigateTo(href: string): Promise<void> {
+    const targetUrl = new URL(href, window.location.href);
+    if (targetUrl.origin !== window.location.origin) return;
+
+    const nextPath = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+    const currentPath = window.location.pathname + window.location.search + window.location.hash;
+    if (nextPath !== currentPath) {
+      window.history.pushState({}, '', nextPath);
+    }
+
+    this.currentFolderId = targetUrl.searchParams.get('folder') || null;
+    await this.refreshAll();
   }
 
   private bindCreateFolderButton(): void {
@@ -140,6 +176,7 @@ class SimpleFolderManager {
 
   private async refreshOnce(): Promise<void> {
     try {
+      this.currentFolderId = new URLSearchParams(window.location.search).get('folder') || null;
       
       
       // フォルダ選択プルダウンを更新
@@ -176,7 +213,6 @@ class SimpleFolderManager {
       if (res.success && res.data) {
         const data = res.data as unknown as { folders?: FolderData[]; breadcrumb?: Array<{ id: number; name: string }> };
         this.updateBreadcrumb(data.breadcrumb || []);
-        this.updateFolderDisplay((data.folders as FolderData[]) || []);
         // グローバルのフォルダデータも最新化しておく（フォルダ名解決用）
         if (Array.isArray(data.folders)) {
           (window as unknown as { folderData?: FolderData[] }).folderData = data.folders;
@@ -232,98 +268,6 @@ class SimpleFolderManager {
       // URL constructor が失敗した場合はシンプルに返却
       return base;
     }
-  }
-
-  /**
-   * フォルダ表示の更新
-   */
-  private updateFolderDisplay(folders: FolderData[]): void {
-    const folderGridContainer = document.getElementById('folder-grid');
-    
-    if (folderGridContainer) {
-      // 現在のフォルダレベルの子フォルダのみ表示
-      const currentFolders = this.getChildFolders(folders, this.currentFolderId);
-      
-      if (currentFolders.length === 0) {
-        // フォルダがない場合の表示
-        folderGridContainer.innerHTML = '';
-        const parentContainer = folderGridContainer.parentElement;
-        if (parentContainer) {
-          const emptyMessage = parentContainer.querySelector('.text-center.text-muted');
-          if (!emptyMessage) {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'text-center text-muted';
-            emptyDiv.style.padding = '20px';
-            emptyDiv.innerHTML = `
-              <span class="glyphicon glyphicon-folder-open" 
-                    style="font-size: 2em; margin-bottom: 10px; display: block;"></span>
-              フォルダがありません
-            `;
-            parentContainer.appendChild(emptyDiv);
-          }
-        }
-      } else {
-        // 空のメッセージを削除
-        const parentContainer = folderGridContainer.parentElement;
-        if (parentContainer) {
-          const emptyMessage = parentContainer.querySelector('.text-center.text-muted');
-          if (emptyMessage) {
-            emptyMessage.remove();
-          }
-        }
-        
-        let foldersHtml = '';
-        currentFolders.forEach(folder => {
-          foldersHtml += `
-            <div class="col-sm-3 col-xs-6" style="margin-bottom: 15px;" data-folder-id="${folder.id}">
-              <div class="folder-item-wrapper" style="position: relative;">
-                <a href="?folder=${folder.id}" class="folder-item">
-                  <span class="folder-icon">${actionIcons.move(18)}</span>
-                  <span class="folder-name">${this.escapeHtml(folder.name)}</span>
-                </a>
-                <div class="folder-menu" style="position: absolute; top: 5px; right: 5px; opacity: 0; transition: opacity 0.2s;">
-                  <div class="dropdown">
-                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
-                            data-bs-toggle="dropdown" aria-expanded="false"
-                            style="padding: 2px 6px; border-radius: 50%; width: 24px; height: 24px; font-size: 10px;">
-                      ⋮
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" style="min-width: 120px;">
-                      <li>
-                        <a class="dropdown-item rename-folder" href="#" data-folder-id="${folder.id}">
-                          ${actionIcons.edit(16)} 名前変更
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item move-folder" href="#" data-folder-id="${folder.id}">
-                          ${actionIcons.move(16)} 移動
-                        </a>
-                      </li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li>
-                        <a class="dropdown-item delete-folder" href="#" data-folder-id="${folder.id}" style="color: #d9534f;">
-                          ${actionIcons.delete(16)} 削除
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        });
-        
-        folderGridContainer.innerHTML = foldersHtml;
-      }
-    }
-  }
-
-  /**
-   * 指定された親フォルダの子フォルダを取得
-   */
-  private getChildFolders(folders: FolderData[], parentId: string | null): FolderData[] {
-    const targetParentId = parentId ? parseInt(parentId) : null;
-    return folders.filter(folder => (folder.parent_id ?? null) === targetParentId);
   }
 
   /**

@@ -111,8 +111,14 @@ test.describe('フォルダ管理と移動フロー', () => {
     // 移動後: ルートから A-renamed が消え、B をクリックすると中に A-renamed が見える
     await page.reload();
     await expect(page.locator('#folder-grid .folder-name', { hasText: 'E2E-A-renamed' })).toBeHidden({ timeout: 15000 });
+    await page.evaluate(() => {
+      window.sessionStorage.setItem('workspace-navigation-marker', 'kept');
+      document.documentElement.dataset.workspaceNavigation = 'without-reload';
+    });
     await folderBCard.locator('a.folder-item').click();
     await delay('medium');
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.workspaceNavigation)).toBe('without-reload');
+    await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem('workspace-navigation-marker'))).toBe('kept');
     await expect(page.locator('.breadcrumb')).toContainText('ルート');
     await expect(page.locator('.breadcrumb')).toContainText('E2E-B');
     await expect(page.locator('#folder-grid .folder-name', { hasText: 'E2E-A-renamed' })).toBeVisible({ timeout: 15000 });

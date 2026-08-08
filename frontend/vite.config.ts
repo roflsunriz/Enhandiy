@@ -34,6 +34,7 @@ export default defineConfig({
         'fluent': resolve(__dirname, 'assets/styles/fluent.css'),
         'fluent-content': resolve(__dirname, 'assets/styles/fluent-content.css'),
         'fluent-responsive': resolve(__dirname, 'assets/styles/fluent-responsive.css'),
+        'workspace': resolve(__dirname, 'assets/styles/workspace.css'),
       },
       output: {
         entryFileNames: '[name].js',

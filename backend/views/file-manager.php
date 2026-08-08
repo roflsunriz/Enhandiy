@@ -7,12 +7,10 @@
 
 ?>
 
-<section class="app-surface app-file-surface" aria-label="ファイル">
-    
-    <!-- ファイルマネージャー (TypeScript版) -->
-    <div id="fileManagerContainer">
-      <!-- TypeScriptで動的に生成されるファイル管理UI -->
-    </div>
+<div class="app-file-surface" aria-label="ファイルとフォルダの一覧">
+  <div id="fileManagerContainer">
+    <!-- TypeScriptで動的に生成されるファイル管理UI -->
+  </div>
 
     <!-- 
       注意: 旧式のDataTablesベーステーブルは完全に削除されました。
@@ -23,4 +21,4 @@
       - モダンUI/UX
     -->
 
-</section>
+</div>

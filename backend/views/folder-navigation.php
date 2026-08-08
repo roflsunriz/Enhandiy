@@ -8,16 +8,11 @@
 ?>
 
 <?php require_once __DIR__ . '/icons.php'; ?>
-<?php if (isset($folders_enabled) && $folders_enabled) : ?>
-<!-- フォルダナビゲーション -->
-<section class="app-surface app-folder-surface" aria-label="フォルダ">
-  <div class="app-surface__body">
-    <!-- タイトルは省略し、パンくずと一覧を優先表示 -->
-
-    <!-- パンくずリスト -->
-    <div class="form-section">
+<header class="app-workspace__navigation">
+  <div class="app-workspace__location">
+    <?php if (isset($folders_enabled) && $folders_enabled) : ?>
       <div class="folder-breadcrumb">
-        <label><?php echo render_icon('map-marker', 18, 'icon'); ?> 現在の場所:</label>
+        <span class="folder-breadcrumb__label"><?php echo render_icon('map-marker', 18, 'icon'); ?> 現在の場所</span>
         <ol class="breadcrumb folder-breadcrumb-list">
           <?php
             // ルートリンクはクエリを空にしない（余分な `?folder=` を残さない）
@@ -49,75 +44,19 @@
           <?php endif; ?>
         </ol>
       </div>
-    </div>
-
-    <!-- フォルダ一覧 -->
-    <div class="form-section">
-        <div class="folder-actions">
-          <!-- フォルダ作成ボタンを画面右端に -->
-          <div class="push-right">
-            <button type="button" class="btn btn-success btn-sm" id="create-folder-btn" title="新しいフォルダを作成">
-              <span class="glyphicon glyphicon-plus"></span> フォルダ作成
-            </button>
-          </div>
-        </div>
-
-    <?php if (!empty($folders)) : ?>
-    <div class="row" id="folder-grid">
-        <?php foreach ($folders as $folder) : ?>
-            <?php if (
-                (isset($current_folder_id) && $folder['parent_id'] == $current_folder_id) ||
-                (!isset($current_folder_id) && !$folder['parent_id'])
-) : ?>
-                <div class="col-sm-3 col-xs-6 mb-15"
-                     data-folder-id="<?php echo $folder['id']; ?>">
-          <div class="folder-item-wrapper pos-relative">
-            <a href="?folder=<?php echo $folder['id']; ?>" class="folder-item">
-              <span class="folder-icon"><?php echo render_icon('folder', 20, 'icon'); ?></span>
-              <span class="folder-name"><?php echo htmlspecialchars($folder['name']); ?></span>
-            </a>
-                <?php // 全てのフォルダに管理メニューを表示 ?>
-                <div class="folder-menu">
-              <div class="dropdown">
-                <button class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle--icon" type="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                  ⋮
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu--narrow">
-                  <li>
-                      <a class="dropdown-item rename-folder" href="#"
-                         data-folder-id="<?php echo $folder['id']; ?>">
-                           <?php echo render_icon('pencil', 16, 'icon'); ?> 名前変更
-                      </a>
-                  </li>
-                  <li>
-                      <a class="dropdown-item move-folder" href="#"
-                         data-folder-id="<?php echo $folder['id']; ?>">
-                           <?php echo render_icon('folder-move', 16, 'icon'); ?> 移動
-                      </a>
-                  </li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                      <a class="dropdown-item delete-folder text-danger-soft" href="#"
-                         data-folder-id="<?php echo $folder['id']; ?>">
-                           <?php echo render_icon('trash-can', 16, 'icon'); ?> 削除
-                      </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-            <?php endif; ?>
-        <?php endforeach; ?>
-    </div>
     <?php else : ?>
-    <div class="folder-empty-state">
-      <span class="folder-empty-state__icon glyphicon glyphicon-folder-open" aria-hidden="true"></span>
-      <p>フォルダはまだありません</p>
-    </div>
+      <span class="app-workspace__all-files"><?php echo render_icon('folder', 18, 'icon'); ?> すべてのファイル</span>
     <?php endif; ?>
-    </div>
   </div>
-</section>
-<?php endif; ?>
+  <div class="app-workspace__primary-actions">
+    <?php if (isset($folders_enabled) && $folders_enabled) : ?>
+      <button type="button" class="btn btn-secondary btn-sm" id="create-folder-btn" title="現在の場所に新しいフォルダを作成">
+        <span aria-hidden="true">＋</span> 新しいフォルダ
+      </button>
+    <?php endif; ?>
+    <button type="button" class="btn btn-primary btn-sm app-upload-trigger"
+            data-bs-toggle="modal" data-bs-target="#uploadModal">
+      <?php echo render_icon('folder', 17, 'icon'); ?> アップロード
+    </button>
+  </div>
+</header>

@@ -33,6 +33,7 @@ function initializeDragDrop(): void {
   const multipleFileInput = $('#multipleFileInput') as HTMLInputElement;
   const folderInput = $('#folderInput') as HTMLInputElement;
   const clearFilesBtn = $('#clearFilesBtn') as HTMLButtonElement;
+  const workspaceDropArea = document.querySelector('.app-workspace') as HTMLElement | null;
 
   if (!dragDropArea) {
     console.warn('Drag drop area not found');
@@ -46,6 +47,13 @@ function initializeDragDrop(): void {
   dragDropArea.addEventListener('dragenter', handleDragEnter);
   dragDropArea.addEventListener('dragleave', handleDragLeave);
   dragDropArea.addEventListener('drop', handleDrop);
+
+  if (workspaceDropArea) {
+    workspaceDropArea.addEventListener('dragover', handleDragOver);
+    workspaceDropArea.addEventListener('dragenter', handleDragEnter);
+    workspaceDropArea.addEventListener('dragleave', handleDragLeave);
+    workspaceDropArea.addEventListener('drop', handleDrop);
+  }
 
   // ファイル選択ボタン（複数ファイル選択）
   if (selectFilesBtn) {
@@ -180,6 +188,11 @@ function handleDrop(e: DragEvent): void {
   const files = e.dataTransfer?.files;
   if (files) {
     handleFiles(files);
+    const dropTarget = e.currentTarget as HTMLElement;
+    if (dropTarget.classList.contains('app-workspace')) {
+      const uploadTrigger = document.querySelector<HTMLButtonElement>('.app-workspace .app-upload-trigger');
+      uploadTrigger?.click();
+    }
   }
 }
 

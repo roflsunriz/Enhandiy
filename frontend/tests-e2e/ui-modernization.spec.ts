@@ -14,8 +14,9 @@ test.describe('Fluent UI レスポンシブ品質', () => {
       await page.goto('/');
 
       await expect(page.locator('.app-topbar')).toBeVisible();
-      await expect(page.locator('.app-hero')).toBeVisible();
-      await expect(page.locator('.app-file-surface')).toBeVisible();
+      await expect(page.locator('.app-topbar #app-page-title')).toBeVisible();
+      await expect(page.locator('.app-workspace')).toBeVisible();
+      await expect(page.locator('.app-workspace .app-file-surface')).toBeVisible();
       await expect(page.locator('.file-manager__search-input')).toBeVisible();
       await expect.poll(() => page.locator('#fileManagerContainer').evaluate(element => (
         !element.classList.contains('file-manager--loading')
@@ -29,8 +30,7 @@ test.describe('Fluent UI レスポンシブ品質', () => {
         const viewportWidth = window.innerWidth;
         const selectors = [
           '.app-topbar__inner',
-          '.app-hero',
-          '.app-file-surface',
+          '.app-workspace',
           '.file-manager__header',
           '.file-manager__pagination',
         ];
@@ -65,6 +65,71 @@ test.describe('Fluent UI レスポンシブ品質', () => {
     expect(modalBounds.left).toBeGreaterThanOrEqual(-1);
     expect(modalBounds.right).toBeLessThanOrEqual(391);
     expect(modalBounds.width).toBeGreaterThan(300);
+  });
+
+  test('タイトル・説明・リンクがヘッダーに統合される', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.locator('.app-topbar__identity #app-page-title')).toBeVisible();
+    await expect(page.locator('.app-topbar__identity p')).not.toBeEmpty();
+    await expect(page.locator('.app-announcement')).toHaveCount(0);
+    await expect(page.locator('.app-hero')).toHaveCount(0);
+    await expect(page.locator('.app-folder-surface')).toHaveCount(0);
+
+    const relatedLinks = page.locator('.app-topbar__links a');
+    if (await relatedLinks.count() > 0) {
+      await expect(relatedLinks.first()).toBeVisible();
+    }
+  });
+
+  test('フォルダとファイルが同じグリッド・リストで切り替わる', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => {
+      window.folderData = [{
+        id: '901',
+        name: '統合フォルダ',
+        parent_id: null,
+        created_at: '2026-08-08 10:00:00',
+        file_count: 2,
+      }];
+      window.fileManagerInstance?.setFiles([{
+        id: '902',
+        origin_file_name: '統合ファイル.txt',
+        name: '統合ファイル.txt',
+        size: 128,
+        type: 'text/plain',
+        upload_date: '2026-08-08 10:00:00',
+      }]);
+    });
+
+    const grid = page.locator('.file-manager__grid');
+    await expect(grid.locator('.folder-grid-item .folder-name')).toHaveText('統合フォルダ');
+    await expect(grid.locator('.file-grid-item .file-grid-item__name')).toContainText('統合ファイル.txt');
+
+    await page.locator('.file-manager__view-btn[data-view="list"]').click();
+    const table = page.locator('.file-list-table');
+    await expect(table.locator('.folder-list-item .folder-name')).toHaveText('統合フォルダ');
+    await expect(table.locator('.file-list-item .file-name')).toHaveText('統合ファイル.txt');
+
+    await page.locator('.file-manager__search-input').fill('統合フォルダ');
+    await expect(table.locator('.folder-list-item')).toBeVisible();
+    await expect(table.locator('.file-list-item')).toHaveCount(0);
+  });
+
+  test('ワークスペースへのドロップがアップロード設定につながる', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(new File(['workspace drop'], 'workspace-drop.txt', { type: 'text/plain' }));
+      document.querySelector('.app-workspace')?.dispatchEvent(new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      }));
+    });
+
+    await expect(page.locator('#uploadModal')).toBeVisible();
+    await expect(page.locator('#selectedFilesList')).toContainText('workspace-drop.txt');
   });
 
   test('表示切り替えは状態を視覚・属性の両方で示す', async ({ page }) => {
