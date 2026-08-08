@@ -10,7 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- ターミナル操作なしでローカル環境を扱えるよう、Dockerの起動・終了・状態確認・ブラウザ表示をまとめたJava Swing GUIとダブルクリック用ランチャーを追加した。
 - ブラウザのタブ名を画面内のワークスペース名とは別に変更できるよう、設定ファイルへ `browser_title` を追加した。
+
+### Removed
+
+- Docker GUIへ操作を集約するため、ルートの `scripts` に残っていたPowerShell製のDocker・ビルド・lint・個別E2E補助スクリプトを削除した。
 
 ### Security
 

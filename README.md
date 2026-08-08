@@ -15,6 +15,7 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 - **概要・主要機能**: [guide-overview.md](docs/guide-overview.md)
 - **インストールと要件**: [guide-installation.md](docs/guide-installation.md)
 - **設定ガイド**: [guide-configuration.md](docs/guide-configuration.md)
+- **Docker GUI**: Windowsでは `scripts/docker-manager.cmd` をダブルクリックすると、Dockerの起動・終了・ブラウザ表示をGUIで操作できます。
 - **データベースとマイグレーション**: [guide-database-and-migration.md](docs/guide-database-and-migration.md)
 - **重要な変更点（バージョン別）**: [guide-important-changes.md](docs/guide-important-changes.md)
 - **Docker クイックスタート**: [guide-docker.md](docs/guide-docker.md)
