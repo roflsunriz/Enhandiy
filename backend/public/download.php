@@ -15,6 +15,9 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1'); // ログファイルにエラーを記録
 error_reporting(E_ALL);
 
+$logger = null;
+$fileId = null;
+
 try {
     // 設定とユーティリティの読み込み
     require_once __DIR__ . '/../config/config.php';
@@ -155,11 +158,11 @@ try {
     }
 } catch (Exception $e) {
     // 緊急時のエラーハンドリング
-    if (isset($logger)) {
+    if ($logger instanceof Logger) {
         $logger->error('Download Error: ' . $e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'file_id' => $fileId ?? null
+            'file_id' => $fileId
         ]);
     }
 

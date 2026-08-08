@@ -189,7 +189,7 @@ class ApiAuth
         }
 
         // 古いデータをクリーンアップ
-        $rateLimitData = array_filter($rateLimitData, function ($hour) use ($currentHour) {
+        $rateLimitData = array_filter($rateLimitData, function ($hour) {
             return $hour >= date('Y-m-d-H', strtotime('-1 hour'));
         }, ARRAY_FILTER_USE_KEY);
 

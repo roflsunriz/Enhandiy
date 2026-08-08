@@ -102,6 +102,11 @@ try {
     ];
 
     try {
+        // 読み取り後のロック昇格を避け、削除処理中の書き込み権を先に確保する。
+        $lockPlaceholders = str_repeat('?,', count($validFileIds) - 1) . '?';
+        $lockStmt = $db->prepare("UPDATE uploaded SET id = id WHERE id IN ({$lockPlaceholders})");
+        $lockStmt->execute($validFileIds);
+
         // 削除対象ファイルの情報を取得
         $placeholders = str_repeat('?,', count($validFileIds) - 1) . '?';
         $fileStmt = $db->prepare("

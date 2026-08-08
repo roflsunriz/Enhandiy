@@ -98,6 +98,10 @@ class AppInitializer
             // エラーモードを例外に設定
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+            // 同時リクエストの短い書き込み競合は即時失敗させず、解放を待つ。
+            $this->db->setAttribute(PDO::ATTR_TIMEOUT, 5);
+            $this->db->exec('PRAGMA busy_timeout = 5000');
+
             // デフォルトのフェッチモードを連想配列形式に設定
             $this->db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {

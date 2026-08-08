@@ -7,15 +7,16 @@ import { join } from 'path';
 
 test.describe('共有リンクフロー', () => {
   test('共有リンク生成とコピー、制限設定の反映、DL回数制限', async ({ page, context, request }) => {
-    // 事前権限（クリップボード）
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://localhost' });
-
     // アップロード用一時ファイル
     const dir = mkdtempSync(join(tmpdir(), 'e2e-share-'));
     const filePath = join(dir, 'share-target.txt');
     writeFileSync(filePath, 'share flow test');
 
     await page.goto('/');
+    await context.grantPermissions(
+      ['clipboard-read', 'clipboard-write'],
+      { origin: new URL(page.url()).origin },
+    );
     await delay('low');
 
     // アップロードモーダルを開く
@@ -54,7 +55,6 @@ test.describe('共有リンクフロー', () => {
     await page.locator('#saveShareSettingsBtn').click();
     await delay('medium');
     // 共有リンク生成（生成直後に自動でクリップボードへコピーされる仕様）
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://localhost' });
     await page.evaluate(() => navigator.clipboard.writeText('PREV'));
     await delay('low');
     await page.locator('#generateShareLinkBtn').click();

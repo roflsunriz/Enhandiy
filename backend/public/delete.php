@@ -13,6 +13,9 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1'); // ログファイルにエラーを記録
 error_reporting(E_ALL);
 
+$logger = null;
+$fileId = null;
+
 try {
     // 設定とユーティリティの読み込み
     require_once __DIR__ . '/../config/config.php';
@@ -42,6 +45,11 @@ try {
     $db->beginTransaction();
 
     try {
+        // SQLiteの遅延トランザクションを先に書き込み状態へ移し、
+        // トークン検証後のロック昇格が他リクエストのログ書き込みと競合するのを防ぐ。
+        $lockStmt = $db->prepare('UPDATE uploaded SET id = id WHERE id = :id');
+        $lockStmt->execute(['id' => $fileId]);
+
         // トークンの検証
         $tokenStmt = $db->prepare("
         SELECT t.*, u.origin_file_name, u.stored_file_name, u.file_hash
@@ -157,11 +165,11 @@ try {
     }
 } catch (Exception $e) {
     // 緊急時のエラーハンドリング
-    if (isset($logger)) {
+    if ($logger instanceof Logger) {
         $logger->error('Delete Error: ' . $e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'file_id' => $fileId ?? null
+            'file_id' => $fileId
         ]);
     }
 

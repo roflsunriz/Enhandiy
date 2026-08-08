@@ -866,7 +866,7 @@ class FileApiHandler
             $shareKeySource = empty($file['dl_key_hash']) ? ('no_key_file_' . $fileId) : $file['dl_key_hash'];
 
             // 設定から暗号化キー取得
-            $configObj = new Config();
+            $configObj = new config();
             $cfg = $configObj->index();
 
             // 安定的な共有トークン生成（ダウンロード側と一致させる）

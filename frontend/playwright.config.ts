@@ -6,9 +6,9 @@ export default defineConfig({
   timeout: 30 * 1000,
   expect: { timeout: 5000 },
   retries: 0,
-  // ヘッドあり時は順次実行（1ワーカー、非並列）
-  fullyParallel: process.env.PW_HEADED ? false : true,
-  workers: process.env.PW_HEADED ? 1 : undefined,
+  // E2Eは同じDBとファイル保存領域を変更するため、テスト間の競合を避けて直列実行する。
+  fullyParallel: false,
+  workers: 1,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost',

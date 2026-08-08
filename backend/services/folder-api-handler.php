@@ -323,7 +323,7 @@ class FolderApiHandler
 
             $payload = array(
                 'folder_id' => $folderId,
-                'name' => $isRename ? ($newName ?? $existingFolder['name']) : $existingFolder['name'],
+                'name' => $isRename ? $newName : $existingFolder['name'],
                 'old_parent_id' => $existingFolder['parent_id'],
                 'new_parent_id' => $isMove ? ($newParentId ?? null) : $existingFolder['parent_id']
             );

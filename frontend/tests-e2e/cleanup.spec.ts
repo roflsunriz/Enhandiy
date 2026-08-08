@@ -1,119 +1,84 @@
 // @ts-nocheck
 import { test, expect } from '@playwright/test';
-import { delay } from './helpers/delay';
 
-async function closeAlertIfVisible(page) {
-  const alertModal = page.locator('#alertModal');
-  try {
-    if (await alertModal.isVisible({ timeout: 300 })) {
-      await page.locator('#alertModal .btn.btn-primary').click();
-      await expect(alertModal).toBeHidden();
-    }
-  } catch {}
-}
+const folderNames = new Set(['E2E-A', 'E2E-A-renamed', 'E2E-B', 'E2E-DEL-FOLDER']);
+const fileNames = new Set(['move-me.txt', 'delete-me.txt', 'bulk-a.txt', 'bulk-b.txt']);
 
 test.describe('E2E cleanup @cleanup: テスト実行後の残骸を削除する', () => {
   test('ルートに残ったテストフォルダとテストファイルを削除', async ({ page }) => {
+    test.setTimeout(120000);
     await page.goto('/');
-    await delay('low');
-    await closeAlertIfVisible(page);
 
-    // フォルダ名のパターンにマッチするものを列挙して全件削除
-    const folderNames = ['E2E-A', 'E2E-A-renamed', 'E2E-B', 'E2E-DEL-FOLDER'];
-    for (const name of folderNames) {
-      const card = page.locator('#folder-grid [data-folder-id]:has(.folder-name:has-text("' + name + '"))').first();
-      try {
-        if (await card.isVisible({ timeout: 1000 })) {
-          await card.locator('.dropdown-toggle').click();
-          const menu = card.locator('.dropdown-menu');
-          await expect(menu).toBeVisible({ timeout: 3000 });
-          await page.waitForTimeout(200);
-          const deleteLink = menu.locator('.delete-folder').first();
-          if (await deleteLink.isVisible({ timeout: 2000 })) {
-            await deleteLink.evaluate(el => (el as HTMLElement).click());
-            const confirmModal = page.locator('#confirmModal');
-            await expect(confirmModal).toBeVisible();
-            await Promise.all([
-              page.waitForResponse(response => response.url().includes('/api/') && response.status() === 200),
-              page.locator('#confirmModalOk').click()
-            ]);
-            await expect(confirmModal).toBeHidden({ timeout: 5000 });
-            await closeAlertIfVisible(page);
-          }
+    const masterKey = process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo';
+    const cleanupResult = await page.evaluate(async ({ targetFolders, targetFiles, masterKeyValue }) => {
+      const csrfToken = window.config?.csrf_token || '';
+      const headers = csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
+      const folderResponse = await fetch('/api/index.php?path=/api/folders', { headers });
+      const folderPayload = await folderResponse.json();
+      const roots = Array.isArray(folderPayload?.data?.folders) ? folderPayload.data.folders : [];
+
+      const flatFolders = [];
+      const visit = (folders, depth = 0) => {
+        for (const folder of folders) {
+          flatFolders.push({ ...folder, depth });
+          if (Array.isArray(folder.children)) visit(folder.children, depth + 1);
         }
-      } catch {}
-    }
+      };
+      visit(roots);
 
-    // ファイル名のパターンにマッチするものを列挙して一括削除フローを使って削除
-    // 一括削除はチェックボックスで選択して一括操作ボタンからパスワード認証する実装を模倣する
-    const fileNames = ['move-me.txt', 'delete-me.txt', 'bulk-a.txt', 'bulk-b.txt'];
-    const visibleRows = [] as {rowLocator: any, name: string}[];
-    for (const fname of fileNames) {
-      try {
-        const row = page
-          .locator('.file-list-item:has(.file-name:has-text("' + fname + '"))').first()
-          .or(page.locator('.file-grid-item:has(.file-grid-item__name[title="' + fname + '"])').first());
-        if (await row.isVisible({ timeout: 1000 })) {
-          visibleRows.push({ rowLocator: row, name: fname });
+      const folderErrors = [];
+      const foldersToDelete = flatFolders
+        .filter(folder => targetFolders.includes(folder.name))
+        .sort((a, b) => b.depth - a.depth);
+      for (const folder of foldersToDelete) {
+        const response = await fetch(
+          `/api/index.php?path=/api/folders/${encodeURIComponent(String(folder.id))}&move_files=true`,
+          { method: 'DELETE', headers },
+        );
+        if (!response.ok) {
+          folderErrors.push(`${folder.name}:${response.status}`);
         }
-      } catch {}
-    }
-
-    if (visibleRows.length > 0) {
-      // 各行のチェックボックスをチェック
-      for (const entry of visibleRows) {
-        try {
-          const checkbox = entry.rowLocator.locator('input.file-checkbox');
-          if (await checkbox.isVisible()) {
-            await checkbox.check();
-            await delay('low');
-          }
-        } catch {}
       }
 
-      // 一括削除ボタンを押す
-      try {
-        const bulkDeleteBtn = page.locator('.file-manager__bulk-actions .bulk-action-btn--delete');
-        await expect(bulkDeleteBtn).toBeVisible({ timeout: 5000 });
-        await bulkDeleteBtn.click();
-        await delay('medium');
+      const filesResponse = await fetch('/api/index.php?path=/api/files');
+      const filesPayload = await filesResponse.json();
+      const files = Array.isArray(filesPayload?.data?.files)
+        ? filesPayload.data.files
+        : (Array.isArray(filesPayload?.data) ? filesPayload.data : []);
+      const fileIds = files
+        .filter(file => targetFiles.includes(file.origin_file_name || file.name))
+        .map(file => String(file.id));
 
-        // 確認ダイアログ
-        const confirmModal = page.locator('#confirmModal');
-        await expect(confirmModal).toBeVisible();
-        await page.locator('#confirmModalOk').click();
-        await delay('low');
+      let fileCleanup = { ok: true, status: 200, body: '' };
+      if (fileIds.length > 0) {
+        const body = new FormData();
+        fileIds.forEach(id => body.append('file_ids[]', id));
+        body.append('master_key', masterKeyValue);
+        body.append('csrf_token', csrfToken);
+        const response = await fetch('/api/index.php?path=/api/files/batch', {
+          method: 'POST',
+          body,
+          headers,
+        });
+        fileCleanup = { ok: response.ok, status: response.status, body: await response.text() };
+      }
 
-        // パスワード入力ダイアログ
-        const pwModal = page.locator('#passwordModal');
-        await expect(pwModal).toBeVisible();
-        const masterKey = process.env.PW_MASTER_KEY || 'fZ3MnA800JqkOy87vbktneUJT7GoxuRo';
-        await page.locator('#passwordModalInput').fill(masterKey);
-        await delay('low');
+      return { folderErrors, fileCleanup };
+    }, {
+      targetFolders: [...folderNames],
+      targetFiles: [...fileNames],
+      masterKeyValue: masterKey,
+    });
 
-        // パスワード確認ボタンをクリックしてAPIレスポンスを待つ
-        await Promise.all([
-          page.waitForResponse(response => response.url().includes('/api/') && response.status() === 200),
-          page.locator('#passwordModalOk').click()
-        ]);
+    expect(cleanupResult.folderErrors).toEqual([]);
+    expect(cleanupResult.fileCleanup, cleanupResult.fileCleanup.body).toMatchObject({ ok: true });
 
-        await expect(pwModal).toBeHidden({ timeout: 5000 });
-        await closeAlertIfVisible(page);
-      } catch {}
-    }
-
-    // 最後にページをリフレッシュして残骸が無いことを確認（多少寛容に）
     await page.reload();
-    await delay('medium');
     for (const name of folderNames) {
-      await expect(page.locator('#folder-grid .folder-name', { hasText: name })).toBeHidden({ timeout: 10000 }).catch(() => {});
+      await expect(page.locator('#folder-grid .folder-name', { hasText: name })).toHaveCount(0);
     }
-    for (const fname of fileNames) {
-      await expect(
-        page.locator('.file-list-item:has(.file-name:has-text("' + fname + '"))').or(page.locator('.file-grid-item:has(.file-grid-item__name[title="' + fname + '"])'))
-      ).toBeHidden({ timeout: 10000 }).catch(() => {});
+    for (const name of fileNames) {
+      await expect(page.locator(`.file-name:has-text("${name}"), .file-grid-item__name[title="${name}"]`)).toHaveCount(0);
     }
   });
 });
-
-
