@@ -539,7 +539,7 @@ class SecurityUtils
         // 古いデータをクリーンアップ（2時間以上前のデータを削除）
         $hourlyData = array_filter(
             $hourlyData,
-            function ($hour) use ($currentHour) {
+            function ($hour) {
                 return $hour >= date('Y-m-d-H', strtotime('-2 hours'));
             },
             ARRAY_FILTER_USE_KEY
@@ -1014,14 +1014,36 @@ class SecurityUtils
                 $_SESSION['last_regeneration'] = time();
             }
 
-            // セッションハイジャック対策：IPアドレスとユーザーエージェントのチェック
+            // セッションハイジャック対策：ブラウザ特性のチェック
+            // IPアドレスはモバイル回線やリバースプロキシ配下で正規利用中にも変わるため、
+            // フィンガープリントには含めない。IP変化によるCSRFトークンの不意な失効を防ぐ。
             $sessionFingerprint = self::generateSessionFingerprint();
-            if (isset($_SESSION['fingerprint']) && $_SESSION['fingerprint'] !== $sessionFingerprint) {
+            $fingerprintVersion = 2;
+            $hasCurrentFingerprint = ($_SESSION['fingerprint_version'] ?? null) === $fingerprintVersion;
+            if (
+                $hasCurrentFingerprint
+                && isset($_SESSION['fingerprint'])
+                && $_SESSION['fingerprint'] !== $sessionFingerprint
+            ) {
                 // セッションが異なる環境で使用されている可能性
                 session_destroy();
                 session_start();
             }
             $_SESSION['fingerprint'] = $sessionFingerprint;
+            $_SESSION['fingerprint_version'] = $fingerprintVersion;
+        }
+    }
+
+    /**
+     * セッションへの書き込みを確定し、排他ロックを解放
+     *
+     * PHPのファイルセッションは同一セッションのリクエストを直列化するため、
+     * CSRF検証後のアップロードやダウンロードなど長時間処理の前に呼び出す。
+     */
+    public static function releaseSessionLock(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
         }
     }
 
@@ -1031,7 +1053,6 @@ class SecurityUtils
     private static function generateSessionFingerprint(): string
     {
         $data = [
-            self::getClientIP(),
             $_SERVER['HTTP_USER_AGENT'] ?? '',
             $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''
         ];

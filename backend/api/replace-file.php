@@ -39,6 +39,8 @@ if (!SecurityUtils::validateCSRFToken($csrfToken)) {
     exit;
 }
 
+SecurityUtils::releaseSessionLock();
+
 // 機能チェック
 if (!($config['allow_file_replace'] ?? false)) {
     http_response_code(403);

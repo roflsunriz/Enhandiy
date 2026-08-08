@@ -3,20 +3,25 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
+  plugins: [{
+    name: 'strip-generated-trailing-whitespace',
+    renderChunk(code) {
+      return {
+        code: code.replace(/[\t ]+$/gm, ''),
+        map: null
+      };
+    }
+  }],
   build: {
     outDir: '../backend/public/assets',
     emptyOutDir: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'src/main.ts'),
-        'file-manager': resolve(__dirname, 'src/components/file-manager.ts'),
-        share: resolve(__dirname, 'src/features/share.ts'),
         'file-edit': resolve(__dirname, 'src/features/file-edit.ts'),
-        'api-client': resolve(__dirname, 'src/api/client.ts'),
         'folder-manager': resolve(__dirname, 'src/features/folder-manager.ts'),
         'drag-drop': resolve(__dirname, 'src/features/drag-drop.ts'),
         'resumable-upload': resolve(__dirname, 'src/features/resumable-upload.ts'),
-        'password-strength': resolve(__dirname, 'src/features/password-strength.ts'),
         // CSS files
         'common': resolve(__dirname, 'assets/styles/common.css'),
         'responsive': resolve(__dirname, 'assets/styles/responsive.css'),
@@ -29,7 +34,7 @@ export default defineConfig({
       },
       output: {
         entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
+        chunkFileNames: '[name]-[hash].js',
         assetFileNames: '[name].[ext]'
       }
     }

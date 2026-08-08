@@ -56,6 +56,8 @@ try {
         exit;
     }
 
+    SecurityUtils::releaseSessionLock();
+
     // パラメータ取得
     $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;
     $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';

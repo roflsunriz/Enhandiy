@@ -14,6 +14,8 @@ export class FileManagerCore {
   // 依存コンポーネント（後から設定）
   private renderer: import('../types/file-manager').IFileManagerRenderer | null = null;
   private events: import('../types/file-manager').IFileManagerEvents | null = null;
+  private refreshPromise: Promise<void> | null = null;
+  private refreshRequested = false;
 
   constructor(container: HTMLElement, options: FileManagerOptions = {}) {
     this.container = container;
@@ -333,21 +335,36 @@ export class FileManagerCore {
    * サーバーからファイルリストを再取得して更新
    */
   public async refreshFromServer(): Promise<void> {
-    // 既に処理中の場合は新しいリクエストを開始しない
-    if (this.state.isRefreshing) {
-      
-      return;
+    // 更新中に追加要求が来た場合は捨てず、進行中の取得後に最新状態をもう一度取得する。
+    this.refreshRequested = true;
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.runRefreshLoop().finally(() => {
+        this.refreshPromise = null;
+      });
     }
 
+    await this.refreshPromise;
+  }
+
+  private async runRefreshLoop(): Promise<void> {
     try {
-      // 処理中フラグを設定
       this.state.isRefreshing = true;
-      
-      
-      // ローディング状態をUIに反映
       this.state.isLoading = true;
       this.updateLoadingState();
 
+      do {
+        this.refreshRequested = false;
+        await this.refreshOnce();
+      } while (this.refreshRequested);
+    } finally {
+      this.state.isRefreshing = false;
+      this.state.isLoading = false;
+      this.updateLoadingState();
+    }
+  }
+
+  private async refreshOnce(): Promise<void> {
+    try {
       // 現在のフォルダIDを取得
       const urlParams = new URLSearchParams(window.location.search);
       const folderId = urlParams.get('folder') || '';
@@ -381,33 +398,16 @@ export class FileManagerCore {
         
         // 新しいファイルがアップロードされた可能性がある場合、最新ファイルのページに移動
         this.goToLatestFilePage();
-        
         this.render();
-        
-        // レンダリング完了を確実に待つ（Promiseベース）
-        await new Promise<void>((resolve) => {
-          window.requestAnimationFrame(() => {
-            setTimeout(() => {
-              
-              if (this.events) {
-                this.events.reinitializeEvents();
-              }              
-              resolve();
-            }, 100); // 少し長めの待機時間で確実性を向上
-          });
-        });
-        
-        
+
+        // イベントはコンテナへの委譲で登録済みなので、再登録は不要。
+        // 更新ループ中に再生成されたボタンも操作不可の状態へ揃える。
+        this.updateLoadingState();
       } else {
         console.error('ファイルリスト更新エラー:', apiRes.error || 'データが無効です');
       }
     } catch (error) {
       console.error('ファイルリストの更新に失敗:', error);
-    } finally {
-      // 処理完了フラグを設定
-      this.state.isRefreshing = false;
-      this.state.isLoading = false;
-      this.updateLoadingState();
     }
   }
 

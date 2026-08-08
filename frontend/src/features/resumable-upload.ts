@@ -30,6 +30,7 @@ declare global {
 const resumableUploads: Record<string, UploadInfo> = {};
 let isResumableAvailable = false;
 let uploadHadErrors = false;
+let enhancedUploadPromise: Promise<void> | null = null;
 
 // Tus.ioの利用可能性をチェック
 ready(() => {
@@ -730,7 +731,16 @@ export function cancelUpload(filename: string): boolean {
 /**
  * 既存のアップロード関数を拡張
  */
-export async function enhancedFileUpload(): Promise<void> {
+export function enhancedFileUpload(): Promise<void> {
+  if (!enhancedUploadPromise) {
+    enhancedUploadPromise = runEnhancedFileUpload().finally(() => {
+      enhancedUploadPromise = null;
+    });
+  }
+  return enhancedUploadPromise;
+}
+
+async function runEnhancedFileUpload(): Promise<void> {
   
   
   // 差し替えキー必須チェック
@@ -774,7 +784,7 @@ export async function enhancedFileUpload(): Promise<void> {
       // 単一ファイル
       try {
         const options = getUploadOptions();
-        uploadFileResumable(fileList[0], options);
+        await uploadFileResumable(fileList[0], options);
       } catch (error) {
         if (error instanceof Error && error.message.includes('キーが弱すぎます')) {
           await showAlert(error.message);
@@ -832,30 +842,21 @@ async function enhancedMultipleUpload(selectedFiles: File[]): Promise<void> {
     }
   }
   
-  let completedCount = 0;
-  const totalCount = selectedFiles.length;
-  
-  // 各ファイルを順次アップロード
-  selectedFiles.forEach((file: File, index: number) => {
-    setTimeout(() => {
-      uploadFileResumable(file, options)
-        .then(() => {
-          completedCount++;
-          if (completedCount === totalCount) {
-            (window as unknown as { isUploading: boolean }).isUploading = false;
-            if (uploadContainer) uploadContainer.style.display = 'none';
-          }
-        })
-        .catch((error) => {
-          console.error('Upload failed for', file.name, error);
-          completedCount++;
-          if (completedCount === totalCount) {
-            (window as unknown as { isUploading: boolean }).isUploading = false;
-            if (uploadContainer) uploadContainer.style.display = 'none';
-          }
-        });
-    }, index * 100); // 100ms間隔でスタートして同時接続数を制限
+  const results = await Promise.allSettled(selectedFiles.map(async (file: File, index: number) => {
+    if (index > 0) {
+      await new Promise<void>(resolve => window.setTimeout(resolve, index * 100));
+    }
+    await uploadFileResumable(file, options);
+  }));
+
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error('Upload failed for', selectedFiles[index].name, result.reason);
+    }
   });
+
+  (window as unknown as { isUploading: boolean }).isUploading = false;
+  if (uploadContainer) uploadContainer.style.display = 'none';
 }
 
 /**

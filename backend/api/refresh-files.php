@@ -25,9 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../core/utils.php';
 
-// セキュアセッション開始
-SecurityUtils::startSecureSession();
-
 try {
     // 設定ファイルの読み込み
     if (!file_exists('../config/config.php')) {

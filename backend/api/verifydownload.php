@@ -14,6 +14,10 @@ ini_set('log_errors', '1'); // ログファイルにエラーを記録
 error_reporting(E_ALL);
 header('Content-Type: application/json; charset=utf-8');
 
+$logger = null;
+$responseHandler = null;
+$fileId = null;
+
 try {
     // 設定とユーティリティの読み込み
     require_once __DIR__ . '/../config/config.php';
@@ -46,6 +50,8 @@ try {
         $logger->warning('CSRF token validation failed in download verify', ['file_id' => $fileId]);
         $responseHandler->error('Invalid request. Please reload the page.', [], 403);
     }
+
+    SecurityUtils::releaseSessionLock();
 
     // ファイル情報の取得
     $fileStmt = $db->prepare("SELECT * FROM uploaded WHERE id = :id");
@@ -127,15 +133,15 @@ try {
     ]);
 } catch (Exception $e) {
     // 緊急時のエラーハンドリング
-    if (isset($logger)) {
+    if ($logger !== null) {
         $logger->error('Download verify API Error: ' . $e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'file_id' => $fileId ?? null
+            'file_id' => $fileId
         ]);
     }
 
-    if (isset($responseHandler)) {
+    if ($responseHandler !== null) {
         $responseHandler->error('A system error has occurred.', [], 500);
     } else {
         // 最低限のエラーレスポンス

@@ -146,6 +146,10 @@ class ApiRouter
                 }
             }
 
+            // 認証・CSRF検証で必要なセッション情報はここまでで読み終えている。
+            // 長時間のファイルI/O中に同一ブラウザのAPIを直列化しないようロックを解放する。
+            SecurityUtils::releaseSessionLock();
+
             // ルートマッチング処理
 
             foreach ($this->routes as $route) {

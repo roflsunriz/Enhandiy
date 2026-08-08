@@ -20,12 +20,14 @@ header('Access-Control-Allow-Methods: POST, PATCH, HEAD, OPTIONS');
 header('Access-Control-Allow-Headers: Upload-Offset, Upload-Length, Upload-Metadata, Tus-Resumable, Content-Type');
 header('Access-Control-Expose-Headers: Upload-Offset, Upload-Length, Tus-Resumable, Location');
 
-// セッション開始（CSRFトークン検証のため）
+// POSTで新しいアップロードを作る場合だけ、CSRF検証のためセッションを開始する。
+// PATCH/HEADはセッションを使わず、チャンク転送中に他のAPIを待たせない。
 // セキュリティクラスがまだ読み込まれていない場合の対処
 if (!class_exists('SecurityUtils')) {
     require_once __DIR__ . '/../core/utils.php';
 }
-if (session_status() === PHP_SESSION_NONE) {
+$method = $_SERVER['REQUEST_METHOD'];
+if ($method === 'POST' && session_status() === PHP_SESSION_NONE) {
     SecurityUtils::startSecureSession();
 }
 
@@ -65,8 +67,6 @@ try {
 } catch (Exception $e) {
     error_log('Schema auto-update failed: ' . $e->getMessage());
 }
-
-$method = $_SERVER['REQUEST_METHOD'];
 
 try {
     switch ($method) {
@@ -162,15 +162,11 @@ function handleCreate()
     $configuredMaxPerHour = 50;
     if (isset($ret['security']['max_uploads_per_hour']) && is_numeric($ret['security']['max_uploads_per_hour'])) {
         $configuredMaxPerHour = (int)$ret['security']['max_uploads_per_hour'];
-    } elseif (isset($security['max_uploads_per_hour']) && is_numeric($security['max_uploads_per_hour'])) {
-        $configuredMaxPerHour = (int)$security['max_uploads_per_hour'];
     }
 
     $configuredMaxConcurrent = 5;
     if (isset($ret['security']['max_concurrent_uploads']) && is_numeric($ret['security']['max_concurrent_uploads'])) {
         $configuredMaxConcurrent = (int)$ret['security']['max_concurrent_uploads'];
-    } elseif (isset($security['max_concurrent_uploads']) && is_numeric($security['max_concurrent_uploads'])) {
-        $configuredMaxConcurrent = (int)$security['max_concurrent_uploads'];
     }
 
     // デバッグログに現在の設定値を出力
@@ -221,6 +217,8 @@ function handleCreate()
         exit;
     }
 
+    SecurityUtils::releaseSessionLock();
+
     // アップロードIDを生成
     $uploadId = generateUploadId();
     $currentTime = time();
@@ -245,10 +243,10 @@ function handleCreate()
         if ($encryptionKey === null) {
             // 追加フォールバック: 設定を再ロードして鍵を取得
             try {
-                if (!class_exists('Config')) {
+                if (!class_exists('config')) {
                     include_once __DIR__ . '/../config/config.php';
                 }
-                $cfgObj = new Config();
+                $cfgObj = new config();
                 $cfg = $cfgObj->index();
                 if (isset($cfg['key']) && is_string($cfg['key']) && $cfg['key'] !== '') {
                     $encryptionKey = $cfg['key'];
@@ -689,17 +687,15 @@ function completeUpload($uploadId, $upload)
         $ipForRecord = $upload['client_ip'] ?? ($_SERVER['REMOTE_ADDR'] ?? null);
 
         // データベースに stored_file_name と file_hash, ip_address を記録
-        if (isset($storedFileName)) {
-            $updateStmt = $db->prepare(
-                "UPDATE uploaded SET stored_file_name = ?, file_hash = ?, ip_address = ? WHERE id = ?"
-            );
-            $updateStmt->execute([
-                $storedFileName,
-                $fileHash,
-                $ipForRecord,
-                $fileId
-            ]);
-        }
+        $updateStmt = $db->prepare(
+            "UPDATE uploaded SET stored_file_name = ?, file_hash = ?, ip_address = ? WHERE id = ?"
+        );
+        $updateStmt->execute([
+            $storedFileName,
+            $fileHash,
+            $ipForRecord,
+            $fileId
+        ]);
 
         // tus_uploadsテーブルを更新
         $sql = $db->prepare("UPDATE tus_uploads SET completed = 1, final_file_id = ? WHERE id = ?");

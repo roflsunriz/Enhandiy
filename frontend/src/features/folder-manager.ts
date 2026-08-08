@@ -28,6 +28,8 @@ declare global {
 
 class SimpleFolderManager {
   private currentFolderId: string | null = null;
+  private refreshPromise: Promise<void> | null = null;
+  private refreshRequested = false;
   
   constructor() {
     this.init();
@@ -119,6 +121,24 @@ class SimpleFolderManager {
    * フォルダ表示とFileManagerを動的更新
    */
   public async refreshAll(): Promise<void> {
+    this.refreshRequested = true;
+    if (!this.refreshPromise) {
+      this.refreshPromise = this.runRefreshLoop().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+
+    await this.refreshPromise;
+  }
+
+  private async runRefreshLoop(): Promise<void> {
+    do {
+      this.refreshRequested = false;
+      await this.refreshOnce();
+    } while (this.refreshRequested);
+  }
+
+  private async refreshOnce(): Promise<void> {
     try {
       
       

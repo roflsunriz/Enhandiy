@@ -12,6 +12,7 @@ import { showAlert, showConfirm, showPasswordPrompt, showModal, hideModal } from
 export class FileManagerEvents {
   private core: FileManagerCore;
   private eventListeners: Array<{ element: Element | Window | Document; event: string; handler: EventListener }> = [];
+  private processingActions = new Set<string>();
 
   constructor(core: FileManagerCore) {
     this.core = core;
@@ -102,8 +103,7 @@ export class FileManagerEvents {
     
     // ファイルアクションボタン
     if (target.classList.contains('file-action-btn') || target.closest('.file-action-btn')) {
-      
-      this.handleFileAction(event);
+      void this.handleFileAction(event);
       return;
     }
     
@@ -166,9 +166,9 @@ export class FileManagerEvents {
     const target = event.target as HTMLElement;
     
     if (target.classList.contains('file-grid-item') || target.closest('.file-grid-item')) {
-      this.handleItemDoubleClick(event);
+      void this.handleItemDoubleClick(event);
     } else if (target.classList.contains('file-list-item') || target.closest('.file-list-item')) {
-      this.handleItemDoubleClick(event);
+      void this.handleItemDoubleClick(event);
     }
   }
 
@@ -271,7 +271,7 @@ export class FileManagerEvents {
   /**
    * ファイルアクション処理
    */
-  private handleFileAction(event: Event): void {
+  private async handleFileAction(event: Event): Promise<void> {
     
     
     event.preventDefault();
@@ -301,14 +301,15 @@ export class FileManagerEvents {
       return;
     }
     
-    // 重複実行を防ぐためのフラグチェック
-    if (button.dataset.processing === 'true') {
-      
+    // DOM再描画や表示切り替えをまたいでも同じ操作を二重実行しない。
+    const actionKey = `${action}:${fileId}`;
+    if (this.processingActions.has(actionKey)) {
       return;
     }
-    
-    // 処理中フラグを設定
-    button.dataset.processing = 'true';
+
+    this.processingActions.add(actionKey);
+    (button as HTMLButtonElement).disabled = true;
+    button.classList.add('disabled');
     
     // ファイル検索処理
     const currentPageFiles = this.core.getCurrentPageFiles();
@@ -332,12 +333,16 @@ export class FileManagerEvents {
           
           if (!file) {
             console.error('FileManagerEvents: ページ移動後もファイルが見つかりません', { fileId });
-            button.dataset.processing = 'false';
+            this.processingActions.delete(actionKey);
+            (button as HTMLButtonElement).disabled = false;
+            button.classList.remove('disabled');
             return;
           }
         } else {
           console.error('FileManagerEvents: ページ移動に失敗しました', { fileId });
-          button.dataset.processing = 'false';
+          this.processingActions.delete(actionKey);
+          (button as HTMLButtonElement).disabled = false;
+          button.classList.remove('disabled');
           return;
         }
       } else {
@@ -349,7 +354,9 @@ export class FileManagerEvents {
           isRefreshing: this.core.isRefreshing(),
           note: 'ファイルが完全に存在しません'
         });
-        button.dataset.processing = 'false';
+        this.processingActions.delete(actionKey);
+        (button as HTMLButtonElement).disabled = false;
+        button.classList.remove('disabled');
         return;
       }
     }
@@ -359,7 +366,7 @@ export class FileManagerEvents {
     try {
       switch (action) {
         case 'download':
-          this.downloadFile(file.id.toString());
+          await this.downloadFile(file.id.toString());
           break;
         case 'share':
           // グローバル関数を呼び出してシェアモーダルを開く
@@ -368,23 +375,24 @@ export class FileManagerEvents {
           }
           break;
         case 'delete':
-          this.deleteFile(file.id.toString());
+          await this.deleteFile(file.id.toString());
           break;
         case 'edit':
-          this.editFile(file.id.toString());
+          await this.editFile(file.id.toString());
           break;
         case 'move':
-          this.moveFile(file.id.toString());
+          await this.moveFile(file.id.toString());
           break;
         case 'replace':
-          this.replaceFile(file.id.toString());
+          await this.replaceFile(file.id.toString());
           break;
       }
     } finally {
-      // 処理完了後にフラグをリセット（少し遅延）
-      setTimeout(() => {
-        button.dataset.processing = 'false';
-      }, 1000);
+      this.processingActions.delete(actionKey);
+      if (button.isConnected) {
+        (button as HTMLButtonElement).disabled = false;
+        button.classList.remove('disabled');
+      }
     }
   }
 
@@ -490,7 +498,7 @@ export class FileManagerEvents {
   /**
    * アイテムダブルクリック処理
    */
-  private handleItemDoubleClick(event: Event): void {
+  private async handleItemDoubleClick(event: Event): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation(); // 他のリスナーを停止
@@ -499,22 +507,17 @@ export class FileManagerEvents {
     if (!item) return;
     const fileId = item.dataset.fileId;
     
-    // ダブルクリック処理中フラグをチェック
-    if (item.dataset.doubleClickProcessing === 'true') {
+    const actionKey = fileId ? `download:${fileId}` : '';
+    if (!fileId || this.processingActions.has(actionKey)) {
       return;
     }
-    
-    // ダブルクリック処理中フラグを設定
-    item.dataset.doubleClickProcessing = 'true';
-    
-    if (fileId) {
-      this.downloadFile(fileId);
+
+    this.processingActions.add(actionKey);
+    try {
+      await this.downloadFile(fileId);
+    } finally {
+      this.processingActions.delete(actionKey);
     }
-    
-    // フラグをリセット（遅延）
-    setTimeout(() => {
-      item.dataset.doubleClickProcessing = 'false';
-    }, 1000);
   }
 
   /**

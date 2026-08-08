@@ -14,6 +14,7 @@ import { actionIcons } from '../utils/icons';
 // グローバル変数
 let selectedFiles: UploadedFile[] = [];
 let isUploading = false;
+let uploadClickInProgress = false;
 
 // DOM読み込み完了後の初期化
 ready(() => {
@@ -102,31 +103,45 @@ function initializeDragDrop(): void {
   // 送信ボタンのクリックイベント（再開可能アップロード統合）
   document.addEventListener('click', (e: Event) => {
     const target = e.target as HTMLElement;
-    if (target.id === 'uploadBtn') {
+    const uploadButton = target.closest('#uploadBtn') as HTMLButtonElement | null;
+    if (uploadButton) {
       e.preventDefault();
       e.stopPropagation();
-      
-      
-      
-      // 再開可能アップロード機能が利用可能かチェック
-      if (typeof (window as unknown as { enhancedFileUpload?: () => void }).enhancedFileUpload === 'function') {
-        
-        (window as unknown as { enhancedFileUpload: () => void }).enhancedFileUpload();
-      } else {
-        
+
+      if (isUploading || uploadClickInProgress) return false;
+      uploadClickInProgress = true;
+      uploadButton.disabled = true;
+
+      const runUpload = async (): Promise<void> => {
+        // 再開可能アップロード機能が利用可能かチェック
+        const uploadWindow = window as unknown as { enhancedFileUpload?: () => Promise<void> };
+        if (typeof uploadWindow.enhancedFileUpload === 'function') {
+          await uploadWindow.enhancedFileUpload();
+          return;
+        }
+
         // フォールバック: 従来の方式
         if (selectedFiles.length > 0) {
-          uploadMultipleFiles();
-        } else {
-          const fileInput = $('#multipleFileInput') as HTMLInputElement;
-          if (fileInput?.files && fileInput.files.length > 0) {
-            // 単一ファイルアップロード
-            uploadSingleFile(fileInput.files[0]);
-          } else {
-            showAlert('ファイルが選択されていません。');
-          }
+          await uploadMultipleFiles();
+          return;
         }
-      }
+
+        const fileInput = $('#multipleFileInput') as HTMLInputElement;
+        if (fileInput?.files && fileInput.files.length > 0) {
+          await uploadSingleFile(fileInput.files[0]);
+          return;
+        }
+
+        await showAlert('ファイルが選択されていません。');
+      };
+
+      void runUpload().catch((error: unknown) => {
+        console.error('アップロード開始エラー:', error);
+      }).finally(() => {
+        uploadClickInProgress = false;
+        uploadButton.disabled = false;
+      });
+
       return false;
     }
   });

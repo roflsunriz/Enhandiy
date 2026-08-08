@@ -13,6 +13,9 @@ import { showModal, hideModal } from '../utils/bootstrap';
 import '../types/global';
 // モーダル切り替え用に最後の共有データを保持
 let lastShareData: { share_key: string; share_url?: string; share_url_with_comment?: string; max_downloads?: number; expires_days?: number } | null = null;
+let shareSettingsRequestSequence = 0;
+let commentSaveInProgress = false;
+let fileReplaceInProgress = false;
 
 // ファイル編集機能初期化
 ready(() => {
@@ -213,13 +216,16 @@ export function openShareModal(fileId: string, filename: string, comment: string
     shareFileNameInput.setAttribute('data-file-id', fileId);
   }
   if (shareFileCommentInput) shareFileCommentInput.value = comment;
+  const shareMaxDownloadsInput = $('#shareMaxDownloads') as HTMLInputElement;
+  const shareExpiresDaysInput = $('#shareExpiresDays') as HTMLInputElement;
+  if (shareMaxDownloadsInput) shareMaxDownloadsInput.value = '';
+  if (shareExpiresDaysInput) shareExpiresDaysInput.value = '';
+  lastShareData = null;
+
   // 現在の設定を取得して入力に反映
-  fetchShareSettings(fileId);
-  
-  // 初期表示時も現在の設定を反映
-  setTimeout(() => {
-    updateCurrentShareSettings();
-  }, 100);
+  const requestSequence = ++shareSettingsRequestSequence;
+  void fetchShareSettings(fileId, requestSequence);
+  updateCurrentShareSettings();
   
   // 結果パネルを隠す
   const shareResultPanel = $('#shareResultPanel') as HTMLElement;
@@ -265,6 +271,11 @@ async function handleSaveComment(): Promise<void> {
     showError('マスターキーまたは差し替えキーのいずれかを入力してください。');
     return;
   }
+
+  if (commentSaveInProgress) return;
+  commentSaveInProgress = true;
+  const saveButton = $('#saveCommentBtn') as HTMLButtonElement;
+  if (saveButton) saveButton.disabled = true;
   
   try {
     const response = await request(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}`, {
@@ -289,12 +300,15 @@ async function handleSaveComment(): Promise<void> {
         window.location.reload();
       }
     } else {
-      throw new Error(response.error || 'コメントの保存に失敗しました。');
+      throw new Error(response.message || response.error || 'コメントの保存に失敗しました。');
     }
     
   } catch (error) {
     console.error('コメント保存エラー:', error);
-    showError('コメントの保存に失敗しました。');
+    showError(error instanceof Error ? error.message : 'コメントの保存に失敗しました。');
+  } finally {
+    commentSaveInProgress = false;
+    if (saveButton) saveButton.disabled = false;
   }
 }
 
@@ -334,6 +348,11 @@ async function handleReplaceFile(): Promise<void> {
     showError('マスターキーまたは差し替えキーのいずれかを入力してください。');
     return;
   }
+  if (fileReplaceInProgress) return;
+  fileReplaceInProgress = true;
+  const replaceButton = $('#replaceFileBtn') as HTMLButtonElement;
+  if (replaceButton) replaceButton.disabled = true;
+
   const formData = new FormData();
   formData.append('file', file);
   // 両方常に送る（サーバー側でどちらかを判定）
@@ -363,7 +382,10 @@ async function handleReplaceFile(): Promise<void> {
     
   } catch (error) {
     console.error('ファイル差し替えエラー:', error);
-    showError('ファイルの差し替えに失敗しました。');
+    showError(error instanceof Error ? error.message : 'ファイルの差し替えに失敗しました。');
+  } finally {
+    fileReplaceInProgress = false;
+    if (replaceButton) replaceButton.disabled = false;
   }
 }
 
@@ -412,6 +434,7 @@ async function handleGenerateShareLink(): Promise<void> {
   }
   
   const fileId = attr(shareFileNameInput, 'data-file-id');
+  const requestSequence = shareSettingsRequestSequence;
   const maxDownloads = shareMaxDownloadsInput?.value || null;
   const expiresDays = shareExpiresDaysInput?.value || null;
   
@@ -436,6 +459,10 @@ async function handleGenerateShareLink(): Promise<void> {
         expires_days: expiresDays
       })
     });
+
+    if (requestSequence !== shareSettingsRequestSequence || attr($('#shareFileName'), 'data-file-id') !== fileId) {
+      return;
+    }
     
     if (response.success && response.data) {
       // 生成結果を保持
@@ -452,6 +479,7 @@ async function handleGenerateShareLink(): Promise<void> {
     }
     
   } catch (error) {
+    if (requestSequence !== shareSettingsRequestSequence) return;
     console.error('共有リンク生成エラー:', error);
     // エラーオブジェクトからメッセージを取得
     const errorMessage = error instanceof Error ? error.message : '共有リンクの生成に失敗しました。';
@@ -607,9 +635,14 @@ if (typeof window !== 'undefined') {
 }
 
 // 共有設定取得
-async function fetchShareSettings(fileId: string): Promise<void> {
+async function fetchShareSettings(fileId: string, requestSequence: number): Promise<void> {
   try {
     const res = await get(`/api/index.php?path=/api/files/${encodeURIComponent(fileId)}/share`);
+    const activeFileId = attr($('#shareFileName'), 'data-file-id');
+    if (requestSequence !== shareSettingsRequestSequence || activeFileId !== fileId) {
+      return;
+    }
+
     if (res.success && res.data) {
       const data = res.data as { max_downloads?: number; expires_days?: number };
       const maxInput = $('#shareMaxDownloads') as HTMLInputElement;
@@ -618,6 +651,9 @@ async function fetchShareSettings(fileId: string): Promise<void> {
       if (expInput) expInput.value = data.expires_days?.toString() || '';
       // lastShareDataに反映
       lastShareData = { ...lastShareData, max_downloads: data.max_downloads, expires_days: data.expires_days } as typeof lastShareData;
+      updateCurrentShareSettings();
+    } else {
+      console.error('共有設定の取得に失敗:', res.message || res.error);
     }
   } catch (e) {
     console.error('設定取得エラー:', e);
@@ -630,6 +666,7 @@ async function handleSaveShareSettings(): Promise<void> {
   const expInput = $('#shareExpiresDays') as HTMLInputElement;
   if (!shareFileNameInput) { showError('ファイル情報が見つかりません。'); return; }
   const fileId = shareFileNameInput.getAttribute('data-file-id') || '';
+  const requestSequence = shareSettingsRequestSequence;
   const maxVal = maxInput?.value || null;
   const expVal = expInput?.value || null;
   const saveBtn = $('#saveShareSettingsBtn') as HTMLButtonElement;
@@ -640,6 +677,9 @@ async function handleSaveShareSettings(): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ max_downloads: maxVal ? parseInt(maxVal) : null, expires_days: expVal ? parseInt(expVal) : null })
     });
+    if (requestSequence !== shareSettingsRequestSequence || attr($('#shareFileName'), 'data-file-id') !== fileId) {
+      return;
+    }
     if (res.success) {
       showSuccess('設定を保存しました。');
       lastShareData = { ...lastShareData, max_downloads: maxVal ? parseInt(maxVal) : undefined, expires_days: expVal ? parseInt(expVal) : undefined } as typeof lastShareData;
@@ -647,6 +687,7 @@ async function handleSaveShareSettings(): Promise<void> {
       throw new Error(res.error || '設定保存に失敗しました。');
     }
   } catch (e) {
+    if (requestSequence !== shareSettingsRequestSequence) return;
     console.error('設定保存エラー:', e);
     showError('設定の保存に失敗しました。');
   } finally {

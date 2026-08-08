@@ -14,6 +14,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: string | FormData;
   timeout?: number;
+  signal?: AbortSignal;
 }
 
 // デフォルトヘッダー
@@ -46,23 +47,80 @@ export function getCsrfToken(): string {
   return '';
 }
 
-// タイムアウト付きfetch
-function fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('Request timeout'));
-    }, timeout);
+// タイムアウト付きfetch。時間切れ後もサーバー処理だけ継続する不整合を防ぐため通信も中止する。
+async function fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
+  const controller = new AbortController();
+  const externalSignal = options.signal;
+  const abortFromExternalSignal = (): void => controller.abort(externalSignal?.reason);
 
-    fetch(url, options)
-      .then(response => {
-        clearTimeout(timer);
-        resolve(response);
-      })
-      .catch(error => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
+  if (externalSignal?.aborted) {
+    abortFromExternalSignal();
+  } else {
+    externalSignal?.addEventListener('abort', abortFromExternalSignal, { once: true });
+  }
+
+  const timer = window.setTimeout(() => {
+    controller.abort(new DOMException('Request timeout', 'TimeoutError'));
+  }, timeout);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timer);
+    externalSignal?.removeEventListener('abort', abortFromExternalSignal);
+  }
+}
+
+interface RawApiResponse<T> {
+  status?: string;
+  success?: boolean;
+  message?: string;
+  data?: T;
+  error_code?: string;
+  hint?: string;
+  error_id?: string;
+  error?: string | { code?: string; message?: string };
+}
+
+function normalizeJsonResponse<T>(data: unknown, httpStatus: number): ApiResponse<T> {
+  if (typeof data !== 'object' || data === null) {
+    return { success: httpStatus >= 200 && httpStatus < 300, data: data as T };
+  }
+
+  const raw = data as RawApiResponse<T>;
+  const isEnvelope = 'status' in raw
+    || 'success' in raw
+    || 'error' in raw
+    || 'error_code' in raw
+    || 'message' in raw;
+  if (!isEnvelope) {
+    if (httpStatus >= 200 && httpStatus < 300) {
+      // 標準レスポンス導入前のAPIとの互換性を維持する。
+      return raw as ApiResponse<T>;
+    }
+    return { success: false, error: `HTTP_${httpStatus}`, message: `HTTP ${httpStatus}` };
+  }
+
+  const succeeded = raw.status === 'success' || raw.success === true;
+  if (succeeded) {
+    return { success: true, data: raw.data as T, message: raw.message };
+  }
+
+  const nestedError = typeof raw.error === 'object' && raw.error !== null ? raw.error : undefined;
+  const errorCode = raw.error_code
+    || nestedError?.code
+    || (typeof raw.error === 'string' ? raw.error : undefined)
+    || `HTTP_${httpStatus}`;
+  const message = raw.message || nestedError?.message || (typeof raw.error === 'string' ? raw.error : undefined);
+  const composedMessage = [message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
+    .filter(Boolean)
+    .join(' ');
+
+  return {
+    success: false,
+    error: errorCode,
+    message: composedMessage || `HTTP ${httpStatus}`
+  };
 }
 
 // リクエストボディの型定義（現在未使用だが将来の拡張のため保持）
@@ -77,7 +135,8 @@ export async function request<T = unknown>(
     method = 'GET',
     headers = {},
     body,
-    timeout = 10000
+    timeout = body instanceof FormData ? 300000 : 30000,
+    signal
   } = options;
 
   const requestHeaders: Record<string, string> = {
@@ -101,35 +160,27 @@ export async function request<T = unknown>(
       method,
       headers: requestHeaders,
       body,
+      signal,
     }, timeout);
 
     // レスポンスの Content-Type を確認
     const contentType = response.headers.get('Content-Type') || '';
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
     // JSONレスポンスの場合
     if (contentType.includes('application/json')) {
-      const data = await response.json();
-      // バックエンドのRawレスポンスをApiResponseに正規化
-      if (typeof data === 'object' && data !== null && 'status' in data) {
-        const raw = data as unknown as { status: string; message?: string; data?: T; error_code?: string; hint?: string; error_id?: string };
-        if (raw.status === 'success') {
-          return { success: true, data: raw.data as T, message: raw.message };
-        }
-        const composed = [raw.message, raw.hint, raw.error_id ? `(ID: ${raw.error_id})` : undefined]
-          .filter(Boolean)
-          .join(' ');
-        // error_code（例: AUTH_REQUIRED, INVALID_KEY）が存在する場合はerrorに採用
-        return { success: false, error: (raw.error_code || composed) as unknown as string, message: raw.message } as unknown as ApiResponse<T>;
-      }
-      return data as ApiResponse<T>;
+      const data: unknown = await response.json();
+      return normalizeJsonResponse<T>(data, response.status);
     }
 
     // テキストレスポンスの場合
     const text = await response.text();
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `HTTP_${response.status}`,
+        message: text || `HTTP ${response.status}: ${response.statusText}`
+      };
+    }
     return {
       success: true,
       data: text as T
@@ -137,9 +188,14 @@ export async function request<T = unknown>(
 
   } catch (error) {
     console.error('Request failed:', error);
+    const isTimeout = error instanceof DOMException && error.name === 'TimeoutError';
+    const isAborted = error instanceof DOMException && error.name === 'AbortError';
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: isTimeout ? 'REQUEST_TIMEOUT' : (isAborted ? 'REQUEST_ABORTED' : 'NETWORK_ERROR'),
+      message: isTimeout
+        ? '通信がタイムアウトしました。サーバーの状態を確認してから再試行してください。'
+        : (isAborted ? '通信が中止されました。' : (error instanceof Error ? error.message : 'ネットワークエラーが発生しました。'))
     };
   }
 }

@@ -67,6 +67,9 @@ try {
         }
     }
 
+    // 以降はセッションを書き換えないため、ファイル保存中の排他ロックを解放する。
+    SecurityUtils::releaseSessionLock();
+
     // アップロードレート制限チェック
     $clientIP = SecurityUtils::getClientIP();
     $rateLimitResult = SecurityUtils::checkUploadRateLimit(

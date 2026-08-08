@@ -15,13 +15,14 @@ ini_set('log_errors', '1');
 error_reporting(E_ALL);
 header('Content-Type: application/json; charset=utf-8');
 
+$logger = null;
+$responseHandler = null;
+$validFileIds = null;
+
 try {
     // 設定とユーティリティの読み込み
     require_once __DIR__ . '/../config/config.php';
     require_once __DIR__ . '/../core/utils.php';
-
-    // セキュアセッション開始
-    SecurityUtils::startSecureSession();
 
     $configInstance = new config();
     $config = $configInstance->index();
@@ -227,15 +228,15 @@ try {
     }
 } catch (Exception $e) {
     // 緊急時のエラーハンドリング
-    if (isset($logger)) {
+    if ($logger !== null) {
         $logger->error('Bulk delete API Error: ' . $e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'file_ids' => $validFileIds ?? null
+            'file_ids' => $validFileIds
         ]);
     }
 
-    if (isset($responseHandler)) {
+    if ($responseHandler !== null) {
         $responseHandler->error('A system error occurred during bulk deletion.', [], 500);
     } else {
         // 最低限のエラーレスポンス

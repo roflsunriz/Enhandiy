@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../core/assets.php'; ?>
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -16,14 +17,14 @@
     >
 
     <!-- Viteビルド済みCSS (Apache Alias不要: backend/public/assets 配下) -->
-    <link rel="stylesheet" href="/assets/common.css">
-    <link rel="stylesheet" href="/assets/responsive.css">
-    <link rel="stylesheet" href="/assets/responsive-extra.css">
-    <link rel="stylesheet" href="/assets/file-manager-css.css">
-    <link rel="stylesheet" href="/assets/share-css.css">
-    <link rel="stylesheet" href="/assets/dragdrop.css">
-    <link rel="stylesheet" href="/assets/folders.css">
-    <link rel="stylesheet" href="/assets/password-strength-css.css">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('common.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('responsive.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('responsive-extra.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('file-manager-css.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('share-css.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('dragdrop.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('folders.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('password-strength-css.css'); ?>">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
