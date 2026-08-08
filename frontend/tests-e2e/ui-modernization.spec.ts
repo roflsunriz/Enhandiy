@@ -123,6 +123,17 @@ test.describe('Fluent UI レスポンシブ品質', () => {
     expect(folderListLayout.display).toBe('table-row-group');
     expect(folderListLayout.rowWidth).toBeGreaterThan(folderListLayout.tableWidth * 0.9);
 
+    const folderActions = table.locator('.folder-list__actions');
+    await expect(folderActions.locator('.dropdown-toggle')).toHaveCount(0);
+    await expect(folderActions.locator('[data-folder-action="rename"]')).toBeVisible();
+    await expect(folderActions.locator('[data-folder-action="move"]')).toBeVisible();
+    await expect(folderActions.locator('[data-folder-action="delete"]')).toBeVisible();
+
+    await folderActions.locator('[data-folder-action="rename"]').click();
+    await expect(page.locator('#promptModal')).toBeVisible();
+    await expect(page.locator('#promptModalInput')).toHaveValue('統合フォルダ');
+    await page.locator('#promptModalCancel').click();
+
     await page.locator('.file-manager__search-input').fill('統合フォルダ');
     await expect(table.locator('.folder-list-item')).toBeVisible();
     await expect(table.locator('.file-list-item')).toHaveCount(0);

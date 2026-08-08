@@ -344,14 +344,39 @@ body .file-manager-v2 {
   background: var(--fluent-accent-soft);
 }
 
-.folder-list__actions .folder-menu {
-  position: static;
-  display: inline-block;
-  opacity: 1;
+.folder-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.folder-list__actions .dropdown-toggle--icon {
+.file-manager-v2 .folder-list__actions .folder-action-btn {
+  width: auto;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  gap: 5px;
+  padding: 0 8px;
+  color: var(--fluent-foreground-muted);
   background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.file-manager-v2 .folder-list__actions .folder-action-btn:hover {
+  border-color: var(--fluent-stroke);
+  color: var(--fluent-accent-pressed);
+  background: var(--fluent-accent-soft);
+}
+
+.file-manager-v2 .folder-list__actions .folder-action-btn--delete {
+  color: var(--fluent-danger);
+}
+
+.file-manager-v2 .folder-list__actions .folder-action-btn--delete:hover {
+  border-color: #f1b8bd;
+  color: var(--fluent-danger);
+  background: var(--fluent-danger-soft);
 }
 
 .file-grid-item {

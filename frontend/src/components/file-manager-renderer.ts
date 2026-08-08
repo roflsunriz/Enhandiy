@@ -358,8 +358,32 @@ export class FileManagerRenderer {
         <td class="file-list__date">${createdAt}</td>
         ${folderColumn}
         <td class="file-list__downloads">${Number(folder.file_count || 0)}</td>
-        <td class="file-list__actions folder-list__actions">${this.createFolderMenu(folderId, folderName)}</td>
+        <td class="file-list__actions folder-list__actions">${this.createFolderListActions(folderId, folderName)}</td>
       </tr>
+    `;
+  }
+
+  private createFolderListActions(folderId: string, folderName: string): string {
+    const escapedFolderId = this.escapeHtml(folderId);
+
+    return `
+      <div class="folder-list-actions" role="group" aria-label="${folderName}の操作">
+        <button type="button" class="btn folder-action-btn rename-folder"
+                data-folder-id="${escapedFolderId}" data-folder-action="rename"
+                title="名前変更" aria-label="${folderName}の名前を変更">
+          ${actionIcons.edit(16)} <span>名前変更</span>
+        </button>
+        <button type="button" class="btn folder-action-btn move-folder"
+                data-folder-id="${escapedFolderId}" data-folder-action="move"
+                title="移動" aria-label="${folderName}を移動">
+          ${actionIcons.move(16)} <span>移動</span>
+        </button>
+        <button type="button" class="btn folder-action-btn folder-action-btn--delete delete-folder"
+                data-folder-id="${escapedFolderId}" data-folder-action="delete"
+                title="削除" aria-label="${folderName}を削除">
+          ${actionIcons.delete(16)} <span>削除</span>
+        </button>
+      </div>
     `;
   }
 
