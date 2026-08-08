@@ -257,6 +257,8 @@ export class FileManagerRenderer {
     const fileIcon = fileIconForMime(file.type || '', 20);
     const fileSize = this.formatFileSize(file.size);
     const uploadDate = this.formatDate(file.upload_date || '');
+    const fileName = file.name || '';
+    const { baseName, extension } = this.splitFileName(fileName);
     
     return `
       <article class="file-grid-item ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
@@ -269,10 +271,8 @@ export class FileManagerRenderer {
           <div class="file-grid-item__icon">
             <span class="file-icon file-icon--${this.getFileTypeClass(file.type || '')}">${fileIcon}</span>
           </div>
-          <div class="file-grid-item__name" title="${this.escapeHtml(file.name || '')}">
-            ${this.escapeHtml(this.truncateText(file.name || '', 36))}
-          </div>
-          ${file.comment ? `<div class="file-grid-item__comment">${this.escapeHtml(this.truncateText(file.comment, 50))}</div>` : ''}
+          <div class="file-grid-item__name" title="${this.escapeHtml(fileName)}" aria-label="${this.escapeHtml(fileName)}"><span class="file-grid-item__name-base">${this.escapeHtml(baseName)}</span>${extension ? `<span class="file-grid-item__name-extension">${this.escapeHtml(extension)}</span>` : ''}</div>
+          ${file.comment ? `<div class="file-grid-item__comment" title="${this.escapeHtml(file.comment)}">${this.escapeHtml(file.comment)}</div>` : ''}
         </div>
         
         <!-- メタデータ部分（2x2 グリッド・アイコンラベル） -->
@@ -681,9 +681,16 @@ export class FileManagerRenderer {
     return div.innerHTML;
   }
 
-  private truncateText(text: string, length: number): string {
-    if (!text) return '';
-    return text.length > length ? text.substring(0, length) + '...' : text;
+  private splitFileName(fileName: string): { baseName: string; extension: string } {
+    const lastDotIndex = fileName.lastIndexOf('.');
+    if (lastDotIndex <= 0 || lastDotIndex === fileName.length - 1) {
+      return { baseName: fileName, extension: '' };
+    }
+
+    return {
+      baseName: fileName.slice(0, lastDotIndex),
+      extension: fileName.slice(lastDotIndex),
+    };
   }
 
   private getFolderPath(folderId?: string): string {

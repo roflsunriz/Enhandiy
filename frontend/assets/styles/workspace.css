@@ -224,14 +224,14 @@ body .file-manager-v2 {
 .folder-grid-item .folder-item-wrapper {
   position: relative;
   height: 100%;
-  min-height: 220px;
+  min-height: 286px;
 }
 
 .folder-grid-item .folder-item {
   display: flex;
   width: 100%;
   height: 100%;
-  min-height: 220px;
+  min-height: 286px;
   flex-direction: column;
   gap: 12px;
   align-items: center;
@@ -380,11 +380,80 @@ body .file-manager-v2 {
 }
 
 .file-grid-item {
-  min-height: 220px;
+  min-height: 286px;
 }
 
 .file-grid-item__header {
-  min-height: 104px;
+  height: 154px;
+  min-height: 154px;
+  max-height: 154px;
+  grid-template-rows: auto minmax(0, 2.8em) minmax(0, 2.8em);
+  align-content: start;
+  overflow: hidden;
+  padding: 14px 16px 12px;
+}
+
+.file-grid-item__icon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 6px;
+}
+
+.file-grid-item__name {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 2.8em;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  line-height: 1.4;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.file-grid-item__name-base {
+  display: -webkit-box;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.file-grid-item__name-extension {
+  max-width: 42%;
+  flex: 0 0 auto;
+  overflow: hidden;
+  align-self: flex-end;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-grid-item__comment {
+  display: -webkit-box;
+  width: 100%;
+  height: 2.8em;
+  overflow: hidden;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+  text-align: center;
+  text-overflow: clip;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.file-grid-item__metadata {
+  min-height: 62px;
+}
+
+.file-manager-v2 .file-grid-item__actions {
+  flex: 0 0 auto;
 }
 
 .file-manager__empty {
@@ -542,7 +611,7 @@ body .file-manager-v2 {
   .folder-grid-item .folder-item-wrapper,
   .folder-grid-item .folder-item,
   .file-grid-item {
-    min-height: 210px;
+    min-height: 296px;
   }
 
   .app-workspace__drop-overlay {

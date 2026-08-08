@@ -139,6 +139,71 @@ test.describe('Fluent UI レスポンシブ品質', () => {
     await expect(table.locator('.file-list-item')).toHaveCount(0);
   });
 
+  test('長いファイル名と説明でもグリッドカードの構造を維持する', async ({ page }) => {
+    const longFileName = `${'非常に長い日本語ファイル名😀'.repeat(12)}.production-build-artifact.json`;
+    const longComment = `https://example.com/${'unbroken-path-segment'.repeat(18)} 説明😀`.repeat(3);
+
+    for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      await page.evaluate(({ fileName, comment }) => {
+        window.folderData = [];
+        window.fileManagerInstance?.setFiles([
+          {
+            id: 'long-1',
+            origin_file_name: fileName,
+            name: fileName,
+            comment,
+            size: 1024,
+            type: 'application/json',
+            upload_date: '2026-08-08 10:00:00',
+          },
+          {
+            id: 'long-2',
+            origin_file_name: `絵文字と結合文字-${'e\u0301😀'.repeat(40)}.txt`,
+            name: `絵文字と結合文字-${'e\u0301😀'.repeat(40)}.txt`,
+            comment: '改行できない説明'.repeat(40),
+            size: 2048,
+            type: 'text/plain',
+            upload_date: '2026-08-08 09:00:00',
+          },
+        ]);
+      }, { fileName: longFileName, comment: longComment });
+
+      const cards = page.locator('.file-grid-item');
+      await expect(cards).toHaveCount(2);
+      await expect(cards.first().locator('.file-grid-item__name-extension')).toHaveText('.json');
+      await expect(cards.first().locator('.file-grid-item__name-extension')).toBeVisible();
+      await expect(cards.first().locator('.file-grid-item__name')).toHaveAttribute('title', longFileName);
+      await expect(cards.first().locator('.file-grid-item__comment')).toHaveText(longComment);
+
+      const layouts = await cards.evaluateAll(elements => elements.map(element => {
+        const card = element as HTMLElement;
+        const actions = card.querySelector<HTMLElement>('.file-grid-item__actions');
+        const comment = card.querySelector<HTMLElement>('.file-grid-item__comment');
+        const extension = card.querySelector<HTMLElement>('.file-grid-item__name-extension');
+        const cardRect = card.getBoundingClientRect();
+        const actionsRect = actions?.getBoundingClientRect();
+        return {
+          height: cardRect.height,
+          width: cardRect.width,
+          scrollWidth: card.scrollWidth,
+          actionsVisible: Boolean(actionsRect && actionsRect.height > 0),
+          actionsInsideCard: Boolean(actionsRect && actionsRect.bottom <= cardRect.bottom + 1),
+          commentLineClamp: comment ? getComputedStyle(comment).webkitLineClamp : '',
+          extensionClipped: Boolean(extension && extension.scrollWidth > extension.clientWidth + 1),
+        };
+      }));
+
+      expect(layouts.every(layout => layout.scrollWidth <= layout.width + 1)).toBe(true);
+      expect(layouts.every(layout => layout.actionsVisible && layout.actionsInsideCard)).toBe(true);
+      expect(layouts.every(layout => layout.commentLineClamp === '2')).toBe(true);
+      expect(layouts.every(layout => !layout.extensionClipped)).toBe(true);
+      expect(Math.max(...layouts.map(layout => layout.height)) - Math.min(...layouts.map(layout => layout.height))).toBeLessThanOrEqual(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    }
+  });
+
   test('ワークスペースへのドロップがアップロード設定につながる', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => {
