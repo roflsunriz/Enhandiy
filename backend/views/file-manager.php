@@ -7,8 +7,7 @@
 
 ?>
 
-<div class="row bg-white radius box-shadow">
-  <div class="col-sm-12">
+<section class="app-surface app-file-surface" aria-label="ファイル">
     
     <!-- ファイルマネージャー (TypeScript版) -->
     <div id="fileManagerContainer">
@@ -24,5 +23,4 @@
       - モダンUI/UX
     -->
 
-  </div>
-</div>
+</section>

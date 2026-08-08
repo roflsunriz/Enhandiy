@@ -16,13 +16,25 @@
 
 ?>
 
-<div class="container">
+<main class="container app-shell">
   <!-- ステータスメッセージ部分 -->
   <?php include __DIR__ . '/status-messages.php'; ?>
 
-  <!-- アップロード起動ボタン（モーダル） -->
-  <div class="row">
-    <div class="col-sm-12 text-center my-15">
+  <section class="app-hero" aria-labelledby="app-page-title">
+    <div class="app-hero__content">
+      <span class="app-hero__eyebrow">ファイル ワークスペース</span>
+      <h1 id="app-page-title"><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></h1>
+      <p>ファイルのアップロード、整理、共有を、ひとつの軽やかなワークスペースで。</p>
+    </div>
+    <div class="app-hero__actions">
+      <?php require_once __DIR__ . '/icons.php'; ?>
+      <button type="button" class="btn btn-lg app-upload-trigger" data-bs-toggle="modal" data-bs-target="#uploadModal">
+        <?php echo render_icon('folder', 18, 'icon'); ?> ファイルをアップロード
+      </button>
+    </div>
+  </section>
+
+  <!-- アップローダーからのお知らせ -->
       <?php
         // config.php で設定可能なアップローダ説明（タイトル/説明/URL）。空の場合は非表示。
         if (isset($uploader_info) && is_array($uploader_info)) {
@@ -52,47 +64,40 @@
             }
 
             if ($infoTitle !== '' || $infoDesc !== '' || count($infoUrls) > 0) {
-                echo '<div class="alert alert-info text-start" role="alert">';
+                echo '<aside class="app-announcement" role="note">';
                 if ($infoTitle !== '') {
                     $safeTitle = htmlspecialchars($infoTitle, ENT_QUOTES, 'UTF-8');
-                    echo '<h4 class="alert-heading" style="margin-top:0;">'
+                    echo '<h2>'
                         . $safeTitle
-                        . '</h4>';
+                        . '</h2>';
                 }
                 if ($infoDesc !== '') {
                     $safeDesc = htmlspecialchars($infoDesc, ENT_QUOTES, 'UTF-8');
-                    echo '<p style="margin-bottom:8px;">' . nl2br($safeDesc) . '</p>';
+                    echo '<p>' . nl2br($safeDesc) . '</p>';
                 }
                 if (count($infoUrls) > 0) {
-                    echo '<div style="margin:0;">';
+                    echo '<div class="app-announcement__links">';
                     foreach ($infoUrls as $entry) {
                         $url = $entry['url'] ?? '';
                         $title = $entry['title'] ?? '';
                         $desc = $entry['desc'] ?? '';
                         $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
                         $linkText = ($title !== '') ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : $safeUrl;
-                        echo '<div style="display:inline-block;margin-right:16px;vertical-align:top;">'
-                            . '<a href="' . $safeUrl . '" target="_blank" rel="noopener noreferrer">'
-                            . $linkText
-                            . '</a>';
+                        echo '<a class="app-announcement__link" href="' . $safeUrl
+                            . '" target="_blank" rel="noopener noreferrer">'
+                            . '<span>' . $linkText . '</span>';
                         if ($desc !== '') {
                             $safeDesc = nl2br(htmlspecialchars($desc, ENT_QUOTES, 'UTF-8'));
-                            echo '<div class="small text-muted" style="margin-top:4px;">' . $safeDesc . '</div>';
+                            echo '<small>' . $safeDesc . '</small>';
                         }
-                        echo '</div>';
+                        echo '</a>';
                     }
                     echo '</div>';
                 }
-                echo '</div>';
+                echo '</aside>';
             }
         }
         ?>
-      <?php require_once __DIR__ . '/icons.php'; ?>
-      <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#uploadModal">
-        <?php echo render_icon('folder', 18, 'icon'); ?> ファイルをアップロード
-      </button>
-    </div>
-  </div>
 
   <!-- エラー表示部分 -->
   <?php include __DIR__ . '/error-display.php'; ?>
@@ -104,13 +109,12 @@
   <?php include __DIR__ . '/file-manager.php'; ?>
 
   <!-- フッター情報 -->
-  <div class="row">
-    <div class="col-sm-12">
-      <p class="text-right">@<a href="https://github.com/roflsunriz/Enhandiy" target="_blank">
-        roflsunriz/Enhandiy</a> v<?php echo $version ?? '4.4.1'; ?> - (GitHub)</p>
-    </div>
-  </div>
-</div>
+  <footer class="app-footer">
+    <p>Enhandiy v<?php echo htmlspecialchars($version ?? '4.4.1', ENT_QUOTES, 'UTF-8'); ?></p>
+    <p><a href="https://github.com/roflsunriz/Enhandiy" target="_blank" rel="noopener noreferrer">
+      GitHubでプロジェクトを見る</a></p>
+  </footer>
+</main>
 
 <!-- モーダルダイアログ部分 -->
 <?php include __DIR__ . '/modals.php'; ?>

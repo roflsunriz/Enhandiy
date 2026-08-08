@@ -25,6 +25,9 @@
     <link rel="stylesheet" href="<?php echo enhandiy_asset_url('dragdrop.css'); ?>">
     <link rel="stylesheet" href="<?php echo enhandiy_asset_url('folders.css'); ?>">
     <link rel="stylesheet" href="<?php echo enhandiy_asset_url('password-strength-css.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('fluent.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('fluent-content.css'); ?>">
+    <link rel="stylesheet" href="<?php echo enhandiy_asset_url('fluent-responsive.css'); ?>">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -33,4 +36,13 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
   </head>
-  <body class="bg-fade">
+  <body class="bg-fade app-body">
+    <header class="app-topbar">
+      <div class="app-topbar__inner">
+        <a class="app-brand" href="/" aria-label="Enhandiy ホーム">
+          <span class="app-brand__mark" aria-hidden="true">E</span>
+          <span>Enhandiy</span>
+        </a>
+        <span class="app-topbar__meta">セキュア ファイル ワークスペース</span>
+      </div>
+    </header>

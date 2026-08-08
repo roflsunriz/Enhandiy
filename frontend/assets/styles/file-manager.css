@@ -643,21 +643,6 @@
   font-size: 13px;
 }
 
-/* ===== フォルダナビゲーションとの調和 ===== */
-.folder-item-wrapper:hover .folder-menu {
-  opacity: 1 !important;
-}
-
-/* ===== 明るいテーマの確保 ===== */
-.file-manager-v2 {
-  background: transparent !important;
-  color: #212529 !important;
-  border: none !important;
-  box-shadow: none !important;
-  margin: -12px !important;
-  padding: 12px !important;
-}
-
 /* ===== アニメーション ===== */
 .file-grid-item,
 .file-list-item {

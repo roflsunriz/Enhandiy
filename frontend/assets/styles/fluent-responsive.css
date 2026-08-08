@@ -1,0 +1,320 @@
+/* Modals */
+.app-body .modal-backdrop.show {
+  opacity: 0.32;
+  backdrop-filter: blur(2px);
+}
+
+.app-body .modal-dialog {
+  margin-top: clamp(16px, 6vh, 64px);
+}
+
+.app-body .modal-content,
+.folder-modal {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--fluent-radius-lg);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--fluent-shadow-16);
+}
+
+.app-body .modal-header,
+.folder-modal .modal-header {
+  min-height: 62px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--fluent-stroke);
+  background: var(--fluent-surface-secondary);
+}
+
+.app-body .modal-title,
+.folder-modal .modal-header h3 {
+  color: var(--fluent-foreground);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.app-body .modal-body,
+.folder-modal .modal-body {
+  padding: 22px;
+}
+
+.app-body .modal-footer,
+.folder-modal .modal-footer {
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--fluent-stroke);
+  background: var(--fluent-surface-secondary);
+}
+
+.app-body .btn-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--fluent-radius-sm);
+  background-size: 12px;
+}
+
+.app-body .nav-tabs {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--fluent-stroke);
+  border-radius: 8px;
+  background: var(--fluent-surface-secondary);
+}
+
+.app-body .nav-tabs .nav-link {
+  border: 0;
+  border-radius: var(--fluent-radius-sm);
+  color: var(--fluent-foreground-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.app-body .nav-tabs .nav-link.active {
+  color: var(--fluent-accent-pressed);
+  background: #fff;
+  box-shadow: var(--fluent-shadow-2);
+}
+
+.app-body .panel {
+  overflow: hidden;
+  margin-bottom: 18px;
+  border: 1px solid var(--fluent-stroke);
+  border-radius: var(--fluent-radius-md);
+  background: #fff;
+}
+
+.app-body .panel-heading {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--fluent-stroke);
+  background: var(--fluent-surface-secondary);
+}
+
+.app-body .panel-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.app-body .panel-body {
+  padding: 16px;
+}
+
+#shareLinkModal .radio label {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--fluent-stroke);
+  border-radius: var(--fluent-radius-sm);
+  cursor: pointer;
+}
+
+#shareUrlTextField {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.strength-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: #e7e9ed;
+}
+
+.strength-level {
+  border-radius: inherit;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .file-manager__header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .file-manager__stats {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 800px) {
+  .app-topbar__meta {
+    display: none;
+  }
+
+  .container.app-shell {
+    width: min(100% - 24px, 1440px);
+    padding-top: 18px;
+  }
+
+  .app-hero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 24px;
+    padding: 30px 24px;
+  }
+
+  .app-hero__actions {
+    justify-self: start;
+  }
+
+  .file-manager__header {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: stretch;
+    padding: 18px;
+  }
+
+  .file-manager__controls {
+    align-items: stretch;
+  }
+
+  .file-manager__search {
+    flex-basis: 100%;
+  }
+
+  .file-manager__stats {
+    grid-column: auto;
+  }
+
+  .file-manager__grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    padding: 16px;
+  }
+
+  .folder-actions {
+    margin: 0;
+  }
+
+  .folder-actions .push-right {
+    margin-left: 0;
+  }
+
+  .folder-breadcrumb {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-body .modal-dialog {
+    margin: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-topbar__inner {
+    width: calc(100% - 24px);
+  }
+
+  .app-hero h1 {
+    font-size: 30px;
+  }
+
+  .app-hero .app-upload-trigger {
+    width: 100%;
+  }
+
+  .app-announcement,
+  .app-surface__body {
+    padding: 16px;
+  }
+
+  #folder-grid,
+  .file-manager__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .file-manager__controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .file-manager__sort {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .file-manager__view-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .file-manager__grid {
+    padding: 12px;
+  }
+
+  .file-grid-item {
+    min-height: 272px;
+  }
+
+  .file-manager-v2 .file-grid-item__actions-row:first-child .btn,
+  .file-manager-v2 .file-grid-item__actions-row:last-child .btn {
+    min-height: 36px;
+  }
+
+  .file-manager__pagination {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .app-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .drag-drop-area .btn {
+    width: 100%;
+    margin: 4px 0;
+  }
+
+  .app-body :where(.form-control, .folder-select),
+  .file-manager-v2 :where(input, select) {
+    font-size: 16px;
+  }
+
+  .upload-form > .form-section:not(#progressContainer) {
+    padding: 12px;
+  }
+
+  .app-body .modal-body {
+    padding: 18px;
+  }
+
+  .app-body .modal-fullscreen-sm-down {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+  }
+
+  .app-body .modal-fullscreen-sm-down .modal-content {
+    min-height: 100%;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --fluent-stroke: #8a8886;
+    --fluent-stroke-strong: #605e5c;
+  }
+
+  .app-hero,
+  .app-surface,
+  .file-grid-item,
+  .folder-item {
+    border-width: 2px;
+  }
+}

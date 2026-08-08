@@ -33,9 +33,13 @@ export class FileManagerRenderer {
     // 基本構造を作成
     this.core.container.innerHTML = `
       <div class="file-manager__header">
+        <div class="file-manager__title-group">
+          <span class="file-manager__eyebrow">ライブラリ</span>
+          <h2>ファイル</h2>
+        </div>
         <div class="file-manager__controls">
           <div class="file-manager__search">
-            <input type="text" class="file-manager__search-input" placeholder="ファイル名・コメントで検索">
+            <input type="search" class="file-manager__search-input" placeholder="ファイル名・コメントで検索" aria-label="ファイルを検索">
           </div>
           <div class="file-manager__sort">
             <label>並び順:</label>
@@ -49,13 +53,13 @@ export class FileManagerRenderer {
             </select>
           </div>
           <div class="file-manager__view-toggle">
-            <button class="file-manager__view-btn" data-view="grid" title="グリッド表示">
+            <button type="button" class="file-manager__view-btn" data-view="grid" title="グリッド表示" aria-label="グリッド表示">
               グリッド
             </button>
-            <button class="file-manager__view-btn" data-view="list" title="リスト表示">
+            <button type="button" class="file-manager__view-btn" data-view="list" title="リスト表示" aria-label="リスト表示">
               リスト
             </button>
-            <button class="file-manager__refresh-btn" title="最新の状態に更新">
+            <button type="button" class="file-manager__refresh-btn" title="最新の状態に更新" aria-label="最新の状態に更新">
               ${actionIcons.refresh(18)} 更新
             </button>
           </div>
@@ -118,7 +122,9 @@ export class FileManagerRenderer {
     const viewButtons = this.core.container.querySelectorAll('.file-manager__view-btn');
     viewButtons.forEach(btn => {
       const buttonElement = btn as HTMLElement;
-      if (buttonElement.dataset.view === viewMode) {
+      const isActive = buttonElement.dataset.view === viewMode;
+      buttonElement.setAttribute('aria-pressed', String(isActive));
+      if (isActive) {
         buttonElement.classList.add('active');
       } else {
         buttonElement.classList.remove('active');
@@ -188,7 +194,7 @@ export class FileManagerRenderer {
     const container = this.core.container.querySelector('.file-manager__grid') as HTMLElement;
     
     if (files.length === 0) {
-      container.innerHTML = '<div class="file-manager__empty">ファイルがありません</div>';
+      container.innerHTML = this.createEmptyState();
       return;
     }
     
@@ -202,7 +208,7 @@ export class FileManagerRenderer {
     const container = this.core.container.querySelector('.file-manager__list') as HTMLElement;
     
     if (files.length === 0) {
-      container.innerHTML = '<div class="file-manager__empty">ファイルがありません</div>';
+      container.innerHTML = this.createEmptyState();
       return;
     }
     
@@ -246,9 +252,9 @@ export class FileManagerRenderer {
     const uploadDate = this.formatDate(file.upload_date || '');
     
     return `
-      <div class="file-grid-item ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
+      <article class="file-grid-item ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
         <div class="file-grid-item__checkbox">
-          <input type="checkbox" ${isSelected ? 'checked' : ''} class="file-checkbox" data-file-id="${file.id}">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} class="file-checkbox" data-file-id="${file.id}" aria-label="${this.escapeHtml(file.name || 'ファイル')}を選択">
         </div>
         
         <!-- アイコンとコメント部分（薄いねずみ色背景） -->
@@ -257,13 +263,13 @@ export class FileManagerRenderer {
             <span class="file-icon file-icon--${this.getFileTypeClass(file.type || '')}">${fileIcon}</span>
           </div>
           <div class="file-grid-item__name" title="${this.escapeHtml(file.name || '')}">
-            ${this.escapeHtml(this.truncateText(file.name || '', 20))}
+            ${this.escapeHtml(this.truncateText(file.name || '', 36))}
           </div>
           ${file.comment ? `<div class="file-grid-item__comment">${this.escapeHtml(this.truncateText(file.comment, 50))}</div>` : ''}
         </div>
         
         <!-- メタデータ部分（2x2 グリッド・アイコンラベル） -->
-        <div class="file-grid-item__metadata metadata-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;align-items:center;">
+        <div class="file-grid-item__metadata metadata-grid">
           <div class="meta-item meta-item--size">${metaIcons.size(16)} <span class="meta-text">${fileSize}</span></div>
           <div class="meta-item meta-item--downloads">${metaIcons.downloads(16)} <span class="meta-text">${this.formatDownloads(file)}</span></div>
           <div class="meta-item meta-item--date">${metaIcons.date(16)} <span class="meta-text">${uploadDate}</span></div>
@@ -273,33 +279,45 @@ export class FileManagerRenderer {
         <!-- アクションボタン部分（二段構成） -->
         <div class="file-grid-item__actions">
           <div class="file-grid-item__actions-row">
-            <button class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード">
-              DL
+            <button type="button" class="btn btn-xs btn-primary file-action-btn file-action-btn--download" data-action="download" data-file-id="${file.id}" title="ダウンロード" aria-label="${this.escapeHtml(file.name || 'ファイル')}をダウンロード">
+              ${actionIcons.download(14)} <span>保存</span>
             </button>
-            <button class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有">
-              共有
+            <button type="button" class="btn btn-xs btn-info file-action-btn file-action-btn--share" data-action="share" data-file-id="${file.id}" title="共有" aria-label="${this.escapeHtml(file.name || 'ファイル')}を共有">
+              ${actionIcons.share(14)} <span>共有</span>
             </button>
             ${(window as unknown as { config?: { folders_enabled?: boolean } })?.config?.folders_enabled ? `
-            <button class="btn btn-xs btn-warning file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動">
-              移動
+            <button type="button" class="btn btn-xs btn-warning file-action-btn file-action-btn--move" data-action="move" data-file-id="${file.id}" title="移動" aria-label="${this.escapeHtml(file.name || 'ファイル')}を移動">
+              ${actionIcons.move(14)} <span>移動</span>
             </button>
             ` : ''}
             ${(window as unknown as { config?: { allow_comment_edit?: boolean } })?.config?.allow_comment_edit ? `
-            <button class="btn btn-xs btn-success file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集">
-              編集
+            <button type="button" class="btn btn-xs btn-success file-action-btn file-action-btn--edit" data-action="edit" data-file-id="${file.id}" title="編集" aria-label="${this.escapeHtml(file.name || 'ファイル')}を編集">
+              ${actionIcons.edit(14)} <span>編集</span>
             </button>
             ` : ''}
           </div>
           <div class="file-grid-item__actions-row">
             ${(window as unknown as { config?: { allow_file_replace?: boolean } })?.config?.allow_file_replace ? `
-            <button class="btn btn-xs btn-warning file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え">
-              差し替え
+            <button type="button" class="btn btn-xs btn-warning file-action-btn file-action-btn--replace" data-action="replace" data-file-id="${file.id}" title="差し替え" aria-label="${this.escapeHtml(file.name || 'ファイル')}を差し替え">
+              ${actionIcons.replace(14)} <span>差し替え</span>
             </button>
             ` : ''}
-            <button class="btn btn-xs btn-danger file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除">
-              削除
+            <button type="button" class="btn btn-xs btn-danger file-action-btn file-action-btn--delete" data-action="delete" data-file-id="${file.id}" title="削除" aria-label="${this.escapeHtml(file.name || 'ファイル')}を削除">
+              ${actionIcons.delete(14)} <span>削除</span>
             </button>
           </div>
+        </div>
+      </article>
+    `;
+  }
+
+  private createEmptyState(): string {
+    return `
+      <div class="file-manager__empty">
+        <div class="file-manager__empty-state">
+          <span class="file-manager__empty-icon" aria-hidden="true">${actionIcons.move(26)}</span>
+          <h3 class="file-manager__empty-title">ファイルはまだありません</h3>
+          <p class="file-manager__empty-description">アップロードすると、ここから整理・共有・ダウンロードできます。</p>
         </div>
       </div>
     `;

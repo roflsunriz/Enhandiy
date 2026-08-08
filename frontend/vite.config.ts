@@ -31,6 +31,9 @@ export default defineConfig({
         'folders': resolve(__dirname, 'assets/styles/folders.css'),
         'file-manager-css': resolve(__dirname, 'assets/styles/file-manager.css'),
         'password-strength-css': resolve(__dirname, 'assets/styles/password-strength.css'),
+        'fluent': resolve(__dirname, 'assets/styles/fluent.css'),
+        'fluent-content': resolve(__dirname, 'assets/styles/fluent-content.css'),
+        'fluent-responsive': resolve(__dirname, 'assets/styles/fluent-responsive.css'),
       },
       output: {
         entryFileNames: '[name].js',

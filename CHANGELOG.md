@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - 作業開始時の共通指針見落としを防ぐため、調査やコマンド実行より前に `COMMON-AGENTS.md` を先頭から末尾まで読み、EOFを確認する必須ゲートを追加した。
+- ファイル操作を迷わず一貫して行えるよう、ページシェル、アップロード、フォルダ、ファイル一覧、フォーム、通知、モーダルをFluent DesignベースのレスポンシブUIへ刷新した。
 
 ### Fixed
 

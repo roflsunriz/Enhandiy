@@ -10,8 +10,8 @@
 <?php require_once __DIR__ . '/icons.php'; ?>
 <?php if (isset($folders_enabled) && $folders_enabled) : ?>
 <!-- フォルダナビゲーション -->
-<div class="row bg-white radius box-shadow">
-  <div class="col-sm-12">
+<section class="app-surface app-folder-surface" aria-label="フォルダ">
+  <div class="app-surface__body">
     <!-- タイトルは省略し、パンくずと一覧を優先表示 -->
 
     <!-- パンくずリスト -->
@@ -112,13 +112,12 @@
         <?php endforeach; ?>
     </div>
     <?php else : ?>
-    <div class="text-center text-muted" style="padding: 20px;">
-      <span class="glyphicon glyphicon-folder-open"
-            style="font-size: 2em; margin-bottom: 10px; display: block;"></span>
-      フォルダがありません
+    <div class="folder-empty-state">
+      <span class="folder-empty-state__icon glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+      <p>フォルダはまだありません</p>
     </div>
     <?php endif; ?>
     </div>
   </div>
-</div>
+</section>
 <?php endif; ?>
