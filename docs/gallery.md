@@ -1,3 +1,5 @@
+<!-- 画像の更新: frontend で npm run docs:images を実行 -->
+
 ## アップロードフォーム
 コメント、フォルダ指定、DLキー、削除キー、差し替えキーを指定できます。削除キーと差し替えキーはセキュリティのため必須設定です。
 ![upload-form](../image/upload-form.png)
