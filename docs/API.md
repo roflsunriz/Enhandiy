@@ -1,4 +1,4 @@
-# Enhandiy RESTful API ドキュメント (v4.4.1)
+# Enhandiy RESTful API ドキュメント (v4.5.0)
 
 > 本ドキュメントは Enhandiy に同梱される RESTful API の使用方法をまとめたものです。
 > ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/backend/public/api/index.php`（または Web ルート公開時は `/api/index.php`）を入口として自動ルーティングされます。
@@ -365,6 +365,7 @@ location ~ \.php$ {
 
 ## 7. CHANGELOG (簡易)
 
+* **4.5.0** – 通信競合対策、安定したタイムアウト処理、APIエラー詳細の引き継ぎを追加
 * **4.4.1** – ファイル一覧取得・ファイルアップロード・単一ファイル取得を認証不要に変更
 * **4.3.8** – デフォルトの `api/index.php` を経由する場合について明記
 * **4.3.1** – 共有設定 API、バッチ移動/削除、TUS ルーティング、UI-CSRF 認証を明記

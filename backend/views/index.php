@@ -36,7 +36,7 @@ require_once __DIR__ . '/icons.php';
 
   <!-- フッター情報 -->
   <footer class="app-footer">
-    <p>Enhandiy v<?php echo htmlspecialchars($version ?? '4.4.1', ENT_QUOTES, 'UTF-8'); ?></p>
+    <p>Enhandiy v<?php echo htmlspecialchars($version ?? '4.5.0', ENT_QUOTES, 'UTF-8'); ?></p>
     <p><a href="https://github.com/roflsunriz/Enhandiy" target="_blank" rel="noopener noreferrer">
       GitHubでプロジェクトを見る</a></p>
   </footer>

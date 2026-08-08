@@ -51,6 +51,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v4.3.7...v4.4.1>
+**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v4.4.1...v4.5.0>
 
 Enhandiyをご利用いただき、ありがとうございます！ 🚀

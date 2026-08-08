@@ -1,6 +1,7 @@
 /* global console, document, process, requestAnimationFrame, window */
 
 import { chromium } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -8,6 +9,10 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, '..', '..');
 const imageDirectory = path.join(repositoryRoot, 'image');
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:37555';
+const packageMetadata = JSON.parse(
+  await readFile(path.join(repositoryRoot, 'frontend', 'package.json'), 'utf8'),
+);
+const releaseVersion = packageMetadata.version;
 
 const folders = [
   {
@@ -90,11 +95,15 @@ async function createSeededPage(context) {
       }
     `,
   });
-  await page.evaluate(({ seededFolders, seededFiles }) => {
+  await page.evaluate(({ seededFolders, seededFiles, version }) => {
     window.folderData = seededFolders;
     window.fileData = seededFiles;
     window.fileManagerInstance?.setFiles(seededFiles);
-  }, { seededFolders: folders, seededFiles: files });
+    const versionLabel = document.querySelector('.app-footer p');
+    if (versionLabel) {
+      versionLabel.textContent = `Enhandiy v${version}`;
+    }
+  }, { seededFolders: folders, seededFiles: files, version: releaseVersion });
   await page.locator('.folder-grid-item').first().waitFor({ state: 'visible' });
   await page.locator('.file-grid-item').first().waitFor({ state: 'visible' });
   await page.evaluate(() => document.fonts.ready);

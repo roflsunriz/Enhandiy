@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-08-08
+
 ### Added
 
 - ターミナル操作なしでローカル環境を扱えるよう、Dockerの起動・終了・状態確認・ブラウザ表示をまとめたJava Swing GUIとダブルクリック用ランチャーを追加した。
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Windowsで予約済みの80番ポートと競合せずDocker環境を起動できるよう、標準の公開ポートを `37555` へ変更した。
 - 現行のFluent UIと一体化したフォルダ・ファイル表示を正しく紹介できるよう、READMEのカバー画像と操作ギャラリーを実画面から再生成した。
 - E2Eの中断や失敗で残ったテストデータが次回実行へ影響しないよう、テストスイートの開始前と終了後に既知のテスト用フォルダ・ファイルを自動削除するよう変更した。
 - 長いファイル名や説明でもグリッドが崩れないよう、拡張子を保持した2行のファイル名、2行の説明、固定された操作領域を持つカード構造へ変更した。
