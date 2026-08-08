@@ -3,7 +3,7 @@ services:
         build: "./docker"
         container_name: "php_apache"
         ports:
-            - "80:80"
+            - "37555:80"
         volumes:
             - "..:/var/www/html/"
 
