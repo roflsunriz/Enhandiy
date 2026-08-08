@@ -33,12 +33,12 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 ## 📄 License
 
 ### **コミュニティフォーク版**
-Copyright (c) 2025 roflsunriz  
+Copyright (c) 2026 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/Enhandiy/blob/main/LICENSE>
 
 ### **オリジナル版**
-Copyright (c) 2025 shimosyan  
+Copyright (c) 2026 shimosyan  
 Released under the MIT license  
 <https://github.com/shimosyan/phpUploader/blob/master/MIT-LICENSE.txt>
 
@@ -51,6 +51,6 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v4.3.7...v4.4.0>
+**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v4.3.7...v4.4.1>
 
 Enhandiyをご利用いただき、ありがとうございます！ 🚀
