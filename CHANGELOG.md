@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- 空のマージ元でCPU使用量が制限されないjs-yamlの脆弱性（GHSA-2883-xcg3-v3hh）に対処するため、frontendの推移的依存js-yamlを4.3.1から修正版4.3.2へ更新した。
+
 ## [4.5.0] - 2026-08-08
 
 ### Added
