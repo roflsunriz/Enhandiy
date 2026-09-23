@@ -18,6 +18,15 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 - TypeScript の場合は、ファイル編集後に `npm run lint`、`npm run type-check`、`npm run build` を実行して全てグリーンであることを確認する。
 - それ以外のファイルの場合には、リンターがあればそれを使って静的解析を実行する。
 
+## Dependabot / GitHub CLI の運用知見
+
+- `gh` は既定で `upstream`（shimosyan/phpUploader）を向くことがある。対象は `roflsunriz/Enhandiy` のため、`-R roflsunriz/Enhandiy` または `$env:GH_REPO="roflsunriz/Enhandiy"` を明示する。`gh pr list` だけでは対象外リポジトリを参照して空に見える。
+- Dependabot の Open PR は `gh pr list -R roflsunriz/Enhandiy --state open` で確認する。リモート追跡ブランチ（`origin/dependabot/*`）の残存は `git fetch --prune` 後に再確認する。
+- PR ブランチの最新化は `gh api repos/{owner}/{repo}/pulls/<番号>/update-branch -X PUT`（`GH_REPO` 指定）で行う。競合時は 422 になるため、ローカルで対象ブランチへ `origin/main` をマージして解消し、元の Dependabot ブランチへ push する。
+- composer 系の競合（phpstan と phpcs の同時更新など）は `composer.json` を両方の新バージョンに手編集し、`php composer.phar update <pkg1> <pkg2>` で `composer.lock` を再生成する。`content-hash` の手編集はしない。
+- `actions/labeler` v7 は v5 以降の設定形式が必須である。旧形式（ラベル直下に glob 配列）では `found unexpected type for label ... (should be array of config options)` で失敗する。形式は `changed-files` → `any-glob-to-any-file`（`.github/labeler.yml` 参照）。`pull_request_target` 実行は base ブランチの設定を使うため、labeler 本体の更新と設定移行は main 側へ先に反映してから各 PR を update-branch する。
+- 一時取得の `composer.phar` / `composer-setup.php` はリポジトリへ残さず削除する。
+
 ## Environment
 
 - .githubフォルダにはGitHub Actionsのワークフローがあります。
