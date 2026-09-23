@@ -5,16 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## [Unreleased]
 
 ### Fixed
 
+- Dependabot PR のラベル付けがトークン権限不足で失敗する問題を修正し、PR コードを実行しないイベントでラベルを付ける。README と変更履歴の重複空行を除き、ドキュメント検査も通るようにした。
 - CI と Dependabot の分類の実行順が前後しても更新を取りこぼさないよう、同じ PR 番号と head SHA を再照合する経路を追加した。
 
 ### Changed
 
 - 依存更新を安全に省力化するため、Dependabot の patch／minor PR を既存 CI の全チェック成功後に自動取り込みし、失敗ジョブを一度再実行する設定を追加した。
+
 ### Security
 
 - 空のマージ元でCPU使用量が制限されないjs-yamlの脆弱性（GHSA-2883-xcg3-v3hh）に対処するため、frontendの推移的依存js-yamlを4.3.1から修正版4.3.2へ更新した。
@@ -75,7 +76,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - アップロードフォームの選択中ファイルリストのスタイルを調整
-
 
 ## [4.3.8] - 2025-08-31
 
