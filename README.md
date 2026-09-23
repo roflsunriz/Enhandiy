@@ -6,7 +6,6 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 
 ![cover](./image/cover.png)
 
-
 > 注意: `/api/*` を利用するには Web サーバーで `/api/index.php?path=/api/*` へのリライト設定が必要です。詳細は [API.md](docs/API.md) の「付録: ルーティング設定例（Apache / Nginx）」を参照してください。
 
 ## 📚 ドキュメントインデックス
@@ -28,7 +27,6 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 - **リリース**: [リリースページ](https://github.com/roflsunriz/Enhandiy/releases)
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
 - **リリースノート**: [docs](docs) ディレクトリ内の各リリースノート
-
 
 ## 📄 License
 
