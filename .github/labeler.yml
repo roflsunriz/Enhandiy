@@ -1,45 +1,44 @@
 # 設定ファイル関連
 "area/config":
-  - backend/config/**/*
-  - "config.php.example"
+  - changed-files:
+    - any-glob-to-any-file: ['backend/config/**/*', 'config.php.example']
 
 # API関連
 "area/api":
-  - backend/api/**/*
+  - changed-files:
+    - any-glob-to-any-file: ['backend/api/**/*']
 
 # UI/フロントエンド関連
 "area/frontend":
-  - backend/views/**/*
-  - frontend/src/**/*
-  - frontend/asset/**/*
+  - changed-files:
+    - any-glob-to-any-file: ['backend/views/**/*', 'frontend/src/**/*', 'frontend/asset/**/*']
 
 # データベース関連
 "area/database":
-  - backend/models/**/*
-  - db/**/*
+  - changed-files:
+    - any-glob-to-any-file: ['backend/models/**/*', 'db/**/*']
 
 # Docker関連
 "area/docker":
-  - infrastructure/docker/**/*
-  - infrastructure/docker-compose.yaml
-  - infrastructure/Dockerfile
+  - changed-files:
+    - any-glob-to-any-file: ['infrastructure/docker/**/*', 'infrastructure/docker-compose.yaml', 'infrastructure/Dockerfile']
 
 # ドキュメント関連
 "area/documentation":
-  - "*.md"
-  - docs/**/*
+  - changed-files:
+    - any-glob-to-any-file: ['*.md', 'docs/**/*']
 
 # CI/CD関連
 "area/ci":
-  - .github/**/*
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**/*']
 
 # セキュリティ関連
 "area/security":
-  - backend/config/**/*
-  - backend/api/verify*
+  - changed-files:
+    - any-glob-to-any-file: ['backend/config/**/*', 'backend/api/verify*']
 
 # リリース関連
 "area/release":
-  - infrastructure/scripts/release.*
-  - composer.json
-  - CHANGELOG.md
+  - changed-files:
+    - any-glob-to-any-file: ['infrastructure/scripts/release.*', 'composer.json', 'CHANGELOG.md']
