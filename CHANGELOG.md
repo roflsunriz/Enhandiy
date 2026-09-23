@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- 依存更新を安全に省力化するため、Dependabot の patch／minor PR を既存 CI の全チェック成功後に自動取り込みし、失敗ジョブを一度再実行する設定を追加した。
 ### Security
 
 - 空のマージ元でCPU使用量が制限されないjs-yamlの脆弱性（GHSA-2883-xcg3-v3hh）に対処するため、frontendの推移的依存js-yamlを4.3.1から修正版4.3.2へ更新した。
