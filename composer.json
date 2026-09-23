@@ -20,7 +20,7 @@
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^4.0",
-        "phpstan/phpstan": "^1.10"
+        "phpstan/phpstan": "^2.2"
     },
     "autoload": {
         "classmap": [
