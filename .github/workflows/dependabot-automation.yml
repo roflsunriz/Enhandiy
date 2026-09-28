@@ -26,3 +26,6 @@ jobs:
     with:
       ci_workflows: '["CI", "🔍 Pre-Release Quality Check"]'
       callback_workflow_file: dependabot-automation.yml
+      autofix_command: 'cd frontend && npm install --package-lock-only --ignore-scripts'
+      autofix_paths: '["frontend/package-lock.json"]'
+      autofix_workflow_files: '["ci.yml"]'
