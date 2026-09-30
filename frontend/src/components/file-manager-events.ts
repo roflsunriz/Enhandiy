@@ -1016,7 +1016,7 @@ export class FileManagerEvents {
    * イベントリスナーの追加（単一要素）
    */
   private addListener(selector: string | Element | Document | Window, event: string, handler: EventListener): void {
-    let element: Element | Document | Window | null = null;
+    let element: Element | Document | Window | null;
     
     if (typeof selector === 'string') {
       element = this.core.container.querySelector(selector) || document.querySelector(selector);

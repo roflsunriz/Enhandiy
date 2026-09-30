@@ -7,9 +7,6 @@ import { ready } from '../utils/dom';
 import { FileManager } from '../components/file-manager';
 import { initializeErrorHandling } from '../utils/error-handling';
 
-// 型定義のインポート
-import './types/global';
-
 // ファイルマネージャー専用初期化
 ready(() => {
   
