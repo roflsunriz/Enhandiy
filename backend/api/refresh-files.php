@@ -7,6 +7,8 @@
 
 declare(strict_types=1);
 
+use function Enhandiy\initializeApp;
+
 require_once __DIR__ . '/../core/folder-list.php';
 
 // phpcs:disable PSR1.Files.SideEffects

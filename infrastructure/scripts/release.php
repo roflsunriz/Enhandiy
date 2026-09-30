@@ -1,5 +1,10 @@
 <?php
 
+namespace Enhandiy;
+
+use Exception;
+use InvalidArgumentException;
+
 // phpcs:disable PSR1.Files.SideEffects
 
 /**

@@ -5,6 +5,10 @@
  * ドラッグ&ドロップ、ファイル選択、設定項目を担当
  */
 
+if (!isset($csrf_token) || !is_string($csrf_token) || $csrf_token === '') {
+    throw new LogicException('Upload form requires a CSRF token.');
+}
+
 ?>
 <?php $render_as_modal_body = isset($render_as_modal_body) ? (bool)$render_as_modal_body : false; ?>
 
@@ -12,7 +16,7 @@
 <div class="row bg-white radius box-shadow">
   <div class="col-sm-12">
     <div class="page-header">
-      <h1><?php echo $title; ?> <small>ファイルアップロード</small></h1>
+      <h1><?php echo $title ?? 'Enhandiy'; ?> <small>ファイルアップロード</small></h1>
     </div>
 <?php endif; ?>
     <form id="upload" class="upload-form">

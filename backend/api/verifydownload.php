@@ -1,12 +1,18 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * ダウンロード検証API
  *
  * ハッシュ化された認証キーの検証とワンタイムトークンの生成
  */
+
+declare(strict_types=1);
+
+use Enhandiy\Logger;
+use Enhandiy\ResponseHandler;
+use Enhandiy\SecurityUtils;
+
+use function Enhandiy\initializeApp;
 
 // エラー表示設定
 ini_set('display_errors', '0');

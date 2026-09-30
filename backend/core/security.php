@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+namespace Enhandiy;
+
+use PDO;
+use Exception;
+
 /**
  * セキュリティユーティリティクラス
  * Ver.2.0で追加されたセキュリティ機能

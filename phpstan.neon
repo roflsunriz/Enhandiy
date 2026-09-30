@@ -1,12 +1,10 @@
 parameters:
     level: 1
     paths:
-        - .
+        - backend
+        - infrastructure/scripts
     excludePaths:
-        - vendor
-        - tests
-    ignoreErrors:
-        # レガシーコードのため一時的に無視する項目
-        - '#Variable \$[a-zA-Z_]+ might not be defined#'
-        - '#Function extract\(\) should not be used#'
-    reportUnmatchedIgnoredErrors: false
+        # Deployment configuration is user-owned; analyse the tracked template instead.
+        - backend/config/config.php (?)
+    scanFiles:
+        - backend/config/config.php.example

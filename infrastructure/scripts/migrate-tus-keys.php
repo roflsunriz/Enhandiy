@@ -7,6 +7,8 @@
 
 declare(strict_types=1);
 
+use Enhandiy\SecurityUtils;
+
 // 設定とユーティリティの読み込み
 require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/core/utils.php';
@@ -22,7 +24,7 @@ try {
     }
 
     // データベース接続
-    $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+    $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -64,12 +66,12 @@ try {
             if (!empty($upload['dl_key']) && trim($upload['dl_key']) !== '') {
                 try {
                     // 既に暗号化済みかテスト
-                    SecurityUtils::decryptSecure($upload['dl_key'], $key);
+                    SecurityUtils::decryptSecure($upload['dl_key'], $ret['key']);
                     $encryptedDlKey = $upload['dl_key']; // 既に暗号化済み
                     echo "  dl_key (ID: {$upload['id']}): 既に暗号化済み\n";
                 } catch (Exception $e) {
                     // 平文なので暗号化
-                    $encryptedDlKey = SecurityUtils::encryptSecure($upload['dl_key'], $key);
+                    $encryptedDlKey = SecurityUtils::encryptSecure($upload['dl_key'], $ret['key']);
                     echo "  dl_key (ID: {$upload['id']}): 暗号化完了\n";
                 }
             }
@@ -78,12 +80,12 @@ try {
             if (!empty($upload['del_key']) && trim($upload['del_key']) !== '') {
                 try {
                     // 既に暗号化済みかテスト
-                    SecurityUtils::decryptSecure($upload['del_key'], $key);
+                    SecurityUtils::decryptSecure($upload['del_key'], $ret['key']);
                     $encryptedDelKey = $upload['del_key']; // 既に暗号化済み
                     echo "  del_key (ID: {$upload['id']}): 既に暗号化済み\n";
                 } catch (Exception $e) {
                     // 平文なので暗号化
-                    $encryptedDelKey = SecurityUtils::encryptSecure($upload['del_key'], $key);
+                    $encryptedDelKey = SecurityUtils::encryptSecure($upload['del_key'], $ret['key']);
                     echo "  del_key (ID: {$upload['id']}): 暗号化完了\n";
                 }
             }
@@ -92,12 +94,12 @@ try {
             if (!empty($upload['replace_key']) && trim($upload['replace_key']) !== '') {
                 try {
                     // 既に暗号化済みかテスト
-                    SecurityUtils::decryptSecure($upload['replace_key'], $key);
+                    SecurityUtils::decryptSecure($upload['replace_key'], $ret['key']);
                     $encryptedReplaceKey = $upload['replace_key']; // 既に暗号化済み
                     echo "  replace_key (ID: {$upload['id']}): 既に暗号化済み\n";
                 } catch (Exception $e) {
                     // 平文なので暗号化
-                    $encryptedReplaceKey = SecurityUtils::encryptSecure($upload['replace_key'], $key);
+                    $encryptedReplaceKey = SecurityUtils::encryptSecure($upload['replace_key'], $ret['key']);
                     echo "  replace_key (ID: {$upload['id']}): 暗号化完了\n";
                 }
             }
@@ -157,15 +159,15 @@ try {
 
             try {
                 if (!empty($sample['dl_key'])) {
-                    $decrypted = SecurityUtils::decryptSecure($sample['dl_key'], $key);
+                    $decrypted = SecurityUtils::decryptSecure($sample['dl_key'], $ret['key']);
                     echo "  dl_key: 復号化成功\n";
                 }
                 if (!empty($sample['del_key'])) {
-                    $decrypted = SecurityUtils::decryptSecure($sample['del_key'], $key);
+                    $decrypted = SecurityUtils::decryptSecure($sample['del_key'], $ret['key']);
                     echo "  del_key: 復号化成功\n";
                 }
                 if (!empty($sample['replace_key'])) {
-                    $decrypted = SecurityUtils::decryptSecure($sample['replace_key'], $key);
+                    $decrypted = SecurityUtils::decryptSecure($sample['replace_key'], $ret['key']);
                     echo "  replace_key: 復号化成功\n";
                 }
             } catch (Exception $e) {

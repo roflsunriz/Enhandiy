@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+namespace Enhandiy;
+
+use PDO;
+use PDOException;
+use Exception;
+use config;
+
 /**
  * ファイルAPI操作ハンドラー
  * ファイルの CRUD 操作を担当
@@ -632,7 +639,7 @@ class FileApiHandler
             $updateStmt->execute([time(), $fileId]);
 
             // ダウンロードログの記録（Loggerが利用可能な場合）
-            if (class_exists('Logger')) {
+            if (class_exists(Logger::class)) {
                 $logger = new Logger(
                     $this->config['log_directory'] ?? './logs',
                     $this->config['log_level'] ?? Logger::LOG_INFO
@@ -858,7 +865,7 @@ class FileApiHandler
             $upd->execute();
 
             // 共有キー生成
-            if (!class_exists('SecurityUtils')) {
+            if (!class_exists(SecurityUtils::class)) {
                 require_once __DIR__ . '/../core/utils.php';
             }
 

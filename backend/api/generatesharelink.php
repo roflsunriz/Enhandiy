@@ -1,5 +1,7 @@
 <?php
 
+use Enhandiy\SecurityUtils;
+
 // エラーを画面に表示(1を0にすると画面上にはエラーは出ない)
 ini_set('display_errors', 0);
 // JSONリクエストをパースして$_POSTを初期化
@@ -23,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
         extract($ret);
     }
     try {
-        $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+        $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => 'sqlerror']);
         exit;
@@ -76,7 +78,7 @@ if ($action === 'updateSettings') {
     }
     // DB更新
     try {
-        $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+        $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
         $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         $update = $db->prepare(
             'UPDATE uploaded SET max_downloads = :max_downloads, expires_at = :expires_at WHERE id = :id'
@@ -118,7 +120,7 @@ if (!is_null($ret)) {
 
 // データベースの作成・オープン
 try {
-    $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+    $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
 } catch (Exception $e) {
     // DBエラーを返す
     echo json_encode(array('success' => false, 'error' => 'sqlerror'));
@@ -182,7 +184,7 @@ if ($should_update) {
 
 // 共有用のトークンを生成（セキュアなGCMモード使用）
 try {
-    $share_key = bin2hex(SecurityUtils::encryptSecure($share_key_source, $key));
+    $share_key = bin2hex(SecurityUtils::encryptSecure($share_key_source, $ret['key']));
 } catch (Exception $e) {
     error_log('Share link generation failed: ' . $e->getMessage());
     header('Location: ./');

@@ -1,13 +1,19 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * 一括削除API
  *
  * マスターキー認証による複数ファイルの安全な一括削除
  * セキュリティ重視設計: 個別削除キーは無視し、マスターキーのみで認証
  */
+
+declare(strict_types=1);
+
+use Enhandiy\Logger;
+use Enhandiy\ResponseHandler;
+use Enhandiy\SecurityUtils;
+
+use function Enhandiy\initializeApp;
 
 // エラー表示設定
 ini_set('display_errors', '0');

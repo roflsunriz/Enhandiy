@@ -1,1 +1,4 @@
+# PSR12 requires LF regardless of the checkout platform.
 scripts/docker-manager.cmd text eol=crlf
+*.php text eol=lf
+*.php.example text eol=lf

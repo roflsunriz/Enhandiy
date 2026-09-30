@@ -1,5 +1,11 @@
 <?php
 
+namespace Enhandiy;
+
+use PDO;
+use Exception;
+use config;
+
 class Index
 {
     public function index()
@@ -17,7 +23,7 @@ class Index
 
         //データベースの作成・オープン
         try {
-            $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+            $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
         } catch (Exception $e) {
             $error = '500 - データベースの接続に失敗しました: ' . $e->getMessage();
             include(__DIR__ . '/../views/header.php');

@@ -1,12 +1,18 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * ファイルアップロードAPI
  *
  * セキュリティ強化版のアップロード処理
  */
+
+declare(strict_types=1);
+
+use Enhandiy\Logger;
+use Enhandiy\ResponseHandler;
+use Enhandiy\SecurityUtils;
+
+use function Enhandiy\initializeApp;
 
 // 出力バッファリング開始
 ob_start();

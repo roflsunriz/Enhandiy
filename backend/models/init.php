@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+namespace Enhandiy;
+
+use PDO;
+use PDOException;
+use Throwable;
+
 /**
  * アプリケーション初期化スクリプト
  *

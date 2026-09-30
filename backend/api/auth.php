@@ -1,5 +1,7 @@
 <?php
 
+namespace Enhandiy;
+
 /**
  * RESTful API認証システム
  * APIキー/トークンベースの認証機能
@@ -133,7 +135,7 @@ class ApiAuth
     private function isValidUiRequest(): bool
     {
         // SecurityUtils が必要
-        if (!class_exists('SecurityUtils')) {
+        if (!class_exists(SecurityUtils::class)) {
             require_once dirname(__DIR__) . '/core/utils.php';
         }
 

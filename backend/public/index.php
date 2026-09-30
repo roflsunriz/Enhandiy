@@ -1,12 +1,18 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * Enhandiy Ver.2.0 - メインエントリーポイント
  *
  * 簡易フレームワーク with モダンPHP対応
  */
+
+declare(strict_types=1);
+
+use Enhandiy\Logger;
+use Enhandiy\ResponseHandler;
+use Enhandiy\SecurityUtils;
+
+use function Enhandiy\initializeApp;
 
 // エラー表示設定（本番環境用）
 ini_set('display_errors', '0'); // 本番環境では 0 に設定
@@ -15,7 +21,7 @@ error_reporting(E_ALL);
 // セキュアなセッション開始
 if (session_status() === PHP_SESSION_NONE) {
     // セキュリティクラスがまだ読み込まれていない場合の対処
-    if (!class_exists('SecurityUtils')) {
+    if (!class_exists(SecurityUtils::class)) {
         require_once __DIR__ . '/../core/utils.php';
     }
     SecurityUtils::startSecureSession();
@@ -95,8 +101,9 @@ try {
     if (file_exists($modelPath)) {
         require_once $modelPath;
 
-        if (class_exists($page)) {
-            $model = new $page();
+        $modelClass = 'Enhandiy\\' . $page;
+        if (class_exists($modelClass)) {
+            $model = new $modelClass();
             if (method_exists($model, 'index')) {
                 $result = $model->index();
                 if (is_array($result)) {

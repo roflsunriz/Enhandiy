@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+namespace Enhandiy;
+
+use PDO;
+use PDOException;
+
 // phpcs:disable PSR1.Files.SideEffects
 require_once __DIR__ . '/../core/utils.php';
 // phpcs:enable PSR1.Files.SideEffects

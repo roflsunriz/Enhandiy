@@ -1,8 +1,10 @@
 <?php
 
-// phpcs:disable PSR1.Files.SideEffects
-
 declare(strict_types=1);
+
+namespace Enhandiy;
+
+// phpcs:disable PSR1.Files.SideEffects
 
 // Logger.phpが必要な場合のため
 require_once __DIR__ . '/logger.php';

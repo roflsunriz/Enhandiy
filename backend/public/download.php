@@ -1,14 +1,19 @@
 <?php
 
-// phpcs:disable PSR1.Files.SideEffects
-
-declare(strict_types=1);
-
 /**
  * ファイルダウンロード処理
  *
  * ワンタイムトークンによる安全なダウンロード
  */
+
+declare(strict_types=1);
+
+use Enhandiy\Logger;
+use Enhandiy\SecurityUtils;
+
+use function Enhandiy\initializeApp;
+
+// phpcs:disable PSR1.Files.SideEffects
 
 // エラー表示設定
 ini_set('display_errors', '0');

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * 統合ユーティリティクラスローダー
  * Ver.2.0で分離されたクラスファイルを読み込み
@@ -13,6 +11,8 @@ declare(strict_types=1);
  *
  * 既存の依存関係を維持するためのブリッジファイル
  */
+
+declare(strict_types=1);
 
 // 分離されたクラスファイルを読み込み
 require_once __DIR__ . '/security.php';

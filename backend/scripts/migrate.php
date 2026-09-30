@@ -16,7 +16,7 @@ if (!is_null($ret)) {
 
 // データベースの作成・オープン
 try {
-    $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+    $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
 } catch (Exception $e) {
     echo 'データベース接続エラー: ' . $e->getMessage();
     exit;
