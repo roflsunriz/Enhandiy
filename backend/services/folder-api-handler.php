@@ -28,6 +28,7 @@ class FolderApiHandler
      */
     public function handleGetFolders(): void
     {
+        require_once __DIR__ . '/../core/folder-list.php';
         if (!$this->config['folders_enabled']) {
             $this->response->error('Folder feature is disabled', [], 503, 'FOLDERS_DISABLED');
             return;
@@ -61,9 +62,7 @@ class FolderApiHandler
                 return;
             }
 
-            $stmt = $pdo->prepare("SELECT id, name, parent_id, created_at FROM folders ORDER BY parent_id, name");
-            $stmt->execute();
-            $folders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $folders = fetchFoldersWithFileCounts($pdo);
 
             $this->response->success('Folder list retrieved', ['folders' => $folders]);
         } catch (PDOException $e) {

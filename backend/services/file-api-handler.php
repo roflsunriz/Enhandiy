@@ -24,6 +24,7 @@ class FileApiHandler
      */
     public function handleGetFiles(): void
     {
+        require_once __DIR__ . '/../core/folder-list.php';
         require_once __DIR__ . '/../models/init.php';
 
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -99,9 +100,7 @@ class FileApiHandler
                 $foldersEnabled = $this->config['folders_enabled'] ?? false;
                 if ($foldersEnabled) {
                     if (in_array('folders', $include)) {
-                        $fstmt = $pdo->prepare("SELECT id, name, parent_id FROM folders ORDER BY name");
-                        $fstmt->execute();
-                        $responseData['folders'] = $fstmt->fetchAll(PDO::FETCH_ASSOC);
+                        $responseData['folders'] = fetchFoldersWithFileCounts($pdo);
                     }
                     if (in_array('breadcrumb', $include) && $folder !== null) {
                         $responseData['breadcrumb'] = $this->buildBreadcrumb($pdo, $folder);

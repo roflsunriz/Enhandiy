@@ -27,6 +27,12 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 - `actions/labeler` v7 は v5 以降の設定形式が必須である。旧形式（ラベル直下に glob 配列）では `found unexpected type for label ... (should be array of config options)` で失敗する。形式は `changed-files` → `any-glob-to-any-file`（`.github/labeler.yml` 参照）。`pull_request_target` 実行は base ブランチの設定を使うため、labeler 本体の更新と設定移行は main 側へ先に反映してから各 PR を update-branch する。
 - 一時取得の `composer.phar` / `composer-setup.php` はリポジトリへ残さず削除する。
 
+## フォルダ件数の取得経路
+
+- `file_count` は直下のファイルだけを数える整数。子孫フォルダのファイル、ルートに置いたファイルは含めない。共通集計は `backend/core/folder-list.php` の `fetchFoldersWithFileCounts()`。
+- 初期表示（`backend/models/index.php`）、RESTのファイル一覧・フォルダ一覧、旧 `backend/api/folders.php` と `refresh-files.php` の5経路を同じ集計へ接続する。表示だけ直すとSPAの一覧更新で0件へ戻るため、全経路を検証する。
+- 回帰テストは `composer test` と `frontend/tests-e2e/folder-file-counts.spec.ts`。ブラウザテストの初期HTML取得もページ内のfetchを使い、別User-Agentのリクエストによるテスト用セッションの再生成を避ける。
+
 ## Environment
 
 - .githubフォルダにはGitHub Actionsのワークフローがあります。

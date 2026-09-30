@@ -12,6 +12,15 @@
 12. git tag vx.x.xとgit push origin vx.x.xでタグ作成＆リリース作成
 13. GitHub Actionsでリリース作成されるので、gh release viewでリリースを確認
 
+## フォルダ件数の回帰検証
+
+フォルダ一覧の `file_count` は直下のファイル数です。子孫フォルダのファイルを含めません。初期表示とREST／旧APIの一覧取得を共通集計へ接続しています。
+
+1. `composer test` で空フォルダ、直下と子孫の区別、ルートファイル、追加・移動・削除を確認します。
+2. テスト専用のデータベース・保存領域・設定を使う環境で `PLAYWRIGHT_BASE_URL` と `PW_MASTER_KEY` を設定します。ユーザーの稼働中環境をテスト先にしないでください。
+3. `frontend` で `npm run test:e2e -- folder-file-counts.spec.ts` を実行します。全一覧API、初期HTML、グリッド／リスト、追加・移動・削除、フォルダ遷移、再読み込みを確認します。
+4. 更新後に旧版のPHPが混在しないよう、共通集計ファイルを各呼び出し元と一緒に配置します。問題がある場合は同じファイル一式を直前の版へ戻します。データベースの変更はありません。
+
 ## Dependabot PR の更新
 
 前提は `.github/dependabot.yml` と PR 用 CI（CI、🔍 Pre-Release Quality Check）です。更新 PR の head SHA と `gh pr checks <PR番号>` の結果を確認してください。patch／minor は全チェック成功後に自動取り込みされます。初回 CI 失敗は failed jobs のみを 1 回再実行し、再失敗した PR は残して手動で修正します。

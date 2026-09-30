@@ -4,6 +4,7 @@ class Index
 {
     public function index()
     {
+        require_once __DIR__ . '/../core/folder-list.php';
 
         $config = new config();
         $ret = $config->index();
@@ -68,9 +69,7 @@ class Index
 
 
         // フォルダ一覧も取得
-        $folder_stmt = $db->prepare("SELECT * FROM folders ORDER BY name");
-        $folder_stmt->execute();
-        $folders = $folder_stmt->fetchAll();
+        $folders = fetchFoldersWithFileCounts($db);
 
         // 現在のフォルダ情報を取得
         $current_folder = null;

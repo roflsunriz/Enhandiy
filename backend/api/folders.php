@@ -2,6 +2,7 @@
 
 // フォルダ構造管理API
 // phpcs:disable PSR1.Files.SideEffects
+require_once __DIR__ . '/../core/folder-list.php';
 header('Content-Type: application/json; charset=utf-8');
 // phpcs:disable PSR1.Files.SideEffects
 
@@ -62,9 +63,7 @@ function handleGetFolders($db)
 {
     try {
         // 全フォルダを取得してツリー構造に変換
-        $stmt = $db->prepare("SELECT id, name, parent_id, created_at FROM folders ORDER BY parent_id, name");
-        $stmt->execute();
-        $folders = $stmt->fetchAll();
+        $folders = fetchFoldersWithFileCounts($db);
 
         // ツリー構造に変換
         $tree = buildFolderTree($folders);
