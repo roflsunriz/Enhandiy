@@ -135,7 +135,34 @@ async function closeAlert(page: Page): Promise<void> {
   await expect(page.locator("#alertModal")).toBeHidden();
 }
 
-test("直下件数が全取得経路と追加・移動・削除・再読み込みで一致する", async ({
+async function moveFile(
+  page: Page,
+  name: string,
+  destination: number,
+): Promise<void> {
+  const file = page.locator(".file-list-item").filter({ hasText: name });
+  await file.locator(".file-action-btn--move").click();
+  await page.locator("#promptModalInput").fill(String(destination));
+  await page.locator("#promptModalOk").click();
+  await expect(page.locator("#promptModal")).toBeHidden();
+  await closeAlert(page);
+}
+
+async function deleteFile(page: Page, name: string): Promise<void> {
+  const file = page.locator(".file-list-item").filter({ hasText: name });
+  await file.locator(".file-action-btn--delete").click();
+  await page.locator("#deleteAuthDelKey").fill("folder-count-delete");
+  await page.locator("#deleteAuthConfirmBtn").click();
+  await expect(page.locator("#deleteAuthModal")).toBeHidden();
+  await closeAlert(page);
+}
+
+async function refresh(page: Page): Promise<void> {
+  await page.locator(".file-manager__refresh-btn").click();
+  await expect(page.locator(".file-manager__refresh-btn")).toBeEnabled();
+}
+
+test("子孫のファイル総数が全取得経路と複数階層の更新で一致する", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -145,46 +172,105 @@ test("直下件数が全取得経路と追加・移動・削除・再読み込�
   const prefix = `E2E-count-${Date.now()}`;
   const parent = await folderRequest(page, `${prefix}-parent`);
   const child = await folderRequest(page, `${prefix}-child`, parent);
+  const grandchild = await folderRequest(page, `${prefix}-grandchild`, child);
   const other = await folderRequest(page, `${prefix}-other`);
+  const targetChild = await folderRequest(
+    page,
+    `${prefix}-target-child`,
+    other,
+  );
+  const empty = await folderRequest(page, `${prefix}-empty`);
+  const counts = (
+    parentCount: number,
+    childCount: number,
+    grandchildCount: number,
+    otherCount: number,
+    targetCount: number,
+  ): Record<string, number> => ({
+    [parent]: parentCount,
+    [child]: childCount,
+    [grandchild]: grandchildCount,
+    [other]: otherCount,
+    [targetChild]: targetCount,
+    [empty]: 0,
+  });
   try {
     await page.reload();
-    await assertEveryList(page, { [parent]: 0, [child]: 0, [other]: 0 });
-    await assertViews(page, { [parent]: 0, [other]: 0 });
+    await assertEveryList(page, counts(0, 0, 0, 0, 0));
+    await assertViews(page, { [parent]: 0, [other]: 0, [empty]: 0 });
     await upload(page, `${prefix}-direct.txt`, parent);
     await assertViews(page, { [parent]: 1, [other]: 0 });
     await upload(page, `${prefix}-child.txt`, child);
-    await assertEveryList(page, { [parent]: 1, [child]: 1, [other]: 0 });
-    await assertViews(page, { [parent]: 1, [other]: 0 });
+    await assertEveryList(page, counts(2, 1, 0, 0, 0));
+    await assertViews(page, { [parent]: 2, [other]: 0 });
+    await upload(page, `${prefix}-deep.txt`, grandchild);
+    await assertEveryList(page, counts(3, 2, 1, 0, 0));
+    await assertViews(page, { [parent]: 3, [other]: 0, [empty]: 0 });
 
-    const file = page
-      .locator(".file-list-item")
-      .filter({ hasText: `${prefix}-direct.txt` });
-    await file.locator(".file-action-btn--move").click();
-    await page.locator("#promptModalInput").fill(String(other));
-    await page.locator("#promptModalOk").click();
-    await expect(page.locator("#promptModal")).toBeHidden();
-    await closeAlert(page);
-    await assertViews(page, { [parent]: 0, [other]: 1 });
-    await assertEveryList(page, { [parent]: 0, [child]: 1, [other]: 1 });
+    // 別の枝へ移動すると、移動元と移動先の全祖先が更新される。
+    await moveFile(page, `${prefix}-deep.txt`, targetChild);
+    await assertViews(page, { [parent]: 2, [other]: 1 });
+    await assertEveryList(page, counts(2, 1, 0, 1, 1));
     await page.reload();
-    await assertViews(page, { [parent]: 0, [other]: 1 });
-    await page.locator(".file-manager__refresh-btn").click();
-    await expect(page.locator(".file-manager__refresh-btn")).toBeEnabled();
-    await assertViews(page, { [parent]: 0, [other]: 1 });
+    await refresh(page);
+    await assertViews(page, { [parent]: 2, [other]: 1 });
 
-    await file.locator(".file-action-btn--delete").click();
-    await page.locator("#deleteAuthDelKey").fill("folder-count-delete");
-    await page.locator("#deleteAuthConfirmBtn").click();
-    await expect(page.locator("#deleteAuthModal")).toBeHidden();
-    await closeAlert(page);
-    await assertViews(page, { [parent]: 0, [other]: 0 });
-    await assertEveryList(page, { [parent]: 0, [child]: 1, [other]: 0 });
+    // 同じ枝の中では共通祖先の合計を二重加算・減算しない。
+    await moveFile(page, `${prefix}-direct.txt`, grandchild);
+    await assertEveryList(page, counts(2, 2, 1, 1, 1));
+    await assertViews(page, { [parent]: 2, [other]: 1 });
+    await deleteFile(page, `${prefix}-child.txt`);
+    await assertEveryList(page, counts(1, 1, 1, 1, 1));
+    await assertViews(page, { [parent]: 1, [other]: 1 });
+
+    // ファイルを含む子孫ツリー自体の移動も、新旧の祖先へ反映する。
+    await page.evaluate(
+      async ({ child, other }) => {
+        const token = (window as unknown as { config: { csrf_token: string } })
+          .config.csrf_token;
+        const response = await fetch(
+          `/api/index.php?path=/api/folders/${child}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": token,
+            },
+            body: JSON.stringify({ parent_id: other }),
+          },
+        );
+        if (!response.ok)
+          throw new Error(`Folder move failed: ${response.status}`);
+      },
+      { child, other },
+    );
+    await refresh(page);
+    await assertEveryList(page, counts(0, 1, 1, 2, 1));
+    await assertViews(page, { [parent]: 0, [other]: 2, [empty]: 0 });
     await page
-      .locator(`.folder-list-item[data-folder-id="${parent}"] a.folder-item`)
+      .locator(`.folder-list-item[data-folder-id="${other}"] a.folder-item`)
       .click();
-    await assertViews(page, { [child]: 1 });
+    await assertViews(page, { [child]: 1, [targetChild]: 1 });
     await page.reload();
-    await assertViews(page, { [child]: 1 });
+    await assertViews(page, { [child]: 1, [targetChild]: 1 });
+    await page
+      .locator(`.folder-list-item[data-folder-id="${child}"] a.folder-item`)
+      .click();
+    await assertViews(page, { [grandchild]: 1 });
+    await page
+      .locator(
+        `.folder-list-item[data-folder-id="${grandchild}"] a.folder-item`,
+      )
+      .click();
+    await page.locator('.file-manager__view-btn[data-view="list"]').click();
+    await deleteFile(page, `${prefix}-direct.txt`);
+    await assertEveryList(page, counts(0, 0, 0, 1, 1));
+    await page.goto("/");
+    await assertViews(page, { [parent]: 0, [other]: 1, [empty]: 0 });
+    await deleteFile(page, `${prefix}-deep.txt`);
+    await assertEveryList(page, counts(0, 0, 0, 0, 0));
+    await refresh(page);
+    await assertViews(page, { [parent]: 0, [other]: 0, [empty]: 0 });
   } finally {
     if (!page.isClosed())
       await page.evaluate(
@@ -234,7 +320,7 @@ test("直下件数が全取得経路と追加・移動・削除・再読み込�
           }
         },
         {
-          ids: [child, parent, other],
+          ids: [grandchild, child, targetChild, parent, other, empty],
           prefix,
           masterKey: process.env.PW_MASTER_KEY || "",
         },

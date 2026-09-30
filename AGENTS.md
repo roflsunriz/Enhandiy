@@ -29,7 +29,9 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 
 ## フォルダ件数の取得経路
 
-- `file_count` は直下のファイルだけを数える整数。子孫フォルダのファイル、ルートに置いたファイルは含めない。共通集計は `backend/core/folder-list.php` の `fetchFoldersWithFileCounts()`。
+- 一覧の `file_count` は自身と全子孫フォルダのファイル総数を数える整数。フォルダ自体と、所属先がNULLのルートファイルは含めない。共通集計は `backend/core/folder-list.php` の `fetchFoldersWithFileCounts()`。直下のみという旧方針は撤回されている。
+- 直下件数と親IDを1クエリで取得し、葉から祖先へ反復処理で加算する。追加のDBクエリやPHPの再帰なしで、集計処理はフォルダ数に比例する。5000階層と循環検出はPHP回帰テストで確認する。
+- 削除前チェックの `file_count` と削除結果の `moved_files` は、その削除操作でルートへ移す直下ファイル数。子フォルダは別に移動するため、一覧の総数と混同して削除処理へ流用しない。
 - 初期表示（`backend/models/index.php`）、RESTのファイル一覧・フォルダ一覧、旧 `backend/api/folders.php` と `refresh-files.php` の5経路を同じ集計へ接続する。表示だけ直すとSPAの一覧更新で0件へ戻るため、全経路を検証する。
 - 回帰テストは `composer test` と `frontend/tests-e2e/folder-file-counts.spec.ts`。ブラウザテストの初期HTML取得もページ内のfetchを使い、別User-Agentのリクエストによるテスト用セッションの再生成を避ける。
 
