@@ -1,12 +1,16 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * ファイル削除処理
  *
  * ワンタイムトークンによる安全なファイル削除
  */
+
+declare(strict_types=1);
+
+use Enhandiy\Logger;
+
+use function Enhandiy\initializeApp;
 
 // エラー表示設定
 ini_set('display_errors', '0');

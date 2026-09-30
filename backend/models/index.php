@@ -1,9 +1,16 @@
 <?php
 
+namespace Enhandiy;
+
+use PDO;
+use Exception;
+use config;
+
 class Index
 {
     public function index()
     {
+        require_once __DIR__ . '/../core/folder-list.php';
 
         $config = new config();
         $ret = $config->index();
@@ -16,7 +23,7 @@ class Index
 
         //データベースの作成・オープン
         try {
-            $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+            $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
         } catch (Exception $e) {
             $error = '500 - データベースの接続に失敗しました: ' . $e->getMessage();
             include(__DIR__ . '/../views/header.php');
@@ -68,9 +75,7 @@ class Index
 
 
         // フォルダ一覧も取得
-        $folder_stmt = $db->prepare("SELECT * FROM folders ORDER BY name");
-        $folder_stmt->execute();
-        $folders = $folder_stmt->fetchAll();
+        $folders = fetchFoldersWithFileCounts($db);
 
         // 現在のフォルダ情報を取得
         $current_folder = null;

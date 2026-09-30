@@ -5,6 +5,9 @@
  * CSRFトークンによる保護で安全な編集機能を提供
  */
 
+use Enhandiy\Logger;
+use Enhandiy\SecurityUtils;
+
 // セキュリティヘッダー
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');

@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+namespace Enhandiy;
+
+use PDO;
+use PDOException;
+use Exception;
+use config;
+
 /**
  * ファイルAPI操作ハンドラー
  * ファイルの CRUD 操作を担当
@@ -24,6 +31,7 @@ class FileApiHandler
      */
     public function handleGetFiles(): void
     {
+        require_once __DIR__ . '/../core/folder-list.php';
         require_once __DIR__ . '/../models/init.php';
 
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
@@ -99,9 +107,7 @@ class FileApiHandler
                 $foldersEnabled = $this->config['folders_enabled'] ?? false;
                 if ($foldersEnabled) {
                     if (in_array('folders', $include)) {
-                        $fstmt = $pdo->prepare("SELECT id, name, parent_id FROM folders ORDER BY name");
-                        $fstmt->execute();
-                        $responseData['folders'] = $fstmt->fetchAll(PDO::FETCH_ASSOC);
+                        $responseData['folders'] = fetchFoldersWithFileCounts($pdo);
                     }
                     if (in_array('breadcrumb', $include) && $folder !== null) {
                         $responseData['breadcrumb'] = $this->buildBreadcrumb($pdo, $folder);
@@ -633,7 +639,7 @@ class FileApiHandler
             $updateStmt->execute([time(), $fileId]);
 
             // ダウンロードログの記録（Loggerが利用可能な場合）
-            if (class_exists('Logger')) {
+            if (class_exists(Logger::class)) {
                 $logger = new Logger(
                     $this->config['log_directory'] ?? './logs',
                     $this->config['log_level'] ?? Logger::LOG_INFO
@@ -859,7 +865,7 @@ class FileApiHandler
             $upd->execute();
 
             // 共有キー生成
-            if (!class_exists('SecurityUtils')) {
+            if (!class_exists(SecurityUtils::class)) {
                 require_once __DIR__ . '/../core/utils.php';
             }
 

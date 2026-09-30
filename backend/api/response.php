@@ -1,5 +1,7 @@
 <?php
 
+namespace Enhandiy;
+
 /**
  * RESTful APIレスポンス管理
  * 統一されたJSON形式でのレスポンス処理

@@ -2,6 +2,7 @@
 
 // フォルダ構造管理API
 // phpcs:disable PSR1.Files.SideEffects
+require_once __DIR__ . '/../core/folder-list.php';
 header('Content-Type: application/json; charset=utf-8');
 // phpcs:disable PSR1.Files.SideEffects
 
@@ -25,7 +26,7 @@ if (!isset($folders_enabled) || !$folders_enabled) {
 
 // データベースの作成・オープン
 try {
-    $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+    $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (Exception $e) {
@@ -41,13 +42,13 @@ switch ($method) {
         handleGetFolders($db);
         break;
     case 'POST':
-        handlePostRequest($db, $max_folder_depth, $max_folders_per_level, $allow_folder_creation);
+        handlePostRequest($db, $ret['max_folder_depth'], $ret['max_folders_per_level'], $ret['allow_folder_creation']);
         break;
     case 'PUT':
         handleUpdateFolder($db);
         break;
     case 'DELETE':
-        handleDeleteFolder($db, $allow_folder_deletion);
+        handleDeleteFolder($db, $ret['allow_folder_deletion']);
         break;
     default:
         http_response_code(405);
@@ -62,9 +63,7 @@ function handleGetFolders($db)
 {
     try {
         // 全フォルダを取得してツリー構造に変換
-        $stmt = $db->prepare("SELECT id, name, parent_id, created_at FROM folders ORDER BY parent_id, name");
-        $stmt->execute();
-        $folders = $stmt->fetchAll();
+        $folders = fetchFoldersWithFileCounts($db);
 
         // ツリー構造に変換
         $tree = buildFolderTree($folders);

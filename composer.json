@@ -31,8 +31,15 @@
         "optimize-autoloader": true
     },
     "scripts": {
+        "lint": "@php vendor/bin/phpcs",
+        "analyse": "@php vendor/bin/phpstan analyse --no-progress --memory-limit=512M",
         "check-syntax": "find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l",
-        "test": "php infrastructure/scripts/test-browser-title.php",
+        "test": [
+            "php infrastructure/scripts/test-browser-title.php",
+            "php infrastructure/scripts/test-folder-file-counts.php",
+            "php infrastructure/scripts/test-version.php",
+            "php infrastructure/scripts/test-upload-form.php"
+        ],
         "release": "php infrastructure/scripts/release.php"
     }
 }

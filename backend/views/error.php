@@ -1,3 +1,8 @@
+<?php
+
+$error = $error ?? 'エラーが発生しました。';
+
+?>
 
 <div class="container">
   <div class="row">

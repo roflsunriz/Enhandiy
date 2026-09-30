@@ -12,9 +12,31 @@ cp backend/config/config.php.example backend/config/config.php
 
 注意: `backend/config/config.php` は `.gitignore` に含まれており、リポジトリにはコミットされません。
 
+## 品質検査
+
+PHP 8.1以上、Composer、Node.js 24以上を用意します。
+
+```bash
+composer install
+composer validate --no-check-publish
+composer lint
+composer analyse
+composer test
+composer audit
+
+cd frontend
+npm ci
+npm run lint
+npm run type-check
+npm run build
+npm audit
+```
+
+型検査はTS7、lintは公式TS6互換APIを併用します。peer条件を無視するオプションは不要です。依存更新・回帰テスト・復旧の詳細は [更新手順](../how-to-update.md)、実施結果と環境制約は [検証記録](../verification.md) を参照してください。
+
 ## バージョン管理
 
-- バージョンは `backend/config/config.php` で集中管理し、UI 下部に表示されます。
+- 製品バージョンは `backend/config/config.php.example` と `frontend/package.json` を揃え、`composer test` で一致を確認します。稼働中のユーザー設定は検査で読み書きしません。Composerの任意のversionフィールドは、存在する場合だけ照合します。
 - `backend/routes/router.php` に API バージョンがあるため、更新時に変更が必要です。
 - `backend/services/system-api-handler.php` にもバージョンがあるため、更新時に変更が必要です。
 - `CHANGELOG.md` にバージョンごとの変更点を記載しています。`README.md` もバージョンに合わせて適宜更新してください。
@@ -55,4 +77,3 @@ infrastructure\scripts\release.bat x.x.x
 4. 自動リリース: GitHub Actions が自動でリリースを作成
 
 重要: リリース時は `backend/config/config.php.example` テンプレートが配布され、エンドユーザーが自分で設定ファイルを作成する必要があります。
-

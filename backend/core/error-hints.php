@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * エラーコード→対処ヒントのマッピング
  * - 各サービスから渡される error_code に対して、ユーザーが取れる具体的なアクションを示す
  */
+
+declare(strict_types=1);
 
 return [
     // ルーター/共通

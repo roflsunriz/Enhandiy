@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CIが検査失敗を成功として扱わないよう、PHPクラスと呼び出し元の名前空間、PSR12のヘッダー・整形、PHPStanの設定参照、Dockerイメージ名を修正し、lint・静的解析・Dockerビルドを必須の検査にした。
+- TS7による型検査とtypescript-eslintによるlintを両立するため、公式TS6 APIパッケージを併用し、パス設定・不要な代入・存在しない型定義の参照を修正した。通常の依存導入・lint・型検査・ビルド・npm監査をCIに追加した。
+- バージョン検査が削除済みのComposer versionフィールドに依存しないよう、配布設定テンプレートとfrontendの製品バージョンを照合する検査へ変更した。ユーザー設定・認証情報を読み書きせず、不一致ではCIを失敗させる。
+- フォルダの内容を正しく把握できるよう、初期表示、REST API、旧一覧APIで自身と全子孫フォルダのファイル総数の集計を共通化した。追加・移動・削除を祖先の件数へ反映し、フォルダ自体は数えず、空のツリーは0件を返す（Issue #20）。
 - actions/labelerのv7更新で旧形式の設定が拒否されラベル付けが失敗するため、設定ファイルをv5以降形式へ移行し、Dependabot PRのラベル付けが通るようにした。
 - Dependabot PR のラベル付けがトークン権限不足で失敗する問題を修正し、PR コードを実行しないイベントでラベルを付ける。README と変更履歴の重複空行を除き、ドキュメント検査も通るようにした。
 - CI と Dependabot の分類の実行順が前後しても更新を取りこぼさないよう、同じ PR 番号と head SHA を再照合する経路を追加した。
@@ -19,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- 波括弧展開の再帰によるスタック枯渇・DoSの脆弱性を解消するため、既存の `brace-expansion` overrideを5.0.9から修正版5.0.12へ更新した。
 - 空のマージ元でCPU使用量が制限されないjs-yamlの脆弱性（GHSA-2883-xcg3-v3hh）に対処するため、frontendの推移的依存js-yamlを4.3.1から修正版4.3.2へ更新した。
 
 ## [4.5.0] - 2026-08-08

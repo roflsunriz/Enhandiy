@@ -7,6 +7,10 @@
 
 declare(strict_types=1);
 
+use function Enhandiy\initializeApp;
+
+require_once __DIR__ . '/../core/folder-list.php';
+
 // phpcs:disable PSR1.Files.SideEffects
 // エラー表示設定
 ini_set('display_errors', '0');
@@ -98,10 +102,7 @@ try {
     // フォルダ機能が有効な場合
     if ($config['folders_enabled']) {
         // フォルダ一覧取得
-        $sql = "SELECT id, name, parent_id FROM folders ORDER BY name";
-        $stmt = $db->prepare($sql);
-        $stmt->execute();
-        $allFolders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $allFolders = fetchFoldersWithFileCounts($db);
 
         // 階層構造の構築
         $folders = buildFolderTree($allFolders);

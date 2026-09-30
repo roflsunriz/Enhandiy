@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+namespace Enhandiy;
+
+use PDO;
+use Exception;
+
 /**
  * ロガークラス
  * ファイルとデータベースの両方にログを記録

@@ -3,19 +3,16 @@
     <description>Coding standard for Enhandiy project</description>
     
     <!-- 対象ファイル -->
-    <file>.</file>
+    <file>backend</file>
+    <file>infrastructure/scripts</file>
     
     <!-- 除外パス -->
     <exclude-pattern>vendor/*</exclude-pattern>
-    <exclude-pattern>tests/*</exclude-pattern>
-    <exclude-pattern>docker/*</exclude-pattern>
+    <!-- User-owned deployment configuration is not repository source. -->
+    <exclude-pattern>backend/config/config.php</exclude-pattern>
     
     <!-- 基本規則 -->
-    <rule ref="PSR12">
-        <!-- レガシーコードのため一時的に無視 -->
-        <exclude name="PSR1.Classes.ClassDeclaration.MissingNamespace"/>
-        <exclude name="PSR12.Files.FileHeader.IncorrectOrder"/>
-    </rule>
+    <rule ref="PSR12"/>
     
     <!-- ファイルエンコーディング -->
     <rule ref="Generic.Files.ByteOrderMark"/>

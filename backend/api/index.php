@@ -5,6 +5,11 @@
  * すべてのAPIリクエストをここで受け取り、ルーターに転送
  */
 
+use Enhandiy\SecurityUtils;
+use Enhandiy\ApiRouter;
+
+use function Enhandiy\initializeApp;
+
 // エラー表示設定
 ini_set('display_errors', 0);
 error_reporting(E_ALL);

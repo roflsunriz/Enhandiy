@@ -1,5 +1,9 @@
 <?php
 
+namespace Enhandiy;
+
+use Exception;
+
 /**
  * RESTful APIルーター - リファクタリング版
  * 分離されたハンドラーを統合した管理クラス

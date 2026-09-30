@@ -1,62 +1,29 @@
 <?php
 
 /**
- * バージョン確認テストスクリプト
- * config.phpがcomposer.jsonから正しくバージョンを読み取れるかテスト
+ * 配布用設定テンプレートとフロントエンドの製品バージョンを検証する。
+ * ユーザーの設定・認証情報を読み取ったり書き換えたりしない。
  */
 
-echo "=== バージョン情報テスト ===\n\n";
+declare(strict_types=1);
 
-// config.phpが存在しない場合はテンプレートからコピー
-if (!file_exists(__DIR__ . '/../../backend/config/config.php')) {
-    if (file_exists(__DIR__ . '/../../backend/config/config.php.example')) {
-        copy(__DIR__ . '/../../backend/config/config.php.example', __DIR__ . '/../../backend/config/config.php');
-        echo "📋 config.php.exampleからconfig.phpを作成しました\n";
-    } else {
-        echo "❌ config.php.example が見つかりません\n";
-        exit(1);
-    }
-}
+$root = dirname(__DIR__, 2);
+$frontend = json_decode(file_get_contents($root . '/frontend/package.json'), true, 512, JSON_THROW_ON_ERROR);
+$composer = json_decode(file_get_contents($root . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
 
-// composer.jsonのバージョンを取得
-$composerJson = __DIR__ . '/../../composer.json';
-if (!file_exists($composerJson)) {
-    echo "❌ composer.json が見つかりません\n";
+require $root . '/backend/config/config.php.example';
+$templateVersion = (new config())->index()['version'];
+$expectedVersion = $frontend['version'];
+
+if ($templateVersion !== $expectedVersion) {
+    fwrite(STDERR, "Config template version {$templateVersion} does not match frontend {$expectedVersion}.\n");
     exit(1);
 }
 
-$composerData = json_decode(file_get_contents($composerJson), true);
-if (!$composerData || !isset($composerData['version'])) {
-    echo "❌ composer.jsonからバージョンを取得できません\n";
+// Composer's version is intentionally omitted; if restored, it must also agree.
+if (isset($composer['version']) && $composer['version'] !== $expectedVersion) {
+    fwrite(STDERR, "Composer version does not match frontend {$expectedVersion}.\n");
     exit(1);
 }
 
-$expectedVersion = $composerData['version'];
-echo "📦 composer.json バージョン: $expectedVersion\n";
-
-// config.phpからバージョンを取得
-ob_start();
-include(__DIR__ . '/../../backend/config/config.php');
-ob_end_clean();
-
-// configクラスのインスタンス化
-$config = new config();
-$configData = $config->index();
-
-$configVersion = $configData['version'] ?? 'N/A';
-echo "⚙️  config.php バージョン: $configVersion\n";
-
-// 一致確認
-if ($expectedVersion === $configVersion) {
-    echo "✅ バージョンが一致しています！\n";
-    echo "\n=== その他の設定情報 ===\n";
-    echo "Title: " . $configData['title'] . "\n";
-    echo "Max file size: " . $configData['max_file_size'] . "MB\n";
-    echo "Allowed extensions: " . implode(', ', $configData['extension']) . "\n";
-    exit(0);
-} else {
-    echo "❌ バージョンが一致しません\n";
-    echo "  期待値: $expectedVersion\n";
-    echo "  実際の値: $configVersion\n";
-    exit(1);
-}
+echo "Version consistency tests passed ({$expectedVersion}).\n";

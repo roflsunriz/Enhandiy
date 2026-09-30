@@ -1,11 +1,13 @@
 <?php
 
-// phpcs:disable PSR1.Files.SideEffects
-
 /**
  * Tus.io プロトコル対応アップロードAPI
  * Enhandiy - Tus.io Server Implementation
  */
+
+use Enhandiy\SecurityUtils;
+
+// phpcs:disable PSR1.Files.SideEffects
 
 // タイムアウト設定（本番環境用）
 ini_set('display_errors', 0);
@@ -23,7 +25,7 @@ header('Access-Control-Expose-Headers: Upload-Offset, Upload-Length, Tus-Resumab
 // POSTで新しいアップロードを作る場合だけ、CSRF検証のためセッションを開始する。
 // PATCH/HEADはセッションを使わず、チャンク転送中に他のAPIを待たせない。
 // セキュリティクラスがまだ読み込まれていない場合の対処
-if (!class_exists('SecurityUtils')) {
+if (!class_exists(SecurityUtils::class)) {
     require_once __DIR__ . '/../core/utils.php';
 }
 $method = $_SERVER['REQUEST_METHOD'];
@@ -46,7 +48,7 @@ if (!is_null($ret) && is_array($ret)) {
 
 // データベース接続
 try {
-    $db = new PDO('sqlite:' . $db_directory . '/uploader.db');
+    $db = new PDO('sqlite:' . $ret['db_directory'] . '/uploader.db');
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     http_response_code(500);
@@ -545,12 +547,10 @@ function completeUpload($uploadId, $upload)
 
     // デバッグログ開始
 
-
     $metadata = json_decode($upload['metadata'], true);
     $originalFileName = $metadata['filename'] ?? 'unknown';
 
             // セキュリティ：メタデータのログ出力を削除（機密情報が含まれる可能性）
-
 
     // 拡張子チェック（ポリシー対応）
     $ext = pathinfo($originalFileName, PATHINFO_EXTENSION);
@@ -561,7 +561,6 @@ function completeUpload($uploadId, $upload)
         $db->prepare("DELETE FROM tus_uploads WHERE id = ?")->execute([$uploadId]);
         return false;
     }
-
 
     try {
         // uploadedテーブルに移動
@@ -632,13 +631,11 @@ function completeUpload($uploadId, $upload)
             $upload['folder_id']
         ];
 
-
         $result = $sql->execute($insertData);
 
         if (!$result) {
             throw new Exception('Failed to insert into uploaded table');
         }
-
 
         $fileId = $db->lastInsertId();
 

@@ -17,24 +17,24 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'src/main.ts'),
-        'file-edit': resolve(__dirname, 'src/features/file-edit.ts'),
-        'folder-manager': resolve(__dirname, 'src/features/folder-manager.ts'),
-        'drag-drop': resolve(__dirname, 'src/features/drag-drop.ts'),
-        'resumable-upload': resolve(__dirname, 'src/features/resumable-upload.ts'),
+        main: resolve(import.meta.dirname, 'src/main.ts'),
+        'file-edit': resolve(import.meta.dirname, 'src/features/file-edit.ts'),
+        'folder-manager': resolve(import.meta.dirname, 'src/features/folder-manager.ts'),
+        'drag-drop': resolve(import.meta.dirname, 'src/features/drag-drop.ts'),
+        'resumable-upload': resolve(import.meta.dirname, 'src/features/resumable-upload.ts'),
         // CSS files
-        'common': resolve(__dirname, 'assets/styles/common.css'),
-        'responsive': resolve(__dirname, 'assets/styles/responsive.css'),
-        'responsive-extra': resolve(__dirname, 'assets/styles/responsive-extra.css'),
-        'share-css': resolve(__dirname, 'assets/styles/share.css'),
-        'dragdrop': resolve(__dirname, 'assets/styles/dragdrop.css'),
-        'folders': resolve(__dirname, 'assets/styles/folders.css'),
-        'file-manager-css': resolve(__dirname, 'assets/styles/file-manager.css'),
-        'password-strength-css': resolve(__dirname, 'assets/styles/password-strength.css'),
-        'fluent': resolve(__dirname, 'assets/styles/fluent.css'),
-        'fluent-content': resolve(__dirname, 'assets/styles/fluent-content.css'),
-        'fluent-responsive': resolve(__dirname, 'assets/styles/fluent-responsive.css'),
-        'workspace': resolve(__dirname, 'assets/styles/workspace.css'),
+        'common': resolve(import.meta.dirname, 'assets/styles/common.css'),
+        'responsive': resolve(import.meta.dirname, 'assets/styles/responsive.css'),
+        'responsive-extra': resolve(import.meta.dirname, 'assets/styles/responsive-extra.css'),
+        'share-css': resolve(import.meta.dirname, 'assets/styles/share.css'),
+        'dragdrop': resolve(import.meta.dirname, 'assets/styles/dragdrop.css'),
+        'folders': resolve(import.meta.dirname, 'assets/styles/folders.css'),
+        'file-manager-css': resolve(import.meta.dirname, 'assets/styles/file-manager.css'),
+        'password-strength-css': resolve(import.meta.dirname, 'assets/styles/password-strength.css'),
+        'fluent': resolve(import.meta.dirname, 'assets/styles/fluent.css'),
+        'fluent-content': resolve(import.meta.dirname, 'assets/styles/fluent-content.css'),
+        'fluent-responsive': resolve(import.meta.dirname, 'assets/styles/fluent-responsive.css'),
+        'workspace': resolve(import.meta.dirname, 'assets/styles/workspace.css'),
       },
       output: {
         entryFileNames: '[name].js',
@@ -45,11 +45,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
-      '@components': resolve(__dirname, './src/components'),
-      '@types': resolve(__dirname, './src/types'),
-      '@utils': resolve(__dirname, './src/utils'),
-      '@features': resolve(__dirname, './src/features')
+      '@': resolve(import.meta.dirname, './src'),
+      '@components': resolve(import.meta.dirname, './src/components'),
+      '@types': resolve(import.meta.dirname, './src/types'),
+      '@utils': resolve(import.meta.dirname, './src/utils'),
+      '@features': resolve(import.meta.dirname, './src/features')
     }
   },
   server: {

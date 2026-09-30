@@ -67,7 +67,8 @@ jobs:
           fi
           
           # バージョン情報の確認
-          VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          php infrastructure/scripts/test-version.php
+          VERSION=$(php -r '$metadata = json_decode(file_get_contents("frontend/package.json"), true, 512, JSON_THROW_ON_ERROR); echo $metadata["version"];')
           echo "📌 Current version: $VERSION"
           
           # README.md の存在確認
@@ -188,7 +189,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           # バージョン情報
-          VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          VERSION=$(php -r '$metadata = json_decode(file_get_contents("frontend/package.json"), true, 512, JSON_THROW_ON_ERROR); echo $metadata["version"];')
           echo "### 📌 Version Information" >> $GITHUB_STEP_SUMMARY
           echo "**Current Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -220,15 +221,16 @@ jobs:
         run: |
           echo "🏷️ Checking version consistency..."
           
-          # composer.json からバージョンを取得
-          COMPOSER_VERSION=$(grep '"version"' composer.json | sed 's/.*"version": "\(.*\)".*/\1/')
-          echo "Composer version: $COMPOSER_VERSION"
+          php infrastructure/scripts/test-version.php
+          VERSION=$(php -r '$metadata = json_decode(file_get_contents("frontend/package.json"), true, 512, JSON_THROW_ON_ERROR); echo $metadata["version"];')
+          echo "Product version: $VERSION"
           
           # CHANGELOG.md に該当バージョンのエントリがあるか確認
-          if grep -q "\[${COMPOSER_VERSION}\]" CHANGELOG.md 2>/dev/null; then
-            echo "✅ CHANGELOG.md contains entry for version $COMPOSER_VERSION"
+          if grep -Fq "[${VERSION}]" CHANGELOG.md; then
+            echo "✅ CHANGELOG.md contains entry for version $VERSION"
           else
-            echo "⚠️  CHANGELOG.md does not contain entry for version $COMPOSER_VERSION"
+            echo "❌ CHANGELOG.md does not contain entry for version $VERSION"
+            exit 1
           fi
 
       - name: 🎯 Release Checklist

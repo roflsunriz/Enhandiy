@@ -87,7 +87,7 @@ function checkUrlErrors(): void {
   const error = urlParams.get('error');
   
   if (error) {
-    let errorMessage = '';
+    let errorMessage: string;
     let errorTitle = 'エラー';
     
     switch (error) {

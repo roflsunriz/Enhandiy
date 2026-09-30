@@ -559,7 +559,7 @@ function getUploadOptions(): UploadOptions {
 }
 
 function handleUploadError(data: UploadApiResponse, filename: string): void {
-  let errorMessage = '';
+  let errorMessage: string;
   
   const status = (data as unknown as { error_code?: string; status: string }).error_code
     ? (data as unknown as { error_code?: string }).error_code as string

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Enhandiy\SecurityUtils;
+
 // 本番のプロキシ切り替えを模したセッション回帰テスト。
 $sessionDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'enhandiy-session-' . bin2hex(random_bytes(6));
 if (!mkdir($sessionDirectory, 0700, true) && !is_dir($sessionDirectory)) {
