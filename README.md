@@ -26,7 +26,7 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 
 - **リリース**: [リリースページ](https://github.com/roflsunriz/Enhandiy/releases)
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
-- **リリースノート**: [docs](docs) ディレクトリ内の各リリースノート
+- **リリースノート**: [GitHub Releases](https://github.com/roflsunriz/Enhandiy/releases) にCHANGELOGの該当版を掲載
 
 ## 📄 License
 
@@ -49,7 +49,7 @@ Released under the MIT license
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
-**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v4.4.1...v4.5.0>
+**Full Changelog**: <https://github.com/roflsunriz/Enhandiy/compare/v4.5.0...v4.5.1>
 
 Enhandiyをご利用いただき、ありがとうございます！ 🚀
 

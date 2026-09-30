@@ -14,6 +14,10 @@
 12. git tag vx.x.xとgit push origin vx.x.xでタグ作成＆リリース作成
 13. GitHub Actionsでリリース作成されるので、gh release viewでリリースを確認
 
+タグのpush前にmainの検査を完了し、`git ls-remote origin refs/tags/vX.Y.Z` と `gh release view vX.Y.Z -R roflsunriz/Enhandiy` で同版がないことを確認します。frontendの版数とlockfileは `npm version X.Y.Z --no-git-tag-version --ignore-scripts` で揃え、`npm run build` で配布アセットを再生成します。
+
+公開workflowはCHANGELOGの該当版のみを抽出します。公開後は対象タグのcommitとmainの反映を照合し、正式Releaseと `Enhandiy-vX.Y.Z-source.zip`／`Enhandiy-vX.Y.Z-source.tar.gz` の両方を確認してください。既存タグやReleaseの上書き・削除で復旧しないでください。失敗した場合はログを確認し、必要な修正を追加commitにして検証します。
+
 ## 自動検査と依存関係の更新
 
 PHP 8.1以上、Composer、Node.js 24以上を用意します。フロントエンドの詳しいNode要件は `frontend/package.json` の依存パッケージのenginesも確認してください。

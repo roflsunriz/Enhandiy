@@ -41,6 +41,7 @@
 - `composer lint` は名前空間とヘッダー順序を除外しないPSR12検査、`composer analyse` はbackendと保守スクリプトを検査する。ユーザー所有の `config.php` は読み込まず、型は管理対象テンプレートを参照する。`extract` で供給される設定値は、静的解析が追えるよう設定配列から明示的に参照する。
 - TS7のCLIは `@typescript/native` 別名、typescript-eslint用APIは公式 `@typescript/typescript6` の `typescript` 別名で併用する。`tsc` をTS6へ差し替えたり、peer条件・警告を無視して導入しない。根拠と更新手順は `verification.md`、`how-to-update.md` を参照する。
 - GitHub Advanced SecurityのAIレビューはGitHub管理の動的workflowであり、リポジトリ内にモデル設定がない。`unsupported model` はコードの集計エラーと区別し、対象runの失敗ログを確認する。権限追加やスキャン無効化を修正として扱わない。
+- 正式公開は `how-to-update.md` に従い、ユーザー所有の設定を変更せずテンプレート・API・画面・frontendの版数を揃える。旧 `release.php`／ラッパーは稼働設定を書き換えるため公開作業では使用しない。タグpushを起点に `release.yml` がタグcommitのソースZIP／TAR.GZと該当版CHANGELOGを公開する。既存タグは上書きしない。
 
 - .githubフォルダにはGitHub Actionsのワークフローがあります。
 - .github/workflowsフォルダにはGitHub Actionsのワークフローがあります。

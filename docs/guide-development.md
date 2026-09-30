@@ -55,15 +55,6 @@ docker-compose down php-cli
 # Webサーバーの起動
 docker-compose up -d web
 
-# リリース管理（Linux/Mac）
-./infrastructure/scripts/release.sh x.x.x
-
-# リリース管理（Windows）
-infrastructure\scripts\release.bat x.x.x
-
-# 自動プッシュ付きリリース
-./infrastructure/scripts/release.sh x.x.x --push
-
 # Composer 管理
 ./infrastructure/scripts/composer.sh install
 ./infrastructure/scripts/composer.sh update
@@ -71,9 +62,8 @@ infrastructure\scripts\release.bat x.x.x
 
 ## リリース手順
 
-1. バージョン更新: `./infrastructure/scripts/release.sh x.x.x`
-2. 変更確認: `backend/config/config.php` のバージョン番号を手動で更新
-3. Git 操作: 表示される手順に従ってコミット・タグ・プッシュ
-4. 自動リリース: GitHub Actions が自動でリリースを作成
+正式な手順は [how-to-update.md](../how-to-update.md) を参照してください。設定テンプレート・API・画面・frontendの製品版を揃え、検証とmainへの反映を終えてから新しいタグをpushします。既存タグは上書きしません。
 
-重要: リリース時は `backend/config/config.php.example` テンプレートが配布され、エンドユーザーが自分で設定ファイルを作成する必要があります。
+`release.yml` はタグのcommitからZIPとTAR.GZを生成し、CHANGELOGの該当版をGitHub Releaseへ掲載します。Releaseの対象commit、正式公開状態、両配布物を確認してください。
+
+新規導入では `backend/config/config.php.example` をコピーして設定します。更新時は稼働中の `backend/config/config.php`、認証情報、DB、保存ファイルを維持し、旧リリース補助スクリプトでユーザー設定を上書きしないでください。

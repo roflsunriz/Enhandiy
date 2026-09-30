@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.1] - 2026-09-30
+
 ### Fixed
 
 - CIが検査失敗を成功として扱わないよう、PHPクラスと呼び出し元の名前空間、PSR12のヘッダー・整形、PHPStanの設定参照、Dockerイメージ名を修正し、lint・静的解析・Dockerビルドを必須の検査にした。
@@ -19,10 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- 配布物に最新のソースと依存関係を反映するため、frontendアセットを再生成し、リリースノートをCHANGELOGの該当版だけから生成するようにした。
 - 依存更新を安全に省力化するため、Dependabot の patch／minor PR を既存 CI の全チェック成功後に自動取り込みし、失敗ジョブを一度再実行する設定を追加した。
 
 ### Security
 
+- CIの全ジョブが不要な書き込み権限を持たないよう、GITHUB_TOKENをcontentsの読み取り権限に限定した。
 - 波括弧展開の再帰によるスタック枯渇・DoSの脆弱性を解消するため、既存の `brace-expansion` overrideを5.0.9から修正版5.0.12へ更新した。
 - 空のマージ元でCPU使用量が制限されないjs-yamlの脆弱性（GHSA-2883-xcg3-v3hh）に対処するため、frontendの推移的依存js-yamlを4.3.1から修正版4.3.2へ更新した。
 

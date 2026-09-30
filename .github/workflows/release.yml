@@ -28,6 +28,7 @@ jobs:
       - name: 🔄 Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.inputs.tag_name || github.ref }}
           fetch-depth: 0  # 全履歴を取得してchangelogを生成
 
       - name: 🏷️ Get tag name
@@ -63,12 +64,20 @@ jobs:
             echo ""
           } > release_body.md
 
-          # CHANGELOG.md が存在する場合、最新の3セクションを抽出して追加
-          if [ -f "CHANGELOG.md" ]; then
-            echo "" >> release_body.md
-            echo "## CHANGELOG - Latest 3 entries" >> release_body.md
-            awk 'BEGIN{count=0;printing=0} /^##\s/ {count++; if(count>3) exit; printing=1} { if(printing) print }' CHANGELOG.md >> release_body.md
-          fi
+          # 公開する版の変更履歴だけを掲載し、欠落時は公開を停止する
+          echo "" >> release_body.md
+          echo "## CHANGELOG" >> release_body.md
+          awk -v version="$VERSION" '
+            /^## / {
+              if (printing) exit
+              if (index($0, "## [" version "]") == 1) {
+                found=1
+                printing=1
+              }
+            }
+            printing { print }
+            END { if (!found) exit 1 }
+          ' CHANGELOG.md >> release_body.md
 
           # インストール手順を追加
           cat >> release_body.md << 'EOF'

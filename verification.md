@@ -1,5 +1,16 @@
 # 検証手順
 
+## v4.5.1公開準備（2026-09-30）
+
+PR #21を含むmain `082d213` を基準に、設定テンプレート・API・画面・frontend package／lockの版数を4.5.1へ更新した。ユーザー所有の設定・DB・保存ファイル・ブラウザや端末の認証は変更していない。
+
+- `composer validate --no-check-publish`、`composer lint`、`composer analyse`、`composer test`、設定テンプレートのPHP構文検査が通過。版数一致は4.5.1、件数回帰は5000階層・1クエリ・循環検出を含む。
+- frontendのlint・TS7型検査・ビルドが通過。`npm run build` が生成した配布アセットをそのまま収録する。npm／Composer監査は既知脆弱性0件、直接依存の更新対象なし。
+- 再生成したアセットを専用SQLite・合成テスト認証・localhostの隔離環境で確認し、Chromiumの関連E2E全19件が1回の実行で通過した。最初の実行指定ではQA値と対象ファイル指定を誤ったため、修正後に全対象を実行し直した。稼働中の実環境は検証先にしていない。
+- 公開workflowのactionlintとリリース関連文書のmarkdownlintが通過。公開workflowから抽出した実際のawk処理が4.5.1のCHANGELOGだけを返し、存在しない版では非ゼロ終了することも確認した。
+
+公開後はタグとmainのcommit、正式Releaseの状態、ZIP／TAR.GZの両配布物を照合する。公開workflowとmainの検査結果はGitHub Actionsで確認する。Apache・Firefox・Android実機での今回の動作確認は未実施。既存XSS指摘は今回の公開準備の修正対象外であり、依存監査0件はそれらの解消を意味しない。
+
 ## 自動検査・依存修正（2026-09-30）
 
 Issue #20の修正コミット `3f2c85d` を保った同じ隔離checkoutで、既存検査の失敗を修正した。既存ユーザー設定、元checkout、実データ、ブラウザ・端末の認証は変更していない。
