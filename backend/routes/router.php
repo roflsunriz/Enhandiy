@@ -193,6 +193,15 @@ class ApiRouter
         $handlerMethod = $route['handler'];
         $handlerType = $route['handler_type'];
 
+        // PHPの整数範囲を超えるIDを暗黙変換するとTypeErrorになるため、更新前に拒否する。
+        if (
+            $handlerMethod === 'handleUpdateFile'
+            && filter_var($matches[0] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false
+        ) {
+            $this->response->error('File ID is required', [], 400, 'FILE_ID_REQUIRED');
+            return;
+        }
+
         try {
             // 適切なハンドラーインスタンスを選択
             switch ($handlerType) {
@@ -256,7 +265,7 @@ class ApiRouter
             'file_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'file')),
             'folder_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'folder')),
             'system_routes' => count(array_filter($this->routes, fn($r) => $r['handler_type'] === 'system')),
-            'api_version' => '4.5.1'
+            'api_version' => '4.5.2'
         ];
     }
 }

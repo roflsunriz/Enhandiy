@@ -1,6 +1,6 @@
 {
   "name": "php-uploader-frontend",
-  "version": "4.5.1",
+  "version": "4.5.2",
   "description": "Modern TypeScript frontend for PHP file uploader",
   "type": "module",
   "scripts": {
@@ -11,21 +11,24 @@
     "lint": "eslint src --max-warnings 0",
     "docs:images": "node scripts/update-gallery-images.mjs",
     "test:e2e": "playwright test",
+    "test:isolated": "npm run test:comment-api && npm run test:edit-dialog",
+    "test:comment-api": "node tests-isolated/comment-api.mjs",
+    "test:edit-dialog": "node tests-isolated/edit-dialog.mjs",
     "test:e2e:report": "playwright show-report",
     "test:e2e:headed": "cross-env PW_HEADED=1 PW_SLOWMO=100 PW_TRACE=on PW_VIDEO=on PW_SCREENSHOT=on playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "@typescript-eslint/eslint-plugin": "^8.71.0",
     "@typescript-eslint/parser": "^8.71.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "cross-env": "^10.1.0",
-    "eslint": "^10.11.0",
-    "globals": "^17.12.0",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vite": "^8.3.1"
+    "vite": "^8.3.2"
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",

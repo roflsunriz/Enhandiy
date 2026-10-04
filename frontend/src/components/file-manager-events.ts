@@ -1006,7 +1006,7 @@ export class FileManagerEvents {
     
     // ファイル差し替えモーダルを表示する関数を呼び出し
     if (typeof (window as unknown as { replaceFile?: (id: string, name?: string) => void }).replaceFile === 'function') {
-      (window as unknown as { replaceFile: (id: string, name?: string) => void }).replaceFile(fileId, file.name);
+      (window as unknown as { replaceFile: (id: string, name?: string, comment?: string) => void }).replaceFile(fileId, file.name, file.comment);
     } else {
       await showAlert('差し替え機能が読み込まれていません。ページを再読み込みしてください。');
     }

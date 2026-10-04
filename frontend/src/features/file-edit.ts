@@ -34,6 +34,8 @@ ready(() => {
  * ファイル編集関連のイベント初期化
  */
 function initializeFileEditEvents(): void {
+  // 閉じた編集対象・認証入力を次の編集へ持ち越さない。
+  $('#editModal')?.addEventListener('hidden.bs.modal', clearEditForms);
   // コメント保存ボタン
   const saveCommentBtn = $('#saveCommentBtn');
   if (saveCommentBtn) {
@@ -87,7 +89,21 @@ function initializeFileEditEvents(): void {
 /**
  * ファイル編集モーダルを開く
  */
-export function openEditDialog(fileId: string, fileName: string, comment: string = ''): void {
+function clearEditForms(): void {
+  for (const id of ['editFileId', 'replaceFileId', 'editFileName', 'replaceFileName',
+    'editComment', 'editReplaceKeyInput', 'editMasterKeyInput',
+    'modalReplaceKeyInput', 'replaceMasterKeyInput', 'replaceFileInput']) {
+    const input = $(`#${id}`) as HTMLInputElement | null;
+    if (input) input.value = '';
+  }
+}
+
+function openFileEditDialog(fileId: string, fileName: string, comment: string, replace: boolean): void {
+  clearEditForms();
+  if (!/^[1-9]\d*$/.test(fileId)) {
+    showError('ファイルIDが指定されていません。');
+    return;
+  }
   // フォームに値を設定
   const editFileIdInput = $('#editFileId') as HTMLInputElement;
   const replaceFileIdInput = $('#replaceFileId') as HTMLInputElement;
@@ -102,7 +118,7 @@ export function openEditDialog(fileId: string, fileName: string, comment: string
   if (editCommentInput) editCommentInput.value = comment;
   
   // コメントタブを表示
-  activateTab('comment-tab', 'commentTab');
+  activateTab(replace ? 'replace-tab' : 'comment-tab', replace ? 'replaceTab' : 'commentTab');
   
   // モーダルを表示
   showModal('editModal');
@@ -113,95 +129,34 @@ export function openEditDialog(fileId: string, fileName: string, comment: string
     const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
     
     if (saveCommentBtn) {
-      removeClass(saveCommentBtn, 'd-none');
-      saveCommentBtn.style.display = 'inline-block';
+      if (replace) addClass(saveCommentBtn, 'd-none');
+      else removeClass(saveCommentBtn, 'd-none');
+      saveCommentBtn.style.display = replace ? 'none' : 'inline-block';
     }
     if (replaceFileBtn) {
-      addClass(replaceFileBtn, 'd-none');
-      replaceFileBtn.style.display = 'none';
+      if (replace) removeClass(replaceFileBtn, 'd-none');
+      else addClass(replaceFileBtn, 'd-none');
+      replaceFileBtn.style.display = replace ? 'inline-block' : 'none';
     }
   }, 10);
+}
+
+export function openEditDialog(fileId: string, fileName: string, comment: string = ''): void {
+  openFileEditDialog(fileId, fileName, comment, false);
 }
 
 /**
  * コメント編集開始
  */
 export function editComment(fileId: string, fileName: string, currentComment: string = ''): void {
-  // フォームに値を設定
-  const editFileIdInput = $('#editFileId') as HTMLInputElement;
-  const replaceFileIdInput = $('#replaceFileId') as HTMLInputElement;
-  const editFileNameElement = $('#editFileName');
-  const replaceFileNameElement = $('#replaceFileName');
-  const editCommentInput = $('#editComment') as HTMLInputElement;
-  
-  if (editFileIdInput) editFileIdInput.value = fileId;
-  if (replaceFileIdInput) replaceFileIdInput.value = fileId;
-  if (editFileNameElement) (editFileNameElement as HTMLInputElement).value = fileName;
-  if (replaceFileNameElement) (replaceFileNameElement as HTMLInputElement).value = fileName;
-  if (editCommentInput) editCommentInput.value = currentComment;
-  
-  // 差し替えキーフィールドをクリア（新しい編集セッション用）
-  const editReplaceKeyInput = $('#editReplaceKeyInput') as HTMLInputElement;
-  if (editReplaceKeyInput) editReplaceKeyInput.value = '';
-  // マスターキーフィールドをクリア
-  const editMasterKeyInput = $('#editMasterKeyInput') as HTMLInputElement;
-  if (editMasterKeyInput) editMasterKeyInput.value = '';
-  
-  // コメントタブを表示
-  activateTab('comment-tab', 'commentTab');
-  
-  // モーダルを表示
-  showModal('editModal');
-  
-  // ボタンの表示切り替え（コメント編集タブ用）- showModal後に実行
-  setTimeout(() => {
-    const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
-    const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
-    
-    if (saveCommentBtn) {
-      removeClass(saveCommentBtn, 'd-none');
-      saveCommentBtn.style.display = 'inline-block';
-    }
-    if (replaceFileBtn) {
-      addClass(replaceFileBtn, 'd-none');
-      replaceFileBtn.style.display = 'none';
-    }
-  }, 10);
+  openFileEditDialog(fileId, fileName, currentComment, false);
 }
 
 /**
  * ファイル差し替え開始
  */
-export function replaceFile(fileId: string, currentFilename: string = ''): void {
-  // フォームに値を設定
-  const replaceFileIdInput = $('#replaceFileId') as HTMLInputElement;
-  const editFileNameElement = $('#editFileName');
-  const replaceFileNameElement = $('#replaceFileName');
-  
-  if (replaceFileIdInput) replaceFileIdInput.value = fileId;
-  if (editFileNameElement) (editFileNameElement as HTMLInputElement).value = currentFilename;
-  if (replaceFileNameElement) (replaceFileNameElement as HTMLInputElement).value = currentFilename;
-  
-  // 差し替えタブを表示
-  activateTab('replace-tab', 'replaceTab');
-  
-  // モーダルを表示
-  showModal('editModal');
-  
-  // ボタンの表示切り替え（ファイル差し替えタブ用）- showModal後に実行
-  setTimeout(() => {
-    const saveCommentBtn = $('#saveCommentBtn') as HTMLElement;
-    const replaceFileBtn = $('#replaceFileBtn') as HTMLElement;
-    
-    if (replaceFileBtn) {
-      removeClass(replaceFileBtn, 'd-none');
-      replaceFileBtn.style.display = 'inline-block';
-    }
-    if (saveCommentBtn) {
-      addClass(saveCommentBtn, 'd-none');
-      saveCommentBtn.style.display = 'none';
-    }
-  }, 10);
+export function replaceFile(fileId: string, currentFilename: string = '', comment: string = ''): void {
+  openFileEditDialog(fileId, currentFilename, comment, true);
 }
 
 /**
@@ -261,7 +216,7 @@ async function handleSaveComment(): Promise<void> {
   const replaceKey = editReplaceKeyInput?.value || '';
   const masterKey = editMasterKeyInput?.value || '';
   
-  if (!fileId) {
+  if (!/^[1-9]\d*$/.test(fileId)) {
     showError('ファイルIDが指定されていません。');
     return;
   }
@@ -329,7 +284,7 @@ async function handleReplaceFile(): Promise<void> {
   const fileId = replaceFileIdInput.value;
   const files = replaceFileInput.files;
   
-  if (!fileId) {
+  if (!/^[1-9]\d*$/.test(fileId)) {
     showError('ファイルIDが指定されていません。');
     return;
   }

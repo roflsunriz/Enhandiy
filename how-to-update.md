@@ -30,6 +30,14 @@ CIはPHP 8.1／8.2／8.3とNode 24で上記の検査を実行し、Dockerビル�
 
 PHPクラス・呼び出し元は同じコミットのファイル一式で更新します。稼働中の `backend/config/config.php`、DB、保存ファイルやブラウザ認証を置き換えないでください。既存のグローバル `config` クラスはそのまま利用できます。問題があれば追加修正コミットをrevertし、旧版のPHP一式と依存lockfileに揃えて再導入・再検査します。
 
+## コメント編集・差し替えの更新と回帰検証
+
+PHP 8.1以上（pdo_sqlite・mbstring・openssl）、Node.js 24以上、Google Chromeを用意し、`frontend` で `npm ci`、`npm run build`、`npm run test:isolated` を実行します。ChromeやPHPの実バイナリが標準パスにない場合は、`CHROME_BINARY`／`PHP_BINARY` に実行ファイルのパスを設定します。
+
+テストは専用の一時DB・保存領域・架空の認証値・独立したブラウザを自動作成して終了時に削除します。稼働設定や実データを読み込まず、公開サイトを検証先にしません。APIだけを確認する場合は `npm run test:comment-api`、UIだけなら `npm run test:edit-dialog` を使えます。
+
+更新時はPHP一式とビルド済み `backend/public/assets` を同じ版に揃え、ブラウザを再読み込みします。IDの修正にはフロントエンド、コメント認証の修正にはPHPの更新が必要です。ユーザー所有の `backend/config/config.php`、DB、保存ファイルを置き換えず、DBの移行も行いません。問題があれば同じファイル一式を直前の版へ戻して再検査します。
+
 ## フォルダ件数の回帰検証
 
 フォルダ一覧の `file_count` は、自身とすべての子孫フォルダのファイル総数です。フォルダ自体は数えません。初期表示とREST／旧APIの一覧取得を共通集計へ接続しています。

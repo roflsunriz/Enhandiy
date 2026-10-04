@@ -62,7 +62,14 @@ try {
     SecurityUtils::releaseSessionLock();
 
     // パラメータ取得
-    $fileId = isset($_POST['file_id']) ? (int)$_POST['file_id'] : 0;
+    foreach (['comment', 'replace_key', 'master_key'] as $field) {
+        if (isset($_POST[$field]) && !is_string($_POST[$field])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid input', 'error_code' => 'BAD_REQUEST']);
+            exit;
+        }
+    }
+    $fileId = filter_var($_POST['file_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
     $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
     $replaceKey = isset($_POST['replace_key']) ? trim($_POST['replace_key']) : '';
     $masterKey = isset($_POST['master_key']) ? trim($_POST['master_key']) : '';
@@ -147,6 +154,14 @@ try {
     $isMasterAuthenticated = false;
     if ($masterKey !== '' && hash_equals($config['master'], $masterKey)) {
         $isMasterAuthenticated = true;
+    }
+
+    if (!empty($config['file_edit_admin_only']) && !$isMasterAuthenticated) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false, 'message' => 'Admin privilege required', 'error_code' => 'ADMIN_REQUIRED'
+        ]);
+        exit;
     }
 
     if (!$isMasterAuthenticated) {

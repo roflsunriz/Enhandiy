@@ -690,6 +690,22 @@ class FileApiHandler
      */
     public function handleUpdateFile(int $fileId): void
     {
+        if ($fileId <= 0) {
+            $this->response->error('File ID is required', [], 400, 'FILE_ID_REQUIRED');
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input) || array_is_list($input)) {
+            $this->response->error('A JSON object is required', [], 400, 'BAD_REQUEST');
+            return;
+        }
+
+        $uiMasterAuthenticated = $this->auth->isUiAuthenticated()
+            && isset($input['master_key']) && is_string($input['master_key'])
+            && trim($input['master_key']) !== ''
+            && hash_equals((string)($this->config['master'] ?? ''), trim($input['master_key']));
+
         // 機能の有効性チェック
         if (!isset($this->config['allow_comment_edit']) || !$this->config['allow_comment_edit']) {
             $this->response->error('Comment edit feature is disabled', [], 403, 'COMMENT_EDIT_DISABLED');
@@ -698,15 +714,13 @@ class FileApiHandler
 
         // 管理者のみ許可設定のチェック
         if (isset($this->config['file_edit_admin_only']) && $this->config['file_edit_admin_only']) {
-            if (!$this->auth->hasPermission('admin')) {
+            if (!$this->auth->hasPermission('admin') && !$uiMasterAuthenticated) {
                 $this->response->error('Admin privilege required', [], 403, 'ADMIN_REQUIRED');
                 return;
             }
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        $isCommentUpdate = isset($input['comment']);
+        $isCommentUpdate = array_key_exists('comment', $input);
         $isMoveFolder = array_key_exists('folder_id', $input);
         if (!$isCommentUpdate && !$isMoveFolder) {
             $this->response->error('No valid update fields provided', [], 400, 'BAD_REQUEST');
@@ -715,11 +729,16 @@ class FileApiHandler
 
         $newComment = null;
         if ($isCommentUpdate) {
-            $newComment = SecurityUtils::escapeHtml(trim($input['comment']));
-            if (mb_strlen($newComment) > $this->config['max_comment']) {
+            if (!is_string($input['comment'])) {
+                $this->response->error('Comment must be a string', [], 400, 'BAD_REQUEST');
+                return;
+            }
+            $comment = trim($input['comment']);
+            if (mb_strlen($comment) > $this->config['max_comment']) {
                 $this->response->error('Comment is too long', [], 400, 'COMMENT_TOO_LONG');
                 return;
             }
+            $newComment = SecurityUtils::escapeHtml($comment);
         }
 
         try {
@@ -736,6 +755,42 @@ class FileApiHandler
             if (!$existingFile) {
                 $this->response->error('File not found', [], 404, 'FILE_NOT_FOUND');
                 return;
+            }
+
+            // CSRF はリクエストの検証であり、ファイル編集の認証にはならない。
+            // write 権限付き API キーの契約は維持し、UI のコメント更新だけファイルのキーを照合する。
+            if ($isCommentUpdate && $this->auth->isUiAuthenticated() && !$uiMasterAuthenticated) {
+                $replaceKey = $input['replace_key'] ?? '';
+                if (!is_string($replaceKey) || trim($replaceKey) === '') {
+                    $this->response->error('Replace key is required', [], 400, 'REPLACE_KEY_REQUIRED');
+                    return;
+                }
+                if (empty($existingFile['replace_key'])) {
+                    $this->response->error(
+                        'This file does not have a replace key configured',
+                        [],
+                        400,
+                        'NO_REPLACE_KEY'
+                    );
+                    return;
+                }
+                try {
+                    $storedKey = SecurityUtils::decryptSecure($existingFile['replace_key'], $this->config['key']);
+                } catch (Exception $e) {
+                    try {
+                        $storedKey = SecurityUtils::decryptLegacyECB(
+                            $existingFile['replace_key'],
+                            $this->config['key']
+                        );
+                    } catch (Exception $e2) {
+                        $this->response->error('Failed to decrypt replace key', [], 500, 'DECRYPTION_FAILED');
+                        return;
+                    }
+                }
+                if (!hash_equals((string)$storedKey, trim($replaceKey))) {
+                    $this->response->error('Invalid replace key', [], 403, 'INVALID_REPLACE_KEY');
+                    return;
+                }
             }
 
             // フォルダ移動（folder_id 更新）

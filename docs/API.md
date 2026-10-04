@@ -1,4 +1,4 @@
-# Enhandiy RESTful API ドキュメント (v4.5.1)
+# Enhandiy RESTful API ドキュメント (v4.5.2)
 
 > 本ドキュメントは Enhandiy に同梱される RESTful API の使用方法をまとめたものです。
 > ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/backend/public/api/index.php`（または Web ルート公開時は `/api/index.php`）を入口として自動ルーティングされます。
@@ -29,11 +29,11 @@
 REST API を利用するには通常 **API キー**（= Bearer トークン）を付与します。加えて、ブラウザ UI からの安全な操作に限り、CSRF トークンによる認証緩和が働きます。
 
 | 方法 | ヘッダ / パラメータ | 例 |
-|--|--|--|
+| -- | -- | -- |
 | Bearer | `Authorization: Bearer <API_KEY>` | `Authorization: Bearer abcdEFGH1234` |
 | クエリ | `?api_key=<API_KEY>` | `/api/status?api_key=abcdEFGH1234` |
-| POST   | `api_key=<API_KEY>` (application/x-www-form-urlencoded) | |
-| UI-CSRF | ヘッダ `X-CSRF-Token: <token>` または POST `csrf_token=<token>` | ブラウザ UI 操作時のみ。キー無しでも `read/write/delete` を許可 |
+| POST | `api_key=<API_KEY>` (application/x-www-form-urlencoded) | |
+| UI-CSRF | ヘッダ `X-CSRF-Token: <token>` または POST `csrf_token=<token>` | ブラウザ UI のルーター権限。各操作のファイル認証も必要 |
 
 API キーは `backend/config/config.php` で設定します。
 
@@ -57,8 +57,10 @@ API キーは `backend/config/config.php` で設定します。
 
 UI-CSRF 認証について
 
-- ブラウザ UI からのリクエストで、セッション上の CSRF トークンと一致する `X-CSRF-Token`（またはフォームの `csrf_token`）が付与された場合、API キーが無くても `read/write/delete` 権限として扱われます。
-- これは UI 操作の円滑化を目的としたもので、スクリプト/外部クライアントは API キー方式の利用を推奨します。
+* ブラウザ UI からのリクエストで、セッション上の CSRF トークンと一致する `X-CSRF-Token`（またはフォームの `csrf_token`）が付与された場合、API キーが無くても `read/write/delete` 権限として扱われます。
+* これは UI 操作の円滑化を目的としたもので、スクリプト/外部クライアントは API キー方式の利用を推奨します。
+* コメント更新ではCSRFに加え、JSON本文の `master_key` または対象ファイルの `replace_key` を照合します。CSRFだけではコメントを変更できません。`file_edit_admin_only` が有効なら正しいマスターキーを要求します。
+* APIキー方式のコメント更新には `write` 権限を要求します。管理者限定時は `admin` 権限も必要です。ファイル認証キーを本文へ追加する必要はありません。有効なUI-CSRFとAPIキーを併記すると、既存仕様どおりUI経路を優先します。
 
 ---
 
@@ -68,8 +70,8 @@ UI-CSRF 認証について
 
 補足（アップロード系の追加制限）
 
-- IP 単位でのアップロード回数/同時数などの内部制限があります（既定例: 1時間50回・同時5）。
-- 主に `/api/files`（通常アップロード）や `/api/tus-upload`（断片アップロード）に適用されます。
+* IP 単位でのアップロード回数/同時数などの内部制限があります（既定例: 1時間50回・同時5）。
+* 主に `/api/files`（通常アップロード）や `/api/tus-upload`（断片アップロード）に適用されます。
 
 ---
 
@@ -100,19 +102,19 @@ UI-CSRF 認証について
 ### 4.1 ファイル API
 
 | メソッド | パス | 権限 | 説明 |
-|--|--|--|--|
-| GET    | `/api/files` | なし | ファイル一覧取得（`page`,`limit`,`folder`,`include=folders,breadcrumb`）。認証不要 |
-| POST   | `/api/files` | なし | ファイルアップロード（multipart/form-data）。認証不要 |
-| GET    | `/api/files/{id}` | なし | 単一ファイル情報取得。認証不要 |
-| GET    | `/api/files/{id}/download` | なし | ファイルダウンロード（バイナリ）。認証不要 |
-| PUT    | `/api/files/{id}` | write | 既存ファイルの差し替え（multipart/form-data） |
-| POST   | `/api/files/{id}/replace` | write | 既存ファイルの差し替え（互換エイリアス） |
-| PATCH  | `/api/files/{id}` | write | コメント・フォルダ移動更新（`comment`, `folder_id`） |
-| POST   | `/api/files/batch` | なし | 一括削除（マスターキー必須）。互換のため POST を許可 |
+| -- | -- | -- | -- |
+| GET | `/api/files` | なし | ファイル一覧取得（`page`,`limit`,`folder`,`include=folders,breadcrumb`）。認証不要 |
+| POST | `/api/files` | なし | ファイルアップロード（multipart/form-data）。認証不要 |
+| GET | `/api/files/{id}` | なし | 単一ファイル情報取得。認証不要 |
+| GET | `/api/files/{id}/download` | なし | ファイルダウンロード（バイナリ）。認証不要 |
+| PUT | `/api/files/{id}` | write | 既存ファイルの差し替え（multipart/form-data） |
+| POST | `/api/files/{id}/replace` | write | 既存ファイルの差し替え（互換エイリアス） |
+| PATCH | `/api/files/{id}` | write | コメント・フォルダ移動更新（`comment`, `folder_id`） |
+| POST | `/api/files/batch` | なし | 一括削除（マスターキー必須）。互換のため POST を許可 |
 | DELETE | `/api/files/batch` | なし | 一括削除（マスターキー必須） |
-| PATCH  | `/api/files/batch` | write | 複数ファイル移動（`file_ids`, `folder_id`） |
-| GET    | `/api/files/{id}/share` | read | 共有設定取得（`max_downloads`, `expires_days`） |
-| PATCH  | `/api/files/{id}/share` | write | 共有設定更新＋共有URL生成 |
+| PATCH | `/api/files/batch` | write | 複数ファイル移動（`file_ids`, `folder_id`） |
+| GET | `/api/files/{id}/share` | read | 共有設定取得（`max_downloads`, `expires_days`） |
+| PATCH | `/api/files/{id}/share` | write | 共有設定更新＋共有URL生成 |
 
 注意: `DELETE /api/files/{id}` は互換のためルーティングは存在しますが、削除キー検証フローを要求するため API からは直接削除できません（`verifydelete.php` → `delete.php` フローを利用）。
 
@@ -155,7 +157,6 @@ curl -X POST \
      -F "comment=月報" \
      https://example.com/api/index.php?path=/api/files
 ```
-
 
 #### 4.1.3 例: ファイルダウンロード
 
@@ -205,7 +206,6 @@ curl -X PUT -H "Authorization: Bearer <API_KEY>" \
 curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
      -H "Content-Type: application/json" \
      -d '{"comment":"メモ更新","folder_id":3}' \
-     -F "replacekey=<REPLACE_KEY>" \
      https://example.com/api/files/123
 ```
 
@@ -215,9 +215,14 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
 curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
      -H "Content-Type: application/json" \
      -d '{"comment":"メモ更新","folder_id":3}' \
-     -F "replacekey=<REPLACE_KEY>" \
      https://example.com/api/index.php?path=/api/files/123
 ```
+
+更新対象のIDはURLの `{id}` で指定します。正の整数が必要で、コメント更新のJSON本文に `file_id` を追加する必要はありません。本文はJSONオブジェクト、`comment` は文字列とし、空文字でコメントを消去できます。文字数は前後の空白除去後・HTMLエスケープ前に `max_comment` と比較します。不正な形式は400、存在しないファイルは404です。
+
+ブラウザUIは同じPATCH経路へ `comment` と `master_key`／`replace_key` を送信します。コメントとフォルダ移動を同時に要求した場合も、コメント認証に失敗すると両方とも更新しません。フォルダ移動のみの既存契約は維持します。
+
+旧 `backend/api/edit-comment.php` を直接配信する構成では、POSTの `file_id`・`comment`・`csrf_token` と、`master_key`／`replace_key` を使用します。こちらも正のIDとファイル認証を検証し、管理者限定時にはマスターキーを要求します。
 
 #### 4.1.6 例: 複数ファイル移動（PATCH /batch）
 
@@ -258,10 +263,10 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
 ### 4.2 フォルダ API
 
 | メソッド | パス | 権限 | 説明 |
-|--|--|--|--|
-| GET    | `/api/folders` | read | フォルダ一覧取得。`?id={id}&check=true` でファイル数/子数の要約を返却 |
-| POST   | `/api/folders` | write | フォルダ作成（`name`, `parent_id` 任意） |
-| PATCH  | `/api/folders/{id}` | write | フォルダ名変更（`name`）／移動（`parent_id`） |
+| -- | -- | -- | -- |
+| GET | `/api/folders` | read | フォルダ一覧取得。`?id={id}&check=true` でファイル数/子数の要約を返却 |
+| POST | `/api/folders` | write | フォルダ作成（`name`, `parent_id` 任意） |
+| PATCH | `/api/folders/{id}` | write | フォルダ名変更（`name`）／移動（`parent_id`） |
 | DELETE | `/api/folders/{id}` | delete | フォルダ削除（`?move_files=true` で子要素をルートに退避） |
 
 `parent_id` を省略するとルート直下に作成されます。
@@ -269,14 +274,14 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
 ### 4.3 システム API
 
 | メソッド | パス | 権限 | 説明 |
-|--|--|--|--|
+| -- | -- | -- | -- |
 | GET | `/api/status` | read | API バージョン・DB統計・設定フラグなど（`admin` でシステム情報も） |
 | GET | `/api/health` | read | ヘルスチェック（DB/FS/設定を診断。健全時は success、問題ありは 503） |
 
 ### 4.4 TUS (断片的アップロード) API
 
 | メソッド | パス | 権限 | 説明 |
-|--|--|--|--|
+| -- | -- | -- | -- |
 | OPTIONS/POST | `/api/tus-upload` | なし | TUS アップロード初期化・オプション（認証は内部実装で処理） |
 | HEAD/PATCH | `/api/tus-upload/{id}` | なし | チャンク照会・転送（認証は内部実装で処理） |
 
@@ -285,7 +290,7 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
 ## 5. 付録: HTTP ステータスとエラーコード一覧 (抜粋)
 
 | HTTP | error_code | 意味 |
-|--|--|--|
+| -- | -- | -- |
 | 401 | `API_KEY_MISSING` | API キー未付与（UI-CSRF 例外あり） |
 | 401 | `API_KEY_INVALID` | API キー不正 |
 | 403 | `PERMISSION_DENIED` | 権限不足 |
@@ -300,10 +305,6 @@ curl -X PATCH -H "Authorization: Bearer <API_KEY>" \
 | 503 | `SYSTEM_UNHEALTHY` | ヘルスチェックで問題検出 |
 
 ---
-
-
-
-
 
 ## 6. 付録: ルーティング設定例（Apache / Nginx）
 

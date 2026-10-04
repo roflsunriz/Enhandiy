@@ -37,6 +37,10 @@
 
 ## Environment
 
+- コメント編集・差し替えは `frontend/src/features/file-edit.ts` の共通初期化で両タブのID・表示名・コメントを同じ対象へ揃える。差し替え入口にも現在のコメントを渡し、モーダルの `hidden.bs.modal` でID・認証入力・選択ファイルを消去する。片方のIDだけを設定すると、初回のID欠落だけでなく別ファイルへの誤更新になる。
+- RESTのCSRF検証はファイル編集の認証ではない。コメント更新では `ApiAuth::isUiAuthenticated()` でUI経路を識別し、マスターキーまたはファイルの差し替えキーを照合する。write権限付きAPIキーの契約は維持し、管理者限定時はUIの正しいマスターキー／APIのadmin権限を要求する。
+- `frontend` の `npm run test:isolated` は設定ファイルを読み込まず、一時DB・架空のキー・独立したChromeプロファイルだけでREST／互換フォーム／実UIを検証する。ブラウザ操作は `shown.bs.modal` 完了を待つ。WindowsのPHPランチャーを終了して子サーバーが残らないよう、テストは `PHP_BINARY` が示す実バイナリを起動する。詳細は `verification.md`。
+
 - PHPの製品クラスは `Enhandiy` 名前空間を使う。呼び出し元は `use Enhandiy\...`、初期化関数は `use function Enhandiy\initializeApp` を指定する。`class_exists` には `::class` を渡し、画面モデルの動的解決にも名前空間を付ける。既存ユーザー設定のグローバル `config` クラスは維持する。
 - `composer lint` は名前空間とヘッダー順序を除外しないPSR12検査、`composer analyse` はbackendと保守スクリプトを検査する。ユーザー所有の `config.php` は読み込まず、型は管理対象テンプレートを参照する。`extract` で供給される設定値は、静的解析が追えるよう設定配列から明示的に参照する。
 - TS7のCLIは `@typescript/native` 別名、typescript-eslint用APIは公式 `@typescript/typescript6` の `typescript` 別名で併用する。`tsc` をTS6へ差し替えたり、peer条件・警告を無視して導入しない。根拠と更新手順は `verification.md`、`how-to-update.md` を参照する。

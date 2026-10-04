@@ -12,6 +12,7 @@ class ApiAuth
     private $config;
     private $apiKey = null;
     private $permissions = array();
+    private bool $uiAuthenticated = false;
 
     public function __construct($config)
     {
@@ -24,6 +25,7 @@ class ApiAuth
      */
     public function authenticate()
     {
+        $this->uiAuthenticated = false;
         // API機能が無効の場合は認証失敗
         if (!$this->config['api_enabled']) {
             $this->sendError(503, 'API_DISABLED', 'RESTful API feature is disabled');
@@ -33,6 +35,7 @@ class ApiAuth
         // 1) UI経由のアクセスを許容: CSRFトークンが正しい場合はキーなしでも通す
         //    （ブラウザUIからの操作を想定。既定はread/write。安全なUI操作としてDELETEも許可）
         if ($this->isValidUiRequest()) {
+            $this->uiAuthenticated = true;
             $this->permissions = array('read', 'write', 'delete');
             return true;
         }
@@ -74,6 +77,11 @@ class ApiAuth
     public function getApiKey()
     {
         return $this->apiKey;
+    }
+
+    public function isUiAuthenticated(): bool
+    {
+        return $this->uiAuthenticated;
     }
 
     /**
