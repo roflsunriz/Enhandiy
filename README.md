@@ -1,6 +1,6 @@
 # Enhandiy
 
-## 🎉 概要
+## 概要
 
 Enhandiy は、モダン UI・再開可能アップロード・フォルダ管理・強力なセキュリティ・REST API・コメント編集・ファイル差し替え・ダウンロードキー認証フォームを備えた多機能なファイルアップローダーです。
 
@@ -8,7 +8,7 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 
 > 注意: `/api/*` を利用するには Web サーバーで `/api/index.php?path=/api/*` へのリライト設定が必要です。詳細は [API.md](docs/API.md) の「付録: ルーティング設定例（Apache / Nginx）」を参照してください。
 
-## 📚 ドキュメントインデックス
+## ドキュメント
 
 - **ギャラリー(見た目を確認したい方はこちら)**: [gallery.md](docs/gallery.md)
 - **概要・主要機能**: [guide-overview.md](docs/guide-overview.md)
@@ -22,36 +22,36 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 - **開発・リリース手順**: [guide-development.md](docs/guide-development.md)
 - **REST API リファレンス**: [API.md](docs/API.md)
 
-## 🔗 関連
+## 関連
 
 - **リリース**: [リリースページ](https://github.com/roflsunriz/Enhandiy/releases)
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
 - **リリースノート**: [GitHub Releases](https://github.com/roflsunriz/Enhandiy/releases) にCHANGELOGの該当版を掲載
 
-## 📄 License
+## License
 
-### **コミュニティフォーク版**
+### コミュニティフォーク版
 Copyright (c) 2026 roflsunriz  
 Released under the MIT license  
 <https://github.com/roflsunriz/Enhandiy/blob/main/LICENSE>
 
-### **オリジナル版**
+### オリジナル版
 Copyright (c) 2026 shimosyan  
 Released under the MIT license  
 <https://github.com/shimosyan/phpUploader/blob/master/MIT-LICENSE.txt>
 
 ---
 
-## 🙏 謝辞
+## 謝辞
 
-**コミュニティフォーク版について**: この拡張機能強化版は、shimosyan氏による優れたオリジナルphpUploaderプロジェクトの基盤の上に構築されています。
+このコミュニティフォーク版は、shimosyan氏によるオリジナルのphpUploaderを拡張したものです。
 
 **フォーク管理者**: @roflsunriz  
 **オリジナルプロジェクト**: shimosyan/phpUploader
 
 **Full Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
-Enhandiyをご利用いただき、ありがとうございます！ 🚀
+Enhandiyをご利用いただき、ありがとうございます。
 
 ## 依存更新の自動処理
 
