@@ -101,3 +101,12 @@ GitHub管理のAIレビューは `dynamic/agents/github-advanced-security` で�
 大量の Dependabot PR により CI 完了より分類が遅れる場合でも、分類後の `workflow_dispatch` が現在の PR 番号と head SHA を照合して再評価する。別の作成者、古い SHA、未完了の CI はマージしない。
 
 [Dependabot PR #12 のチェック](https://github.com/roflsunriz/Enhandiy/pull/12/checks) では、既存 `label` が `Resource not accessible by integration`、`documentation` が README／CHANGELOG の重複空行で失敗した。ラベル処理を PR コードをチェックアウトしない `pull_request_target` に移して必要な権限を明示し、重複空行を除いた。更新した workflow は actionlint で、文書は markdownlint で検査する。
+
+## 2026-10-05: GitHub受付・READMEの整備（公開前）
+
+- 比較元: `af45429672d1917bd7e3d17d13121f4be946bed1`（`main`）。
+- 受付フォーム 2 件のYAML構造、重複キー・ID、入力型、選択肢、予約ファイル名を一括検査し、エラー0件。
+- 既存の固有質問・入力例・必須条件を原文と照合。READMEのリンク・画像・コマンド・条件を確認し、裏付けがある誤記だけを訂正した。
+- 既存のCI、Dependabot、labeler、ライセンスのファイル内容は比較元から変更していない。
+- 製品のビルド・インストール・実機操作、GitHub上のフォーム表示、公開後CIは今回の静的検証に含めない。公開後に実際の受付表示と必要ラベルの適用を確認する。
+- 公開前に確認する不足ラベル: `area/config`, `area/docker`。既存ラベルの削除・上書きはしない。
