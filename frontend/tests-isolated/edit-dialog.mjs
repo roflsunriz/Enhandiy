@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:net';
+import { trackProcess, waitForReady, stopProcess } from './process-readiness.mjs';
 
 // 実際のPHPテンプレート、配布JS、Bootstrap、FileManagerをローカルだけで操作する。
 const source = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -32,25 +33,27 @@ const php = spawn(phpBinary, ['-S', `127.0.0.1:${httpPort}`,
 });
 let serverErrors = '';
 php.stderr.on('data', chunk => { serverErrors += chunk; });
+const phpState = trackProcess(php);
 const executable = process.env.CHROME_BINARY || (process.platform === 'win32'
   ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : 'google-chrome');
 const chrome = spawn(executable, ['--headless=new', '--no-first-run', '--no-default-browser-check',
   '--disable-background-networking', '--disable-component-update', '--no-sandbox',
   `--user-data-dir=${join(root, 'chrome')}`, `--remote-debugging-port=${debugPort}`, 'about:blank'],
-{ windowsHide: true, stdio: 'ignore' });
+{ windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
+const chromeState = trackProcess(chrome);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 let socket;
 try {
-  let target;
-  for (let i = 0; i < 120; i++) {
-    try {
-      await fetch(base + '/session');
-      target = (await (await fetch(`http://127.0.0.1:${debugPort}/json/list`)).json()).find(item => item.type === 'page');
-      if (target) break;
-    } catch { /* 起動待ち */ }
-    await pause(50);
-  }
-  assert.ok(target, 'headless Chrome must start');
+  await waitForReady('isolated PHP server', phpState, async () => {
+    const response = await fetch(base + '/session', { signal: AbortSignal.timeout(1000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${(await response.text()).slice(0, 500)}`);
+    return true;
+  });
+  const target = await waitForReady('headless Chrome page', chromeState, async () => {
+    const response = await fetch(`http://127.0.0.1:${debugPort}/json/list`, { signal: AbortSignal.timeout(1000) });
+    if (!response.ok) throw new Error(`DevTools HTTP ${response.status}`);
+    return (await response.json()).find(item => item.type === 'page' && item.webSocketDebuggerUrl);
+  });
   socket = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise(resolve => socket.addEventListener('open', resolve, { once: true }));
   let nextId = 0;
@@ -194,9 +197,7 @@ try {
   process.exitCode = 1;
 } finally {
   socket?.close();
-  chrome.kill();
-  php.kill();
-  await Promise.all([new Promise(resolve => chrome.once('close', resolve)), new Promise(resolve => php.once('close', resolve))]);
+  await Promise.all([stopProcess(chromeState), stopProcess(phpState)]);
   assert.equal(dirname(resolve(root)), resolve(tmpdir()), 'cleanup stays inside the temporary directory');
   rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }

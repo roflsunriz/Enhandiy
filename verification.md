@@ -110,3 +110,12 @@ GitHub管理のAIレビューは `dynamic/agents/github-advanced-security` で�
 - 既存のCI、Dependabot、labeler、ライセンスのファイル内容は比較元から変更していない。
 - 製品のビルド・インストール・実機操作、GitHub上のフォーム表示、公開後CIは今回の静的検証に含めない。公開後に実際の受付表示と必要ラベルの適用を確認する。
 - 公開前に確認する不足ラベル: `area/config`, `area/docker`。既存ラベルの削除・上書きはしない。
+
+## 2026-10-05: 隔離テストの起動判定・診断・終了待機
+
+- 旧PR #22は初回に `edit-dialog.mjs` のChrome起動assertが失敗したが、旧コードはstderrを捨てており、その実行の直接原因を断定できない。既定ブランチ `c1cf521f8841a849b55d1e1e6880d456ec82e6cb` のCI・公開前品質確認は今回の再取得時点で成功していた。
+- コード上の問題として、PHPとChromeの待機を同じtryに入れた6秒の固定ポーリング、HTTPエラーを準備完了扱いする判定、spawn失敗の未処理、終了後にclose待機を登録する後片付けを修正した。正常応答とChrome page targetを個別に最大30秒待ち、1回のHTTP接続は1秒で打ち切る。実行ファイル欠落・早期終了・タイムアウトは診断を添えて失敗する。
+- `npm run test:process-readiness` は従来上限を超える6.5秒の遅延、非0終了・stderr、実行ファイル欠落、最後のHTTPエラー保全の4件で成功。既存の認証・入力・対象ID・保存結果などの期待値は変更していない。
+- `npm run lint`、`npm run type-check`、`npm run build`、`npm run test:isolated` が成功し、隔離REST50件と実Chromeの編集・差し替え・タブ・キャンセル・再表示・無効ID拒否を確認。`npm audit` は既知の脆弱性0件。
+- テスト変更のため製品版・ユーザー設定・配布アセットは変更しない。GitHubの新しいPRとマージSHAに対するCI結果は公開後に別途確認する。
+- 同じ修正で実Chrome UIを5回連続実行し全て成功した。存在しないChromeを指定した実テストはENOENTとともに非0終了し、終了済み子プロセスの後片付けも戻ることを確認した。
