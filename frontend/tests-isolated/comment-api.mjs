@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:net';
+import { trackProcess, waitForReady, stopProcess } from './process-readiness.mjs';
 
 const source = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const root = mkdtempSync(join(tmpdir(), 'enhandiy-comment-test-'));
@@ -27,15 +28,15 @@ const php = spawn(phpBinary, ['-S', `127.0.0.1:${port}`,
 });
 let log = '';
 php.stderr.on('data', chunk => { log += chunk; });
+const phpState = trackProcess(php);
 const base = `http://127.0.0.1:${port}`;
-const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 let checks = 0;
 try {
-  let session;
-  for (let i = 0; i < 80; i++) {
-    try { session = await fetch(base + '/session'); break; } catch { await pause(50); }
-  }
-  assert.ok(session, 'isolated PHP server must start');
+  const session = await waitForReady('isolated PHP server', phpState, async () => {
+    const response = await fetch(base + '/session', { signal: AbortSignal.timeout(1000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${(await response.text()).slice(0, 500)}`);
+    return response;
+  });
   const cookie = session.headers.get('set-cookie').split(';')[0];
   const { csrf } = await session.json();
   const ui = { Cookie: cookie, 'X-CSRF-Token': csrf };
@@ -138,8 +139,7 @@ try {
   console.error(log.replace(/127\.0\.0\.1:\d+/g, 'localhost'));
   process.exitCode = 1;
 } finally {
-  php.kill();
-  await new Promise(resolve => php.once('close', resolve));
+  await stopProcess(phpState);
   assert.equal(dirname(resolve(root)), resolve(tmpdir()), 'cleanup stays inside the temporary directory');
   rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }
