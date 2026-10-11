@@ -1,5 +1,15 @@
 # 検証手順
 
+## Dependabot PR #24 の依存更新（2026-10-11）
+
+`codelytv/pr-size-labeler` v1.12.0への更新で、PRの自動修復が作成したコミットは GitHub Actions の実行承認待ちになった。承認後のCIは `source-map-js` 1.2.1 の高重大度の監査警告で失敗した。PRブランチで `npm audit fix --package-lock-only --ignore-scripts` を使い、修正版1.2.2を反映した。互換範囲の依存も `npm update --package-lock-only --ignore-scripts` で更新した。
+
+Composerは `show --locked --outdated --direct` で PHPStan 2.2.17 から 2.3.1 への互換範囲更新を確認し、公式Composerで `update phpstan/phpstan` を実行して lockfile を再生成した。PHPCS は lockfile 上ですでに 4.0.4 だった。
+
+Windowsの隔離環境で `npm ci`、`npm run lint`、`npm run type-check`、`npm run build`、`npm run test:isolated`、`npm audit --audit-level=high`、`npm outdated --json` が通過した。隔離テストでは起動判定4件、REST 50リクエスト、実Chrome UIの編集・差し替え経路を確認した。更新したViteで配布アセットを再生成した。PRの最終head SHAに対するGitHub CIとマージ後のmainを別途確認する。
+
+PHP側も `composer validate --no-check-publish`、`composer lint`、`composer analyse`、`composer test`、`composer audit` が通過し、lockfile の直接依存に未更新は残っていない。PHPのテストにはブラウザタイトル、フォルダ件数、版数、アップロードフォーム境界条件を含む。
+
 ## コメント編集のID保持と認証（v4.5.2、2026-10-04）
 
 基準は最新main `31abdf8`。修正・再現は一時DBと架空の認証値を使う隔離環境で実施し、ユーザー所有の設定・DB・保存ファイルを読み込んでいない。公開サイトでは公開HTML・JavaScriptのGETだけを確認し、コメント更新や認証の検証は行っていない。

@@ -26,6 +26,7 @@
 - composer 系の競合（phpstan と phpcs の同時更新など）は `composer.json` を両方の新バージョンに手編集し、`php composer.phar update <pkg1> <pkg2>` で `composer.lock` を再生成する。`content-hash` の手編集はしない。
 - `actions/labeler` v7 は v5 以降の設定形式が必須である。旧形式（ラベル直下に glob 配列）では `found unexpected type for label ... (should be array of config options)` で失敗する。形式は `changed-files` → `any-glob-to-any-file`（`.github/labeler.yml` 参照）。`pull_request_target` 実行は base ブランチの設定を使うため、labeler 本体の更新と設定移行は main 側へ先に反映してから各 PR を update-branch する。
 - 一時取得の `composer.phar` / `composer-setup.php` はリポジトリへ残さず削除する。
+- 2026-10-11時点、Dependabot自動修復のGitHub Actions botコミットでは、PR側CIが `action_required` となり実行承認を要した。承認後のCIは `npm audit` で `source-map-js` 1.2.1 の脆弱性を検出した。`npm install --package-lock-only` は監査修正を行わないため、失敗ログを確認し、PR側のlockfileへ `npm audit fix --package-lock-only --ignore-scripts` を適用して再検証する。手順は `how-to-update.md` を参照する。
 
 ## フォルダ件数の取得経路
 

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- PR の変更行数ラベルを正しく維持できるよう、`codelytv/pr-size-labeler` を v1.12.0 へ更新した。
+- 依存関係の更新と配布物が一致するよう、互換範囲の npm 依存と PHPStan を更新し、フロントエンドの配布アセットを再生成した。
+
+### Security
+
+- CI の依存監査で検出された `source-map-js` のサービス拒否脆弱性を解消するため、修正版 1.2.2 を lockfile へ反映した。
+
 ### Fixed
 
 - 隔離回帰テストの起動遅延をChromeの起動失敗と誤判定しないよう、PHPとChromeの準備状態を個別に確認するようにした。実際の起動失敗では終了コード・標準エラー・最後の接続エラーを報告し、既に終了した子プロセスでも後片付けが停止しないようにした。

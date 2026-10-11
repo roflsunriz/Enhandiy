@@ -54,3 +54,5 @@ PHP 8.1以上（pdo_sqlite・mbstring・openssl）、Node.js 24以上、Google C
 設定を変えたときは `actionlint .github/workflows/dependabot-automation.yml` と実際の PR の Actions 結果を確認します。問題があれば呼び出し先の共通 workflow SHA を直前の検証済み値へ戻すコミットを push します。取り込まれた依存更新に問題があれば通常の revert コミットで復旧します。
 
 CI 完了より Dependabot の分類が遅れる場合は、`callback_workflow_file` が指す呼び出し側 workflow を `workflow_dispatch` し、同じ PR 番号・head SHA・全チェックを再確認する。呼び出し側のファイル名を変える際はこの入力も一緒に更新する。
+
+自動修復が作ったコミットの CI が `action_required` で止まった場合は、対象コミットと workflow の差分を確認してから GitHub の実行承認を行う。`gh run list -R roflsunriz/Enhandiy --branch <PRブランチ>` で新しい head SHA の結果を確認する。`npm audit` が失敗した場合は、PR の checkout で `npm audit fix --package-lock-only --ignore-scripts` を実行し、lockfile の差分、`npm ci`、監査、lint、型検査、ビルド、隔離テストを確認してから修正コミットを PR ブランチへ反映する。配布アセットを再生成した場合は生成ファイルも同じコミットに含める。
