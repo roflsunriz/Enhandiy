@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - PR の変更行数ラベルを正しく維持できるよう、`codelytv/pr-size-labeler` を v1.12.0 へ更新した。
 - 依存関係の更新と配布物が一致するよう、互換範囲の npm 依存と PHPStan を更新し、フロントエンドの配布アセットを再生成した。
+- GitHub Actions の Node.js 20 非推奨警告を解消し、Ubuntu 26.04 でも PHP をセットアップできるよう、CI と公開前検査の `setup-php` を v2.40.0 の固定 SHA へ更新した。
 
 ### Security
 

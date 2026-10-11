@@ -2,6 +2,8 @@
 
 ## Dependabot PR #24 の依存更新（2026-10-11）
 
+マージ後の `main` CIで、旧 `setup-php` v2.35.2 が Node.js 20 非推奨警告を出した。公式 2.40.0 リリースのコミット SHA と `action.yml` の `node24` 指定を確認し、CIの3箇所と公開前検査の1箇所を同じ固定 SHA に揃えた。最終のmain検査でPHP 8.1／8.2／8.3、フロントエンドの隔離テスト、監査、Dockerビルドを再確認する。
+
 `codelytv/pr-size-labeler` v1.12.0への更新で、PRの自動修復が作成したコミットは GitHub Actions の実行承認待ちになった。承認後のCIは `source-map-js` 1.2.1 の高重大度の監査警告で失敗した。PRブランチで `npm audit fix --package-lock-only --ignore-scripts` を使い、修正版1.2.2を反映した。互換範囲の依存も `npm update --package-lock-only --ignore-scripts` で更新した。
 
 Composerは `show --locked --outdated --direct` で PHPStan 2.2.17 から 2.3.1 への互換範囲更新を確認し、公式Composerで `update phpstan/phpstan` を実行して lockfile を再生成した。PHPCS は lockfile 上ですでに 4.0.4 だった。

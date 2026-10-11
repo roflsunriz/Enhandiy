@@ -33,7 +33,7 @@ jobs:
           echo "🐘 Testing PHP ${{ matrix.php-version }}"
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@ccf2c627fe61b1b4d924adfcbd19d661a18133a0 #v2.35.2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 #v2.40.0
         with:
           php-version: ${{ matrix.php-version }}
           extensions: pdo, pdo_sqlite, sqlite3
@@ -127,7 +127,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Setup PHP for isolated regressions
-        uses: shivammathur/setup-php@ccf2c627fe61b1b4d924adfcbd19d661a18133a0 # v2.35.2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
           php-version: '8.1'
           extensions: pdo_sqlite, mbstring, openssl
@@ -153,7 +153,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@ccf2c627fe61b1b4d924adfcbd19d661a18133a0 #v2.35.2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 #v2.40.0
         with:
           php-version: '8.1'
           extensions: pdo, pdo_sqlite
