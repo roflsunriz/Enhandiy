@@ -12,12 +12,16 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         php-version:
           - '8.1'
