@@ -5,7 +5,7 @@
 ## Ver.4.5.3 の重要な変更
 
 - PHP本体の未認証リモートコード実行脆弱性へ対応するため、PHP 8.2.35／8.3.36／8.4.27／8.5.12以降が必須です。
-- Docker環境はPHP 8.4.27へ更新しました。既存コンテナは `docker compose -f infrastructure/docker-compose.yaml build --no-cache web` で再ビルドし、作り直してください。
+- Docker環境はPHP 8.5.12へ更新しました。既存コンテナは `docker compose -f infrastructure/docker-compose.yaml build --no-cache web` で再ビルドし、作り直してください。
 - 手動導入ではPHP本体を更新してからApacheまたはPHP-FPMの全ワーカーを再起動し、CLIとWeb SAPIの両方が修正版になったことを確認してください。
 
 ## Ver.4.5.2 の重要な変更
