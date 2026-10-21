@@ -1,5 +1,13 @@
 # 検証手順
 
+## 2026-10-22 PHP緊急セキュリティ更新
+
+PHP公式のセキュリティ情報で、CVE-2026-109618とCVE-2026-109619の影響版と修正版を確認した。アプリコード開始前に成立する経路があるため、Composer条件、CI、公開前検査、Docker、導入・更新手順を修正版PHPへ揃える。公式Docker registryで `php:8.4.27-apache` の複数architecture向けmanifestと、PHP 8.4.27であることを確認した。
+
+公式Windows版PHP 8.4.27とComposer 2.10.3を一時領域へ取得し、公式SHA-256と一致することを確認した。この環境でlockfileを再生成し、Composer設定、実行環境、PSR-12、PHPStan、既存PHPテスト、全PHPファイルの構文、Composer監査を検査して成功した。既定のPHP 8.4.11では実行環境チェックが終了コード1で拒否することも確認した。
+
+Node側はlint、TS7型検査、ビルド、隔離プロセス・API・Chrome UIテスト、npm監査に成功した。actionlint 1.7.12と変更文書のmarkdownlintもエラー0件だった。Docker Desktopを起動し、公式PHP 8.4.27 Apacheイメージからの実ビルドに成功した。完成イメージ内でもPHP 8.4.27、必須拡張、Composerの実行環境チェックがすべて合格した。
+
 ## 2026-10-19: CI高速化
 
 - 変更したGitHub Actionsをactionlint 1.7.12で検査し、エラー0件を確認した。

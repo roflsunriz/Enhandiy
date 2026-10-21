@@ -1,4 +1,4 @@
-FROM php:8.1-apache
+FROM php:8.4.27-apache
 
 # 作業ディレクトリを設定
 WORKDIR /var/www/html
@@ -7,16 +7,12 @@ WORKDIR /var/www/html
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        libsqlite3-dev \
         git \
         unzip \
         curl \
     ; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
-
-# 必要な拡張機能をインストール
-RUN docker-php-ext-install pdo pdo_sqlite
 
 # Composerのインストール
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \

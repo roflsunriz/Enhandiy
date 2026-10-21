@@ -31,14 +31,15 @@ jobs:
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 #v2.40.0
         with:
-          php-version: '8.1'
-          extensions: pdo, sqlite3, openssl, json
+          php-version: '8.4.27'
+          extensions: pdo, pdo_sqlite, sqlite3, mbstring, openssl, json
           coverage: none
 
       - name: 📦 Install Composer dependencies
         run: |
           if [ -f composer.json ]; then
             composer install --no-dev --optimize-autoloader
+            composer check-platform
             echo "✅ Composer dependencies installed"
           else
             echo "ℹ️  No composer.json found, skipping dependency installation"

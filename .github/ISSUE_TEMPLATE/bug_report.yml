@@ -47,9 +47,10 @@ body:
       label: PHP バージョン
       description: 使用しているPHPのバージョン
       options:
-        - PHP 8.1
-        - PHP 8.2
-        - PHP 8.3
+        - PHP 8.2.35以降
+        - PHP 8.3.36以降
+        - PHP 8.4.27以降
+        - PHP 8.5.12以降
         - その他
     validations:
       required: true

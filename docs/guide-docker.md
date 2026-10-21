@@ -1,5 +1,7 @@
 # Docker クイックスタート
 
+DockerイメージはCVE-2026-109618とCVE-2026-109619を修正したPHP 8.4.27を使用します。既存コンテナは古いPHPを保持するため、更新後に `--no-cache` で再ビルドして作り直してください。
+
 ## Java GUIで操作する（Windows推奨）
 
 1. Docker Desktopを起動します。
@@ -42,4 +44,3 @@ docker compose -f infrastructure/docker-compose.yaml build --no-cache web
 ```
 
 開発向け Docker の利用例やリリース手順は `docs/guide-development.md` を参照してください。
-

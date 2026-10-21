@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- PHP本体の未認証リモートコード実行脆弱性（CVE-2026-109618、CVE-2026-109619）を含む版で導入・検査されないよう、Composerの実行条件、CI、公開前検査、Dockerを修正版PHPへ更新した。既存環境の更新・全ワーカー再起動・確認手順も追加した。
+
 - CI の依存監査で検出された `source-map-js` のサービス拒否脆弱性を解消するため、修正版 1.2.2 を lockfile へ反映した。
 
 ### Fixed

@@ -1,5 +1,11 @@
 # セキュリティノート
 
+## PHP実行環境
+
+PHP 8.2.35／8.3.36／8.4.27／8.5.12より前の版は使用しないでください。[CVE-2026-109618](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w)と[CVE-2026-109619](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)は、未認証のリクエストからWebワーカー権限でのリモートコード実行につながります。処理の一部はアプリケーションコードの開始前に行われるため、Enhandiy側の入力検証やPHP設定だけでは完全に防げません。
+
+PHP本体の更新後はApacheまたはPHP-FPMの全ワーカーを再起動し、CLIだけでなくWeb SAPIも修正版へ切り替わったことを確認してください。Docker利用時は `docker compose -f infrastructure/docker-compose.yaml build --no-cache web` で再ビルドし、コンテナを作り直します。
+
 ## 設定ファイルのセキュリティ
 
 - `backend/config/config.php` は機密情報を含むため、外部アクセスを遮断してください。
@@ -19,7 +25,7 @@
 
 以下のディレクトリは外部からの直接アクセスを遮断してください。
 
-```
+```text
 - backend/config/  (設定ファイル)
 - db/              (データベースファイル)
 - storage/logs/    (ログファイル)
@@ -53,4 +59,3 @@
 ## `/api/*` のリライト設定について（補足）
 
 `/api/*` を `/api/index.php?path=/api/*` に書き換える設定が必要です。詳細は `docs/API.md` の付録（Apache/Nginx の例）を参照してください。
-

@@ -20,19 +20,21 @@
 
 ## 自動検査と依存関係の更新
 
-PHP 8.1以上、Composer、Node.js 24以上を用意します。フロントエンドの詳しいNode要件は `frontend/package.json` の依存パッケージのenginesも確認してください。
+PHP 8.2.35／8.3.36／8.4.27／8.5.12以降のいずれか、Composer、Node.js 24以上を用意します。フロントエンドの詳しいNode要件は `frontend/package.json` の依存パッケージのenginesも確認してください。
 
-リポジトリ直下で `composer install`、`composer validate --no-check-publish`、`composer lint`、`composer analyse`、`composer test`、`composer audit` を実行します。PHPの名前空間とヘッダー順序を含むPSR12、静的解析、件数・表示・バージョン・フォームの回帰を検査します。
+リポジトリ直下で `composer install`、`composer check-platform`、`composer validate --no-check-publish`、`composer lint`、`composer analyse`、`composer test`、`composer audit` を実行します。PHPの名前空間とヘッダー順序を含むPSR12、静的解析、件数・表示・バージョン・フォームの回帰を検査します。
 
 `frontend` で `npm ci`、`npm run lint`、`npm run type-check`、`npm run build`、`npm audit` を実行します。`--legacy-peer-deps` は不要です。TS7の型検査CLIとlint用TS6 APIは、[Microsoftの公式併用手順](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0)に従う別名依存です。パッケージを更新するときは両方の互換性を確認し、lockfileを通常のnpmコマンドで生成してください。
 
-CIはPHP 8.1／8.2／8.3とNode 24で上記の検査を実行し、Dockerビルドは `docker build -t enhandiy-test ./infrastructure/docker/` で確認します。失敗を警告へ置き換えて成功扱いにしません。動的なGitHub管理のAIレビューがモデルエラーで失敗する場合は、そのrunのログを記録し、通常CIやCodeQLと区別してください。
+CIは各マイナー版の修正済み最小版（PHP 8.2.35／8.3.36／8.4.27／8.5.12）とNode 24で上記の検査を実行し、Dockerビルドは `docker build -t enhandiy-test ./infrastructure/docker/` で確認します。失敗を警告へ置き換えて成功扱いにしません。動的なGitHub管理のAIレビューがモデルエラーで失敗する場合は、そのrunのログを記録し、通常CIやCodeQLと区別してください。
+
+PHP更新時は、CLIとWeb SAPIの両方が修正版であることを確認し、ApacheまたはPHP-FPMの全ワーカーを再起動します。Dockerは `docker compose -f infrastructure/docker-compose.yaml build --no-cache web` で再ビルドしてコンテナを作り直します。問題がある場合も脆弱なPHPへ戻さず、修正版の別マイナー版へ切り替えて復旧してください。
 
 PHPクラス・呼び出し元は同じコミットのファイル一式で更新します。稼働中の `backend/config/config.php`、DB、保存ファイルやブラウザ認証を置き換えないでください。既存のグローバル `config` クラスはそのまま利用できます。問題があれば追加修正コミットをrevertし、旧版のPHP一式と依存lockfileに揃えて再導入・再検査します。
 
 ## コメント編集・差し替えの更新と回帰検証
 
-PHP 8.1以上（pdo_sqlite・mbstring・openssl）、Node.js 24以上、Google Chromeを用意し、`frontend` で `npm ci`、`npm run build`、`npm run test:isolated` を実行します。ChromeやPHPの実バイナリが標準パスにない場合は、`CHROME_BINARY`／`PHP_BINARY` に実行ファイルのパスを設定します。
+サポート対象の修正版PHP（pdo_sqlite・mbstring・openssl）、Node.js 24以上、Google Chromeを用意し、`frontend` で `npm ci`、`npm run build`、`npm run test:isolated` を実行します。ChromeやPHPの実バイナリが標準パスにない場合は、`CHROME_BINARY`／`PHP_BINARY` に実行ファイルのパスを設定します。
 
 テストは専用の一時DB・保存領域・架空の認証値・独立したブラウザを自動作成して終了時に削除します。稼働設定や実データを読み込まず、公開サイトを検証先にしません。APIだけを確認する場合は `npm run test:comment-api`、UIだけなら `npm run test:edit-dialog` を使えます。
 

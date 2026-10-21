@@ -2,7 +2,7 @@
 
 ## Requirement
 
-- PHP Version 8.1+
+- PHP 8.2.35／8.3.36／8.4.27／8.5.12以降（同じマイナー版内では記載版以上）
 - SQLite（通常 `sqlite3` 拡張がバンドル。未有効なら有効化が必要）
 - PHP 拡張: `pdo_sqlite`, `openssl`, `json`, `mbstring`, `hash`
 - Web サーバー: Apache もしくは Nginx + PHP-FPM
@@ -12,7 +12,7 @@
 ### Windows（手動）
 1. 公式サイトから「Thread Safe」版の zip を入手し展開（例: `C:\php`）
 2. `php.ini-development` を `php.ini` にコピーして調整
-3. `PATH` に追加し `php -v` で 8.1+ を確認
+3. `PATH` に追加し、`php -v` で上記の修正版以上であることを確認
 
 ### Ubuntu（例）
 ```bash
@@ -20,9 +20,15 @@ sudo apt update
 sudo apt install -y software-properties-common
 sudo add-apt-repository ppa:ondrej/php
 sudo apt update
-sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-sqlite3 php8.1-mbstring php8.1-json php8.1-openssl php8.1-hash
+sudo apt install -y php8.4 php8.4-cli php8.4-fpm php8.4-sqlite3 php8.4-mbstring php8.4-openssl
 php -v
 ```
+
+`php -v` が8.4.27未満の場合は起動せず、利用している配布元からセキュリティ更新を適用してください。PHP 8.1以前はサポート対象外です。
+
+### 2026年10月の緊急PHP更新
+
+PHP 8.2.35／8.3.36／8.4.27／8.5.12より前の版には、未認証のリモートコード実行につながるCVE-2026-109618とCVE-2026-109619があります。アプリケーションコードが動く前に悪用される経路があり、設定だけでは完全に緩和できません。PHP本体を更新した後、ApacheまたはPHP-FPMの全ワーカーを再起動し、`php -v` と実際のWeb SAPIの版が一致することを確認してください。
 
 ### SQLite CLI（任意）
 ```bash
@@ -33,6 +39,7 @@ sqlite3 --version
 ### 必要拡張の確認
 ```bash
 php -m | grep -E 'openssl|json|mbstring|hash|sqlite3'
+php infrastructure/scripts/check-php-compatibility.php
 ```
 
 ## 新規インストール手順
@@ -87,4 +94,3 @@ nginx（例）:
 
 - **重要**: ルートに `index.php` がないため、サーバのドキュメントルートは必ず `backend/public` を指すように設定してください。これにより、公開可能なエントリポイントと静的アセットが正しく配信されます。
 - Webサーバー公開時は `/backend/public` をルートにリライトして公開してください。`https://www.example.com` でアクセスできるようにしてください。
-

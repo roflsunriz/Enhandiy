@@ -24,9 +24,10 @@ jobs:
       fail-fast: true
       matrix:
         php-version:
-          - '8.1'
-          - '8.2'
-          - '8.3'
+          - '8.2.35'
+          - '8.3.36'
+          - '8.4.27'
+          - '8.5.12'
 
     steps:
       - name: Checkout code
@@ -40,7 +41,7 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 #v2.40.0
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: pdo, pdo_sqlite, sqlite3
+          extensions: pdo, pdo_sqlite, sqlite3, mbstring, openssl
           tools: composer
           coverage: none
           ini-values: error_reporting=E_ALL&~E_DEPRECATED&~E_STRICT
@@ -80,6 +81,9 @@ jobs:
           echo "📦 Installing Composer dependencies..."
           composer install --prefer-dist --no-progress --no-interaction
           echo "✅ Dependencies installed successfully"
+
+      - name: Check supported PHP runtime
+        run: composer check-platform
 
       - name: Check PHP syntax
         run: |
@@ -133,7 +137,7 @@ jobs:
       - name: Setup PHP for isolated regressions
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.1'
+          php-version: '8.4.27'
           extensions: pdo_sqlite, mbstring, openssl
           coverage: none
       - name: Install dependencies
@@ -159,8 +163,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 #v2.40.0
         with:
-          php-version: '8.1'
-          extensions: pdo, pdo_sqlite
+          php-version: '8.4.27'
+          extensions: pdo, pdo_sqlite, sqlite3, mbstring, openssl
           tools: composer
 
       - name: Install dependencies
