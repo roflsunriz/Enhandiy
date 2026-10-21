@@ -1,5 +1,11 @@
 # 検証手順
 
+## 2026-10-22 v4.5.3公開前検証
+
+製品版数を4.5.3へ揃え、公式PHP 8.4.27 ApacheイメージからDockerイメージを実ビルドした。コンテナ内でPHP版・必須拡張チェック、PSR-12、PHPStan、全PHP構文、既存PHPテスト、4.5.3の版数一致がすべて成功した。
+
+互換範囲のnpm依存を更新してクリーン導入し、lint、TS7型検査、Viteビルド、隔離プロセス・API・Chrome UIテストを再実行した。Composer／npm監査とGitHub Dependabot alertは既知脆弱性0件、直接依存の更新残り0件を確認した。actionlint 1.7.12、変更文書のmarkdownlint、差分検査も成功した。
+
 ## 2026-10-22 PHP緊急セキュリティ更新
 
 PHP公式のセキュリティ情報で、CVE-2026-109618とCVE-2026-109619の影響版と修正版を確認した。アプリコード開始前に成立する経路があるため、Composer条件、CI、公開前検査、Docker、導入・更新手順を修正版PHPへ揃える。公式Docker registryで `php:8.4.27-apache` の複数architecture向けmanifestと、PHP 8.4.27であることを確認した。
