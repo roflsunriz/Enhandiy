@@ -12,7 +12,7 @@ actionlint 1.7.12でCI・公開前検査・リリースworkflow、markdownlint�
 
 mainの `004fce6` に対する[CI](https://github.com/roflsunriz/Enhandiy/actions/runs/44665421843)はPHP4系列・frontend・Docker・文書検査をすべて通過し、公開前検査とCodeQLも成功した。同じcommitのタグ `v4.5.4` から[正式Release](https://github.com/roflsunriz/Enhandiy/releases/tag/v4.5.4)を公開し、ZIPとTAR.GZをダウンロードしてLinux上の同タグ由来アーカイブとSHA-256が完全一致することを確認した。
 
-公開時のNode.js 20／`set-output` 廃止予定警告を受け、今後の公開workflowをGitHub CLIへ移行した。actionlintと、workflowから抽出した実際のBash処理での模擬検証が成功した。正式版／プレリリースのフラグ、既存タグ確認、CHANGELOG本文と両配布物の引渡し、作成失敗時に後続処理へ進まないことを確認した。公開済みのv4.5.4は変更せず、移行後の実公開は次回タグで確認する。
+公開時のNode.js 20／`set-output` 廃止予定警告を受け、今後の公開workflowをGitHub CLIへ移行した。actionlintと、workflowから抽出した実際のBash処理での模擬検証が成功した。正式版／プレリリースのフラグ、既存タグ確認、CHANGELOG本文と両配布物の引渡し、作成や公開URLの取得に失敗したときに後続処理へ進まないことを確認した。公開済みのv4.5.4は変更せず、移行後の実公開は次回タグで確認する。
 
 ## 2026-11-10: README本文と配布情報の整備
 

@@ -145,7 +145,8 @@ jobs:
             "${args[@]}" \
             "dist/Enhandiy-${RELEASE_TAG}-source.zip" \
             "dist/Enhandiy-${RELEASE_TAG}-source.tar.gz"
-          echo "html_url=$(gh release view "$RELEASE_TAG" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+          release_url=$(gh release view "$RELEASE_TAG" --json url --jq .url)
+          echo "html_url=$release_url" >> "$GITHUB_OUTPUT"
 
       - name: 📢 Release Summary
         run: |
