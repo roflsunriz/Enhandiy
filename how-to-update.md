@@ -20,15 +20,29 @@
 
 ## 自動検査と依存関係の更新
 
-PHP 8.2.35／8.3.36／8.4.27／8.5.12以降のいずれか、Composer、Node.js 24以上を用意します。フロントエンドの詳しいNode要件は `frontend/package.json` の依存パッケージのenginesも確認してください。
+PHP 8.2.36／8.3.37／8.4.28／8.5.13以降のいずれか、Composer、Node.js 24以上を用意します。フロントエンドの詳しいNode要件は `frontend/package.json` の依存パッケージのenginesも確認してください。
 
 リポジトリ直下で `composer install`、`composer check-platform`、`composer validate --no-check-publish`、`composer lint`、`composer analyse`、`composer test`、`composer audit` を実行します。PHPの名前空間とヘッダー順序を含むPSR12、静的解析、件数・表示・バージョン・フォームの回帰を検査します。
 
 `frontend` で `npm ci`、`npm run lint`、`npm run type-check`、`npm run build`、`npm audit` を実行します。`--legacy-peer-deps` は不要です。TS7の型検査CLIとlint用TS6 APIは、[Microsoftの公式併用手順](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0)に従う別名依存です。パッケージを更新するときは両方の互換性を確認し、lockfileを通常のnpmコマンドで生成してください。
 
-CIは各マイナー版の修正済み最小版（PHP 8.2.35／8.3.36／8.4.27／8.5.12）とNode 24で上記の検査を実行し、Dockerビルドは `docker build -t enhandiy-test ./infrastructure/docker/` で確認します。失敗を警告へ置き換えて成功扱いにしません。動的なGitHub管理のAIレビューがモデルエラーで失敗する場合は、そのrunのログを記録し、通常CIやCodeQLと区別してください。
+CIは各マイナー版の修正済み最小版（PHP 8.2.36／8.3.37／8.4.28／8.5.13）とNode 24で上記の検査を実行し、Dockerビルドは `docker build -t enhandiy-test ./infrastructure/docker/` で確認します。失敗を警告へ置き換えて成功扱いにしません。動的なGitHub管理のAIレビューがモデルエラーで失敗する場合は、そのrunのログを記録し、通常CIやCodeQLと区別してください。
 
-PHP更新時は、CLIとWeb SAPIの両方が修正版であることを確認し、ApacheまたはPHP-FPMの全ワーカーを再起動します。Dockerは `docker compose -f infrastructure/docker-compose.yaml build --no-cache web` で再ビルドしてコンテナを作り直します。問題がある場合も脆弱なPHPへ戻さず、修正版の別マイナー版へ切り替えて復旧してください。
+## PHPランタイムのセキュリティ更新
+
+2026年11月19日の修正内容は[セキュリティノート](docs/guide-security.md#php実行環境)を参照してください。Enhandiyの配布ファイルだけを更新しても、ホストやコンテナのPHP本体は更新されません。
+
+手動導入では、利用しているPHP配布元の修正版へ更新し、ApacheまたはPHP-FPMの全ワーカーを再起動します。`php -v` と `composer check-platform` を確認し、実際のWeb SAPIも同じ修正版になったことを管理画面などで確認してください。確認用の `phpinfo()` ページを公開状態で残さないでください。
+
+Dockerはリポジトリ直下で次を実行します。
+
+```bash
+docker compose -f infrastructure/docker-compose.yaml build --pull --no-cache web
+docker compose -f infrastructure/docker-compose.yaml up -d --force-recreate web
+docker compose -f infrastructure/docker-compose.yaml exec web php infrastructure/scripts/check-php-compatibility.php
+```
+
+利用中の `php-cli` コンテナも同様に再ビルド・再作成してください。問題がある場合も脆弱なPHPへ戻さず、修正版の別マイナー版へ切り替えて復旧します。
 
 PHPクラス・呼び出し元は同じコミットのファイル一式で更新します。稼働中の `backend/config/config.php`、DB、保存ファイルやブラウザ認証を置き換えないでください。既存のグローバル `config` クラスはそのまま利用できます。問題があれば追加修正コミットをrevertし、旧版のPHP一式と依存lockfileに揃えて再導入・再検査します。
 

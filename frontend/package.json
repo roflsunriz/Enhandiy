@@ -1,6 +1,6 @@
 {
   "name": "php-uploader-frontend",
-  "version": "4.5.3",
+  "version": "4.5.4",
   "description": "Modern TypeScript frontend for PHP file uploader",
   "type": "module",
   "scripts": {
@@ -37,7 +37,6 @@
   },
   "overrides": {
     "brace-expansion": "5.0.12",
-    "minimatch": "10.2.6",
     "picomatch": "4.0.5"
   },
   "allowScripts": {

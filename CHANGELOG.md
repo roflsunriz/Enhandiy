@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.4] - 2026-11-20
+
+### Security
+
+- 11月19日のPHPセキュリティ更新（CVE-2026-115560、CVE-2026-126714、CVE-2026-129481など）を適用するため、Composerの実行条件・環境チェック・CI・公開前検査をPHP 8.2.36／8.3.37／8.4.28／8.5.13以降へ引き上げた。DockerもPHP 8.5.13へ更新した。10月の修正版を使用中の環境もPHP本体の更新が必要。
+- 既存環境のPHP更新、Dockerの再ビルド・再作成、全Webワーカー再起動、CLI／Web両方の版確認と復旧手順を整えた。Enhandiyのファイル更新だけではPHP本体の脆弱性対応を完了できないことを明記した。
+- 公開前監査で検出したminimatchのサービス拒否脆弱性（CVE-2026-118764）を解消するため、脆弱な旧版への固定を外し、修正版を要求するESLint・typescript-eslintとlockfileを更新した。
+
+### Changed
+
+- PHPStanとフロントエンドの依存関係を互換範囲で更新し、配布アセットを再生成した。
+
 ### Fixed
 
 - READMEでfindings.mdへの案内に置き換わっていた本文を復元し、構成・開発・検証の説明をREADMEから直接読めるようにした。移動後のREADME更新は保持した。

@@ -1,4 +1,4 @@
-FROM php:8.5.12-apache
+FROM php:8.5.13-apache
 
 # 作業ディレクトリを設定
 WORKDIR /var/www/html

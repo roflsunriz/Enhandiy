@@ -6,6 +6,8 @@ Enhandiy は、モダン UI・再開可能アップロード・フォルダ管�
 
 ![cover](./image/cover.png)
 
+**PHPセキュリティ更新（2026-11-20）:** v4.5.4ではPHP 8.2.36／8.3.37／8.4.28／8.5.13以降が必要です。既存環境でもPHP本体の更新と全Webワーカーの再起動が必要です。[更新手順](how-to-update.md#phpランタイムのセキュリティ更新)と[修正内容](docs/guide-security.md#php実行環境)を確認してください。
+
 > 注意: `/api/*` を利用するには Web サーバーで `/api/index.php?path=/api/*` へのリライト設定が必要です。詳細は [API.md](docs/API.md) の「付録: ルーティング設定例（Apache / Nginx）」を参照してください。
 
 ## ドキュメント

@@ -24,10 +24,10 @@ jobs:
       fail-fast: true
       matrix:
         php-version:
-          - '8.2.35'
-          - '8.3.36'
-          - '8.4.27'
-          - '8.5.12'
+          - '8.2.36'
+          - '8.3.37'
+          - '8.4.28'
+          - '8.5.13'
 
     steps:
       - name: Checkout code
@@ -137,7 +137,7 @@ jobs:
       - name: Setup PHP for isolated regressions
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
         with:
-          php-version: '8.4.27'
+          php-version: '8.4.28'
           extensions: pdo_sqlite, mbstring, openssl
           coverage: none
       - name: Install dependencies
@@ -163,7 +163,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 #v2.40.0
         with:
-          php-version: '8.4.27'
+          php-version: '8.4.28'
           extensions: pdo, pdo_sqlite, sqlite3, mbstring, openssl
           tools: composer
 

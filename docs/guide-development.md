@@ -14,7 +14,7 @@ cp backend/config/config.php.example backend/config/config.php
 
 ## 品質検査
 
-PHP 8.2.35／8.3.36／8.4.27／8.5.12以降のいずれか、Composer、Node.js 24以上を用意します。
+PHP 8.2.36／8.3.37／8.4.28／8.5.13以降のいずれか、Composer、Node.js 24以上を用意します。
 
 ```bash
 composer install

@@ -1,4 +1,4 @@
-# Enhandiy RESTful API ドキュメント (v4.5.3)
+# Enhandiy RESTful API ドキュメント (v4.5.4)
 
 > 本ドキュメントは Enhandiy に同梱される RESTful API の使用方法をまとめたものです。
 > ベース URL はサーバー設置先を `https://example.com` とした場合、`https://example.com/backend/public/api/index.php`（または Web ルート公開時は `/api/index.php`）を入口として自動ルーティングされます。
