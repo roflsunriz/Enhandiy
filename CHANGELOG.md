@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- 今後のリリース作成が廃止予定のNode.jsランタイムや `set-output` に依存しないよう、公開workflowの旧Release ActionsをGitHub CLIへ移行した。タグ確認、CHANGELOG本文、正式版／プレリリースの区別、ZIPとTAR.GZの添付を維持する。
+
 ## [4.5.4] - 2026-11-20
 
 ### Security

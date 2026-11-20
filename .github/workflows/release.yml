@@ -129,36 +129,23 @@ jobs:
           echo "リリースアセットを作成しました"
 
       - name: 🚀 Create GitHub Release
-        uses: actions/create-release@v1
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag.outputs.tag_name }}
-          release_name: Enhandiy ${{ steps.tag.outputs.tag_name }}
-          body_path: release_body.md
-          draft: false
-          prerelease: ${{ github.event.inputs.prerelease || false }}
-
-      - name: 📎 Upload ZIP Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/Enhandiy-${{ steps.tag.outputs.tag_name }}-source.zip
-          asset_name: Enhandiy-${{ steps.tag.outputs.tag_name }}-source.zip
-          asset_content_type: application/zip
-
-      - name: 📎 Upload TAR.GZ Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/Enhandiy-${{ steps.tag.outputs.tag_name }}-source.tar.gz
-          asset_name: Enhandiy-${{ steps.tag.outputs.tag_name }}-source.tar.gz
-          asset_content_type: application/gzip
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.tag.outputs.tag_name }}
+          RELEASE_PRERELEASE: ${{ github.event.inputs.prerelease || 'false' }}
+        run: |
+          args=()
+          if [ "$RELEASE_PRERELEASE" = "true" ]; then
+            args+=(--prerelease)
+          fi
+          gh release create "$RELEASE_TAG" --verify-tag \
+            --title "Enhandiy $RELEASE_TAG" --notes-file release_body.md \
+            "${args[@]}" \
+            "dist/Enhandiy-${RELEASE_TAG}-source.zip" \
+            "dist/Enhandiy-${RELEASE_TAG}-source.tar.gz"
+          echo "html_url=$(gh release view "$RELEASE_TAG" --json url --jq .url)" >> "$GITHUB_OUTPUT"
 
       - name: 📢 Release Summary
         run: |

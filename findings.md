@@ -10,6 +10,7 @@
 - PHP製品classは `Enhandiy` namespace、利用者所有のglobal `config` classだけ例外。静的解析で利用者の `config.php` を読まず、管理templateを型の根拠にする。
 - TypeScript 7 CLIは `@typescript/native`、eslint APIは `@typescript/typescript6` を `typescript` aliasで併用する。
 - 公開時は稼働設定を書換える旧 `release.php`/wrapperを使わず、tag commit由来のrelease workflowを使う。既存tagを上書きしない。
+- v4.5.4の公開で旧 `actions/create-release@v1`／`actions/upload-release-asset@v1` がNode.js 20と `set-output` の廃止予定警告を出したため、以後は `gh release create --verify-tag --notes-file` へ移行する。Windowsの `git archive` は既定の改行変換とZIP時刻でLinuxの配布物とhashが異なる。配布物のSHA-256照合はLinux上で同じタグから生成し、`core.autocrlf=false` を指定する（2026-11-20、両アーカイブで完全一致を確認）。
 - CVE-2026-109618／CVE-2026-109619はPHPのリクエスト初期化・終了処理で成立し、アプリコード開始前の経路もある。設定やアプリ内version guardは完全な緩和にならない。2026-11-19の追加修正（CVE-2026-115560／126714／129481など）により、現在の最小版はPHP 8.2.36／8.3.37／8.4.28／8.5.13。公式[変更履歴](https://www.php.net/ChangeLog-8.php#8.5.13)と[セッション脆弱性情報](https://github.com/php/php-src/security/advisories/GHSA-658j-r8rw-q6mx)を2026-11-20に確認した。全Webワーカー再起動、CLI／Web双方の版確認が必要で、具体的な検査・復旧は `how-to-update.md` と `verification.md` を参照する。
 - 公式 `php:8.5.13-apache` はpdo、pdo_sqlite、sqlite3、mbstring、opensslを組込み済みで、2026-11-20の実ビルドと環境チェックで確認した。`docker-php-ext-install` で再ビルドすると重複読込みとsource cleanupにより失敗するため、実イメージの `php -m` と環境チェックスクリプトで組込みを検証する。
 - minimatchの旧override `10.2.6` はCVE-2026-118764の影響版で、ESLint／typescript-eslint更新後も修正版を阻害する。2026-11-20に固定を削除し、各依存の通常条件で11.0.9が選ばれ、npm監査・lint・型検査・ビルド・隔離テストが成功した。今後の監査でもoverrideによる旧版固定を確認する。
